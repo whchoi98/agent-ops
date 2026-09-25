@@ -4,8 +4,9 @@ import {
 import type { Bootstrap, RunEvent, RunRequest, Settings } from '../../shared/types';
 import { api } from '../lib/api';
 import { apiUrl } from '../lib/urls';
-import { errorMessage, number } from '../lib/format';
+import { errorMessage } from '../lib/format';
 import { useNavigation } from '../lib/navigation';
+import { createRefreshQueue } from './refreshQueue';
 
 export type NewRunDraft = Partial<RunRequest>;
 export type AppModal =
@@ -39,7 +40,7 @@ function useAppState() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const listeners = useRef(new Set<(event: AppEvent) => void>());
-  const pending = useRef<Promise<void> | null>(null);
+  const refreshQueue = useRef<ReturnType<typeof createRefreshQueue> | null>(null);
   const mounted = useRef(true);
   const theme = data?.settings.theme ?? 'light';
   const syncing = localSyncing || Boolean(data?.syncing);
@@ -49,25 +50,28 @@ function useAppState() {
   }, []);
   const dismissToast = useCallback((id: number) => setToasts(items => items.filter(item => item.id !== id)), []);
 
-  const refresh = useCallback(function refreshWorkspace(force = false): Promise<void> {
-    if (pending.current) return force ? pending.current.then(() => refreshWorkspace(true)) : pending.current;
-    setRefreshing(true);
-    const work = api.bootstrap().then(result => {
+  if (!refreshQueue.current) {
+    refreshQueue.current = createRefreshQueue(async force => {
       if (!mounted.current) return;
-      setData(result);
-      setError(null);
-      if (force) setArchiveRevision(value => value + 1);
-    }).catch(cause => {
-      if (mounted.current) setError(errorMessage(cause));
-    }).finally(() => {
-      pending.current = null;
-      if (mounted.current) {
-        setLoading(false);
-        setRefreshing(false);
+      try {
+        const result = await api.bootstrap();
+        if (!mounted.current) return;
+        setData(result);
+        setError(null);
+        if (force) setArchiveRevision(value => value + 1);
+      } catch (cause) {
+        if (mounted.current) setError(errorMessage(cause));
+      } finally {
+        if (mounted.current) setLoading(false);
       }
     });
-    pending.current = work;
-    return work;
+  }
+  const refresh = useCallback((force = false): Promise<void> => {
+    setRefreshing(true);
+    const queue = refreshQueue.current!;
+    return queue.refresh(force).finally(() => {
+      if (mounted.current && !queue.isPending()) setRefreshing(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -146,10 +150,9 @@ function useAppState() {
     if (syncing) return;
     setLocalSyncing(true);
     try {
-      const report = await api.sync();
+      await api.startSync();
+      notify('동기화를 시작했습니다. 진행 상태는 자동으로 갱신됩니다.', 'info');
       await refresh(true);
-      notify(`${number(report.imported)}개 세션을 가져왔습니다.${report.warnings.length ? ` 확인할 항목 ${report.warnings.length}개가 있습니다.` : ''}`,
-        report.warnings.length ? 'info' : 'success');
     } catch (cause) { notify(errorMessage(cause), 'error'); }
     finally { setLocalSyncing(false); }
   }, [syncing, notify, refresh]);

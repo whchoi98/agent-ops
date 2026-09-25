@@ -1,3 +1,4 @@
+import { useI18n, Trans, AppNotice } from '../../i18n/I18nProvider';
 import {
   Children, cloneElement, isValidElement, memo, useEffect, useId, useRef, useState, type ReactNode,
 } from 'react';
@@ -41,14 +42,15 @@ function plainText(children: ReactNode): string {
 // Reached only after an explicit full-message request. The shared Markdown
 // component intentionally retains its own 32,000-character preview.
 export const FullMessageMarkdown = memo(function FullMessageMarkdown({ content, find = '' }: { content: string; find?: string }) {
+  const { t } = useI18n();
   return <div className="markdown message-full-markdown">
     <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]} urlTransform={safeMarkdownUrl} components={{
       a: ({ children, href }) => href
         ? <a href={href} target="_blank" rel="noreferrer noopener">{children}</a>
         : <span>{children}</span>,
-      img: ({ alt }) => <span className="markdown-image"><FileImage size={15} aria-hidden />{alt || '이미지'}<span>자동 로드하지 않음</span></span>,
+      img: ({ alt }) => <span className="markdown-image"><FileImage size={15} aria-hidden />{alt || t("이미지")}<span><Trans message={"자동 로드하지 않음"} /></span></span>,
       pre: ({ children }) => <div className="code-block">
-        <div className="code-heading"><span>CODE</span><CopyButton text={plainText(children)} compact label="코드 복사" /></div>
+        <div className="code-heading"><span>CODE</span><CopyButton text={plainText(children)} compact label={t("코드 복사")} /></div>
         <pre>{children}</pre>
       </div>,
       code: ({ children, className }) => <code className={className}>{highlighted(children, find)}</code>,
@@ -68,6 +70,7 @@ export const FullMessageMarkdown = memo(function FullMessageMarkdown({ content, 
 export const MessageBody = memo(function MessageBody({ sessionId, message, find }: {
   sessionId: string; message: Message; find: string;
 }) {
+  const { t } = useI18n();
   const preview = messagePreview(message);
   const [full, setFull] = useState<Message | null>(null);
   const [loading, setLoading] = useState(false);
@@ -104,21 +107,21 @@ export const MessageBody = memo(function MessageBody({ sessionId, message, find 
 
   return <div className="message-body">
     {preview.truncated && <div className="message-expansion-controls">
-      <span>{expanded ? `전체 내용 · ${number(content.length)}자`
-        : preview.contentLength !== undefined ? `미리보기 · 전체 ${number(preview.contentLength)}자 중 일부`
-          : '긴 메시지의 일부를 표시합니다.'}</span>
+      <span>{expanded ? t("전체 내용 · {0}자", { "0": number(content.length) })
+        : preview.contentLength !== undefined ? t("미리보기 · 전체 {0}자 중 일부", { "0": number(preview.contentLength) })
+          : t("긴 메시지의 일부를 표시합니다.")}</span>
       <Button size="small" icon={expanded ? ChevronUp : error ? RefreshCw : Maximize2} busy={loading}
         aria-expanded={expanded} aria-controls={contentId} onClick={() => expanded ? collapse() : void expand()}>
-        {expanded ? '미리보기로 접기' : error ? '다시 시도' : '전체 메시지 보기'}
+        {expanded ? t("미리보기로 접기") : error ? t("다시 시도") : t("전체 메시지 보기")}
       </Button>
     </div>}
-    {loading && <p className="message-full-loading" role="status">전체 메시지를 불러오는 중입니다.</p>}
-    {error && <InlineNotice tone="error"><strong>전체 메시지를 불러오지 못했습니다.</strong><p>{error}</p></InlineNotice>}
+    {loading && <p className="message-full-loading" role="status"><Trans message={"전체 메시지를 불러오는 중입니다."} /></p>}
+    {error && <InlineNotice tone="error"><strong><Trans message={"전체 메시지를 불러오지 못했습니다."} /></strong><p><AppNotice message={error} /></p></InlineNotice>}
     <div id={contentId} className="message-content" aria-busy={loading || undefined}>
       {message.role === 'tool' ? <details className={`tool-block ${message.isError ? 'tool-error' : ''}`}
         open={message.isError || !!find || expanded}>
-        <summary><Wrench size={15} aria-hidden /><strong>{message.toolName || '도구 출력'}</strong>
-          <span className="tool-result-label">{message.isError ? '오류' : '도구 결과'}</span><ChevronDown size={15} className="tool-chevron" aria-hidden /></summary>
+        <summary><Wrench size={15} aria-hidden /><strong>{message.toolName || t("도구 출력")}</strong>
+          <span className="tool-result-label">{message.isError ? t("오류") : t("도구 결과")}</span><ChevronDown size={15} className="tool-chevron" aria-hidden /></summary>
         <pre><code>{highlightText(content, find)}</code></pre>
       </details> : expanded ? <FullMessageMarkdown content={content} find={find} />
         : preview.truncated ? <pre className="message-content-preview">{highlightText(preview.content, find)}</pre>

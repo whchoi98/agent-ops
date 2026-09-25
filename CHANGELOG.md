@@ -9,6 +9,10 @@
 
 #### Added
 
+- Korean/English switch beside the theme control, browser language persistence
+  and translated workspaces/dialogs with original content preserved.
+- Explicit offline `optimize` command with a verified compressed backup,
+  lossless search-document compression and unused-page reclamation.
 - Assistant-specific skill/plugin/Power discovery, configured-state evidence,
   project filters, redacted source previews and local content analysis.
 - Optional editable CLI analysis drafts through the existing explicit run flow.
@@ -25,6 +29,10 @@
 
 #### Fixed
 
+- Keep HTTP requests responsive during native import by running owned background
+  synchronization with bounded output, cancellation and coalescing.
+- Persist Kiro row fingerprints and update only changed messages/search content
+  instead of rewriting entire unchanged conversations.
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and
   cross-origin request guards.
@@ -36,6 +44,8 @@
 
 #### 추가
 
+- 테마 버튼 옆 한/영 전환, 브라우저 언어 저장과 원문을 보존하는 화면·대화창 번역.
+- 검증한 압축 백업, 검색 본문 압축과 빈 페이지 회수를 제공하는 오프라인 `optimize` 명령.
 - 어시스턴트별 스킬·플러그인·Power 조회, 상태 근거, 프로젝트 필터,
   마스킹된 원문·참조 파일과 로컬 내용 분석.
 - 기존 실행 절차로 연결하는 편집 가능한 CLI 분석 프롬프트.
@@ -50,5 +60,7 @@
 
 #### 수정
 
+- 원본 수집을 별도 프로세스에서 실행해 동기화 중 서버 응답 정체를 줄입니다.
+- Kiro 행별 지문을 저장하고 변경된 메시지·검색 본문만 갱신해 중복 쓰기를 줄입니다.
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산합니다.
 - 로컬 연결과 교차 출처 보호를 유지하면서 설정한 프록시 출처를 허용합니다.

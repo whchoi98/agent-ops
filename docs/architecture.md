@@ -6,6 +6,8 @@
 flowchart TB
     UI["React UI"] <-->|HTTP / SSE| API["Fastify API"]
     Sources["Native session files"] --> Import["Read-only collectors"]
+    API --> Sync["Owned Agent Ops sync process"]
+    Sync --> Import
     Import --> Store["SQLite + FTS5"]
     API --> Store
     API --> Queue["Owned process queue"]
@@ -26,6 +28,16 @@ Provider readers (`server/providers/index.ts`) normalize native history.
 Synchronization (`server/sync.ts`) fingerprints sources and updates
 SQLite (`server/store.ts`), including full-text indexes and user metadata.
 Importing a session does not execute it.
+
+Live synchronization runs in an owned subprocess (`server/background-sync.ts`)
+to keep synchronous parsing and writes off the HTTP event loop. Source-file and
+Kiro-row checkpoints survive restarts; unchanged messages and search documents
+avoid writes. New caches use compressed external-content FTS documents
+(`server/search-index.ts`). Existing caches upgrade explicitly through offline
+maintenance (`server/maintenance.ts`) after a consistent, verified backup.
+
+The browser keeps the Korean/English language choice locally. React translates
+application labels while preserving transcript/skill text and unsaved input.
 
 The runner (`server/runner.ts`) schedules supported CLI processes using
 validated arguments (`server/commands.ts`). It serializes work in the same
@@ -56,6 +68,16 @@ React 화면과 API를 같은 출처에서 제공하며, SSE로 동기화와 실
 동기화(`server/sync.ts`)는 소스 지문을 비교해 본문 검색 색인과 사용자
 메타데이터를 포함한 SQLite(`server/store.ts`)를 갱신합니다.
 세션을 가져오는 동작은 에이전트를 실행하지 않습니다.
+
+라이브 동기화는 별도 자식 프로세스(`server/background-sync.ts`)에서 실행해
+동기 파싱과 쓰기가 HTTP 이벤트 루프를 점유하지 않도록 합니다. 소스 파일과
+Kiro 행별 지문은 재시작 후에도 유지하며, 같은 메시지·검색 본문은 재작성하지
+않습니다. 신규 캐시는 압축한 외부 본문을 FTS 색인에 연결합니다
+(`server/search-index.ts`). 기존 캐시는 일관된 백업을 검증한 다음 명시적인
+오프라인 유지보수(`server/maintenance.ts`)로 변환합니다.
+
+브라우저는 한국어·영어 선택을 로컬에 보관합니다. React가 화면 문구를 전환하고
+대화·스킬 원문과 작성 중인 입력은 유지합니다.
 
 실행 관리자(`server/runner.ts`)는 검증한 인수(`server/commands.ts`)로
 지원하는 CLI를 실행합니다. 같은 프로젝트의 작업은 순차 실행하고, 시간·출력

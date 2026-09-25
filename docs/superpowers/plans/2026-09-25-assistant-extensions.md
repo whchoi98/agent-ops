@@ -127,3 +127,23 @@ Consumes existing `ConnectorStatus` probes; produces `VersionReport` through
 - [x] Show installed/latest values, source and check time in Settings; preserve
   current version when latest checks fail, and mark sample data in demo.
 - [x] Verify the UI and proxy route, then include the feature in final checks.
+
+## Task 7: Data size and response performance (user addition)
+
+- [x] Measure live table/index sizes and request/query costs without reading out
+  transcript content or modifying source databases.
+- [x] Verify the cause of stalled live requests separately from data volume.
+- [x] Add owned background synchronization with bounded output, cancellation and
+  coalescing; test real temporary sources and responsiveness.
+- [x] Apply evidence-backed storage/write optimizations without deleting history
+  or changing user metadata; verify compatibility and search behavior.
+- [ ] Revalidate the affected APIs, package and live service; record limitations.
+
+## Task 8: Korean and English interface (user addition)
+
+- [x] Add a browser-persisted language context and explicit UI dictionary.
+- [x] Place an accessible KO/EN switch beside the theme button.
+- [x] Translate the existing workspaces and shared dialogs while preserving
+  original conversation/skill content and unsaved input state.
+- [x] Verify switching, reload persistence, English workflows, mobile placement
+  and proxy routes in the browser.

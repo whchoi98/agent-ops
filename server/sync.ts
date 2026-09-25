@@ -1,11 +1,21 @@
-import { discoverSessions } from './providers/index.js';
+import { discoverSessions, type KiroRowCheckpoint } from './providers/index.js';
+import { timestamp } from './providers/common.js';
 import type { Store } from './store.js';
 import type { SyncReport } from '../shared/types.js';
+import { setImmediate as yieldToIO } from 'node:timers/promises';
 
 // Parser identity changes require unchanged native files to be read once again.
-const importFingerprint = (fingerprint: string) => `format-v2:${fingerprint}`;
+const parserFormat = 'format-v3';
+const importFingerprint = (fingerprint: string) => `${parserFormat}:${fingerprint}`;
 
-export class SyncService {
+export interface SyncController {
+  readonly active: boolean;
+  run(): Promise<SyncReport>;
+  wait(): Promise<void>;
+  cancel(): void;
+}
+
+export class SyncService implements SyncController {
   private pending: Promise<SyncReport> | null = null;
   private stopping = false;
   constructor(
@@ -26,17 +36,43 @@ export class SyncService {
     let imported = 0;
     let lastProgress = Date.now();
     const summary = this.demo ? { filesScanned: 0, skipped: 0, warnings: [] as string[] }
-      : await discoverSessions(this.store.getSettings().sourceRoots, (session) => {
+      : await discoverSessions(this.store.getSettings().sourceRoots, async (session) => {
         if (this.stopping) throw new Error('Synchronization cancelled.');
+        const stored = this.store.getSession(session.id, false);
+        if (stored && stored.sourcePath !== session.sourcePath) {
+          const storedAt = Date.parse(timestamp(stored.updatedAt) ?? '');
+          const incomingAt = Date.parse(timestamp(session.updatedAt) ?? '');
+          // Competing copies must not regress persisted history. The same source
+          // may legitimately revise its corpus or parser-derived timestamps.
+          if (storedAt > incomingAt || (storedAt === incomingAt && stored.messageCount > session.messageCount)) return false;
+        }
         this.store.upsertSession(session);
         imported++;
         if (Date.now() - lastProgress >= 2000) {
           lastProgress = Date.now();
           this.onProgress(imported);
         }
+        // SQLite rows otherwise resolve through microtasks without polling sockets.
+        await yieldToIO();
       }, {
         shouldRead: (path, fingerprint) => !this.stopping && this.store.getFingerprint(path) !== importFingerprint(fingerprint),
         onRead: (path, fingerprint) => { if (!this.stopping) this.store.setFingerprint(path, importFingerprint(fingerprint)); },
+        kiroRows: {
+          get: (key) => {
+            if (this.stopping) throw new Error('Synchronization cancelled.');
+            const saved = this.store.getFingerprint(key);
+            if (!saved) return null;
+            try {
+              const value = JSON.parse(saved) as Partial<KiroRowCheckpoint> & { format?: string };
+              if (value.format !== parserFormat || typeof value.fingerprint !== 'string' || typeof value.sessionId !== 'string') return null;
+              if (!this.store.db.prepare('SELECT 1 FROM sessions WHERE id=?').get(value.sessionId)) return null;
+              return { fingerprint: value.fingerprint, sessionId: value.sessionId };
+            } catch { return null; }
+          },
+          set: (key, checkpoint) => {
+            if (!this.stopping) this.store.setFingerprint(key, JSON.stringify({ format: parserFormat, ...checkpoint }));
+          },
+        },
         maxFiles: 20000,
       });
     const report: SyncReport = {

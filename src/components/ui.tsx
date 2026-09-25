@@ -1,3 +1,4 @@
+import { useI18n, Trans, AppNotice } from '../i18n/I18nProvider';
 import {
   Asterisk, Check, CheckCircle2, CircleAlert, Copy, Inbox, Info,
   LoaderCircle, RefreshCw, X, type LucideIcon,
@@ -52,33 +53,36 @@ export function AgentBadge({ agent, compact = false }: { agent: Agent; compact?:
 }
 
 export function StatusBadge({ status }: { status: RunStatus | SessionStatus }) {
+  const { t } = useI18n();
   return <span className={`status-badge status-${status}`}>
-    <span className="status-dot" aria-hidden />{STATUS_LABEL[status]}
+    <span className="status-dot" aria-hidden />{t(STATUS_LABEL[status])}
   </span>;
 }
 
 export function TokenValue({ usage, compact = true }: { usage: Usage; compact?: boolean }) {
+  const { t } = useI18n();
   const { total, complete } = tokenUsage(usage);
   return <span className={`numeric ${total === null ? 'text-muted' : ''}`} title={
-    total === null ? '이 세션에는 토큰 사용량이 기록되지 않았습니다.'
-      : `입력 ${usage.inputTokens === null ? '미기록' : number(usage.inputTokens)} · 출력 ${usage.outputTokens === null ? '미기록' : number(usage.outputTokens)}${complete ? '' : ' · 부분 기록'}`
+    total === null ? t("이 세션에는 토큰 사용량이 기록되지 않았습니다.")
+      : t("입력 {0} · 출력 {1}{2}", { "0": usage.inputTokens === null ? t("미기록") : number(usage.inputTokens), "1": usage.outputTokens === null ? t("미기록") : number(usage.outputTokens), "2": complete ? '' : t(" · 부분 기록") })
   }>
-    {total === null ? '미기록' : compact ? compactNumber(total) : number(total)}
-    {total !== null && !complete && <span className="partial-indicator" aria-label="부분 기록">*</span>}
+    {total === null ? t("미기록") : compact ? compactNumber(total) : number(total)}
+    {total !== null && !complete && <span className="partial-indicator" aria-label={t("부분 기록")}>*</span>}
   </span>;
 }
 
 export function AggregateTokenValue({ tokens, knownTokenSessions, sessions, showCoverage = true }: {
   tokens: number; knownTokenSessions: number; sessions: number; showCoverage?: boolean;
 }) {
+  const { t } = useI18n();
   const hasRecord = knownTokenSessions > 0;
   const partial = hasRecord && knownTokenSessions < sessions;
   const label = hasRecord
-    ? `${number(tokens)} 토큰 · ${knownTokenSessions}/${sessions}개 세션 기록${partial ? ' · 부분 합계' : ''}`
-    : '토큰 기록 없음';
+    ? t('{0} 토큰 · {1}/{2}개 세션 기록{3}', { 0: number(tokens), 1: knownTokenSessions, 2: sessions, 3: partial ? t(' · 부분 합계') : '' })
+    : t('토큰 기록 없음');
   return <span className="aggregate-usage" title={label} aria-label={label}>
     <span className={`numeric ${hasRecord ? '' : 'text-muted'}`}>{hasRecord ? compactNumber(tokens) : '—'}</span>
-    {partial && showCoverage && <small className="group-coverage">{knownTokenSessions}/{sessions}개 기록</small>}
+    {partial && showCoverage && <small className="group-coverage"><Trans message={"{0}/{1}개 기록"} values={{ "0": knownTokenSessions, "1": sessions }} /></small>}
   </span>;
 }
 
@@ -93,8 +97,8 @@ export function EmptyState({
 
 export function ErrorState({ message, retry, compact = false }: { message: string; retry?: () => void; compact?: boolean }) {
   return <div className={`error-state ${compact ? 'error-state-compact' : ''}`} role="alert">
-    <CircleAlert size={21} aria-hidden /><div><strong>불러오지 못했습니다</strong><p>{message}</p></div>
-    {retry && <Button size="small" icon={RefreshCw} onClick={retry}>다시 시도</Button>}
+    <CircleAlert size={21} aria-hidden /><div><strong><Trans message={"불러오지 못했습니다"} /></strong><p><AppNotice message={message} /></p></div>
+    {retry && <Button size="small" icon={RefreshCw} onClick={retry}><Trans message={"다시 시도"} /></Button>}
   </div>;
 }
 
@@ -124,13 +128,15 @@ export function Panel({ title, description, actions, children, className = '' }:
 }
 
 export function Skeleton({ rows = 4, className = '' }: { rows?: number; className?: string }) {
-  return <div className={`skeleton-group ${className}`} role="status" aria-label="불러오는 중">
+  const { t } = useI18n();
+  return <div className={`skeleton-group ${className}`} role="status" aria-label={t("불러오는 중")}>
     {Array.from({ length: rows }, (_, index) => <div className="skeleton" key={index} style={{ width: index === rows - 1 ? '72%' : '100%' }} />)}
-    <span className="sr-only">불러오는 중입니다.</span>
+    <span className="sr-only"><Trans message={"불러오는 중입니다."} /></span>
   </div>;
 }
 
-export function CopyButton({ text, label = '복사', compact = false }: { text: string; label?: string; compact?: boolean }) {
+export function CopyButton({ text, label, compact = false }: { text: string; label?: string; compact?: boolean }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -142,7 +148,7 @@ export function CopyButton({ text, label = '복사', compact = false }: { text: 
     try { await navigator.clipboard.writeText(text); setCopied(true); }
     catch { setFailed(true); }
   }
-  const actualLabel = copied ? '복사됨' : failed ? '복사 실패. 텍스트를 선택해 복사하세요.' : label;
+  const actualLabel = copied ? t('복사됨') : failed ? t('복사 실패. 텍스트를 선택해 복사하세요.') : label ?? t('복사');
   return compact
     ? <IconButton label={actualLabel} icon={copied ? Check : Copy} onClick={copy} className={copied ? 'copied' : ''} />
     : <Button size="small" icon={copied ? Check : Copy} onClick={copy}>{actualLabel}</Button>;
@@ -166,23 +172,25 @@ export function Switch({ checked, onChange, label, disabled = false }: {
 }
 
 function ToastItem({ toast, dismiss }: { toast: Toast; dismiss: (id: number) => void }) {
+  const { t } = useI18n();
   useEffect(() => {
     const timer = window.setTimeout(() => dismiss(toast.id), toast.tone === 'error' ? 8500 : 5000);
     return () => window.clearTimeout(timer);
   }, [toast.id, toast.tone, dismiss]);
   const Icon = toast.tone === 'success' ? CheckCircle2 : toast.tone === 'error' ? CircleAlert : Info;
   return <div className={`toast toast-${toast.tone}`} role={toast.tone === 'error' ? 'alert' : 'status'}>
-    <Icon size={19} aria-hidden /><span>{toast.message}</span>
-    <IconButton label="알림 닫기" icon={X} onClick={() => dismiss(toast.id)} />
+    <Icon size={19} aria-hidden /><span><AppNotice message={toast.message} /></span>
+    <IconButton label={t("알림 닫기")} icon={X} onClick={() => dismiss(toast.id)} />
   </div>;
 }
 
 export function Toasts() {
+  const { t } = useI18n();
   const { toasts, dismissToast, modal, paletteOpen } = useApp();
   const [target, setTarget] = useState<Element>(document.body);
   useLayoutEffect(() => {
     const dialogs = document.querySelectorAll('dialog[open]');
     setTarget(dialogs.item(dialogs.length - 1) || document.body);
   }, [toasts, modal, paletteOpen]);
-  return createPortal(<div className="toasts" aria-label="알림">{toasts.map(toast => <ToastItem key={toast.id} toast={toast} dismiss={dismissToast} />)}</div>, target);
+  return createPortal(<div className="toasts" aria-label={t("알림")}>{toasts.map(toast => <ToastItem key={toast.id} toast={toast} dismiss={dismissToast} />)}</div>, target);
 }

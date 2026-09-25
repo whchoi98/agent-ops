@@ -72,6 +72,7 @@ export const api = {
   handoff: (body: { sessionId: string; targetAgent: Agent; instruction?: string }) =>
     request<Handoff>('/handoff', json('POST', body)),
   sync: () => request<SyncReport>('/sync', json('POST', {})),
+  startSync: () => request<{ syncing: boolean }>('/sync/start', json('POST', {})),
   run: (runId: string, signal?: AbortSignal) => request<RunDetail>(`/runs/${id(runId)}`, { signal }),
   runEvents: (runId: string, after: number, signal?: AbortSignal) =>
     request<RunDetail>(`/runs/${id(runId)}/events?after=${after}`, { signal }),

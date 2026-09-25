@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import { join, resolve } from 'node:path';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { createApp } from './app.js';
 import { dataDirectory, VERSION } from './config.js';
 import { Store } from './store.js';
@@ -17,6 +17,7 @@ Usage:
   agent-ops [serve] [--port 4317] [--data-dir PATH] [--public-url HTTPS_URL]
   agent-ops demo [--port 4318] [--data-dir PATH]
   agent-ops sync [--data-dir PATH]
+  agent-ops optimize [--data-dir PATH]
   agent-ops doctor [--data-dir PATH]
   agent-ops list [--query TEXT] [--agent codex|claude|kiro] [--limit 20] [--json]
   agent-ops export SESSION_ID [--format md|json|html] [--out FILE]
@@ -32,6 +33,7 @@ Options:
 The server only listens on 127.0.0.1, including reverse-proxy mode.
 Agent credentials stay with each installed CLI.
 AGENT_OPS_DATA_DIR sets the default data directory. No telemetry.
+Optimize requires the server to be stopped and keeps a compressed backup.
 `;
 
 async function main() {
@@ -50,7 +52,7 @@ async function main() {
   if (values.version) { console.log(VERSION); return; }
   const command = positionals[0] || 'serve';
   if (command === 'help') { console.log(help); return; }
-  if (!['serve', 'demo', 'sync', 'doctor', 'list', 'export'].includes(command)) throw new Error(`Unknown command: ${command}. Use --help.`);
+  if (!['serve', 'demo', 'sync', 'optimize', 'doctor', 'list', 'export'].includes(command)) throw new Error(`Unknown command: ${command}. Use --help.`);
   const demo = command === 'demo' || Boolean(values.demo);
   const base = values['data-dir'] ? resolve(values['data-dir']) : dataDirectory(false);
   const directory = demo ? join(base, 'demo') : base;
@@ -83,12 +85,21 @@ async function main() {
     }
     return;
   }
-  const store = new Store(join(directory, 'agent-ops.sqlite'));
+  if (command === 'optimize') {
+    const { optimizeStorage } = await import('./maintenance.js');
+    const report = await optimizeStorage(directory, message => console.error(message));
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+  if (command === 'sync' && demo) throw new Error('Demo mode does not import native history.');
+  const releaseSync = command === 'sync' ? acquireLock(join(directory, 'sync-lock')) : undefined;
+  let store: Store;
+  try { store = new Store(join(directory, 'agent-ops.sqlite')); }
+  catch (error) { releaseSync?.(); throw error; }
   try {
     const mode = store.getMeta<string>('mode');
     if (mode && mode !== (demo ? 'demo' : 'live')) throw new Error('This data directory belongs to a different mode.');
     if (command === 'sync') {
-      if (demo) throw new Error('Demo mode does not import native history.');
       store.setMeta('mode', 'live');
       const report = await new SyncService(store).run();
       console.log(JSON.stringify(report, null, 2));
@@ -130,7 +141,7 @@ async function main() {
       writeFileSync(output, exported.body, { encoding: 'utf8', mode: 0o600, flag: 'wx' });
       console.log(`Exported ${output}`);
     } else process.stdout.write(exported.body + '\n');
-  } finally { store.close(); }
+  } finally { store.close(); releaseSync?.(); }
 }
 
 main().catch((error: unknown) => {

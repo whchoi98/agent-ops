@@ -1,6 +1,7 @@
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { once } from 'node:events';
+import { createRequire } from 'node:module';
 import { createServer } from 'node:net';
 import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir, devNull } from 'node:os';
@@ -28,6 +29,7 @@ try {
   phase = 'CLI help';
   const help = await run(process.execPath, [entry, '--help'], { timeout: 10000 });
   assert.match(help.stdout, /Agent Ops/);
+  assert.match(help.stdout, /agent-ops optimize/);
   const listener = createServer();
   listener.listen(0, '127.0.0.1');
   await once(listener, 'listening');
@@ -46,8 +48,11 @@ try {
   const base = `http://127.0.0.1:${port}`;
   phase = 'local server checks';
   async function request(path, body) {
-    const response = await fetch(base + path, body === undefined ? undefined : {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Agent-Ops': '1' }, body: JSON.stringify(body),
+    const response = await fetch(base + path, {
+      signal: AbortSignal.timeout(10000),
+      ...(body === undefined ? {} : {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Agent-Ops': '1' }, body: JSON.stringify(body),
+      }),
     });
     return response;
   }
@@ -121,12 +126,63 @@ try {
   phase = 'shutdown';
   const termination = await Promise.race([exit, new Promise((_, reject) => setTimeout(() => reject(new Error('Package shutdown timed out')), 5000).unref())]);
   assert.equal(termination[0], 0);
+  phase = 'offline storage optimization';
+  const optimized = JSON.parse((await run(process.execPath, [entry, 'optimize', '--demo', '--data-dir', state], { env: environment, timeout: 60000 })).stdout);
+  assert.equal(optimized.documents, data.sessionTotal);
+  assert.ok(optimized.backupBytes > 0);
+  assert.ok((await readFile(optimized.backupPath)).length > 0);
+  const afterOptimize = await run(process.execPath, [entry, 'list', '--demo', '--data-dir', state, '--query', '후반부 점검 결과', '--json'], { env: environment, timeout: 10000 });
+  assert.equal(JSON.parse(afterOptimize.stdout).total, 1);
+
+  phase = 'packaged background synchronization';
+  const liveState = join(directory, 'synthetic-live-state');
+  await mkdir(liveState);
+  const source = join(directory, 'synthetic-session.jsonl');
+  const transcript = [
+    { type: 'session_meta', payload: { id: 'package-sync', cwd: '/synthetic/package-project', timestamp: '2026-09-25T00:00:00Z' } },
+    { type: 'response_item', timestamp: '2026-09-25T00:00:01Z', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Packaged background sync fixture' }] } },
+  ];
+  await writeFile(source, transcript.map(value => JSON.stringify(value)).join('\n') + '\n');
+  const requirePackage = createRequire(join(directory, 'node_modules/agent-ops-local/package.json'));
+  const Database = requirePackage('better-sqlite3');
+  const fixtureDb = new Database(join(liveState, 'agent-ops.sqlite'));
+  fixtureDb.exec('CREATE TABLE settings (key TEXT PRIMARY KEY,value TEXT NOT NULL)');
+  fixtureDb.prepare('INSERT INTO settings VALUES (?,?)').run('config', JSON.stringify({ sourceRoots: { codex: [source], claude: [], kiro: [] } }));
+  fixtureDb.close();
+  server = spawn(process.execPath, [entry, 'serve', '--port', String(port), '--data-dir', liveState], {
+    cwd: directory, env: environment, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  exit = once(server, 'exit');
+  diagnostics = '';
+  server.stdout.on('data', chunk => { diagnostics = (diagnostics + chunk.toString()).slice(-12000); });
+  server.stderr.on('data', chunk => { diagnostics = (diagnostics + chunk.toString()).slice(-12000); });
+  health = undefined;
+  for (let i = 0; i < 100; i++) {
+    if (server.exitCode !== null) throw new Error(`Package server exited: ${diagnostics}`);
+    try { health = await (await request('/api/health')).json(); if (health.ok && !health.demo) break; } catch {}
+    await new Promise(done => setTimeout(done, 100));
+  }
+  assert.equal(health?.demo, false, diagnostics);
+  const imported = await request('/api/sync', {});
+  assert.equal(imported.status, 200);
+  assert.ok(Array.isArray((await imported.json()).warnings));
+  const recorded = await (await request('/api/sessions?q=' + encodeURIComponent('Packaged background sync fixture'))).json();
+  assert.equal(recorded.total, 1);
+  transcript.push({ type: 'response_item', timestamp: '2026-09-25T00:00:02Z', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Changed packaged import marker' }] } });
+  await writeFile(source, transcript.map(value => JSON.stringify(value)).join('\n') + '\n');
+  const updated = await request('/api/sync', {});
+  assert.equal(updated.status, 200);
+  assert.equal((await updated.json()).imported, 1);
+  assert.equal((await (await request('/api/sessions?q=' + encodeURIComponent('Changed packaged import marker'))).json()).total, 1);
+  server.kill('SIGTERM');
+  const liveTermination = await Promise.race([exit, new Promise((_, reject) => setTimeout(() => reject(new Error('Package shutdown timed out')), 5000).unref())]);
+  assert.equal(liveTermination[0], 0);
   const report = {
     archive: archive.split('/').at(-1), node: process.version, platform: process.platform, arch: process.arch,
     productionInstall: true, cliHelp: true, cliDoctor: true, cliSearch: true, cliExport: true,
     staticAssets: assets.length, dependencyNotices: true, localKoreanFonts: true,
     extensionCatalog: true, extensionAnalysis: true, extensionFilePreview: true, analysisDraftOnly: true,
-    officialBrandIcons: true, cliVersionComparison: true,
+    officialBrandIcons: true, cliVersionComparison: true, offlineOptimization: true, packagedBackgroundSync: true,
     demoSessions: data.sessionTotal, cliAbsent: true, allThreePreviews: true,
     executionBlocked: true, fullExport: true, pagedHistory: true, gracefulShutdown: true,
   };

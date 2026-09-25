@@ -1,13 +1,16 @@
 # Agent Ops contributor guidance
 
 Agent Ops is a local TypeScript workbench for Codex, Claude Code and Kiro CLI.
-Use the existing npm scripts and preserve the Korean interface.
+Use the existing npm scripts and preserve both Korean and English interfaces.
 
 ## Code map
 
 - `server/index.ts`: CLI commands, process lock and HTTP startup.
 - `server/app.ts`, `server/access.ts`: API, static UI, SSE and request guards.
 - `server/store.ts`: SQLite persistence, migrations and FTS search.
+- `server/search-index.ts`, `server/maintenance.ts`: compressed search documents
+  and explicit offline backup/compaction.
+- `server/background-sync.ts`: bounded, owned Agent Ops sync subprocess.
 - `server/providers/`, `server/sync.ts`: bounded, read-only native history import.
 - `server/commands.ts`, `server/runner.ts`: CLI arguments and owned process queue.
 - `server/extensions/`: bounded skill/plugin discovery, local analysis and previews;
@@ -35,6 +38,9 @@ Record actual verification results in `docs/verification.md`.
 - Parse history independently of execution. Spawn only supported CLIs with
   argument arrays; cancel only processes owned by this application.
 - Keep demo state separate and prevent demo agent execution.
+- Preserve original transcripts and user text when translating interface labels.
+- Offline storage optimization must back up and verify the cache before mutation;
+  never migrate a large existing search index during HTTP startup.
 - Extension status describes configuration evidence, not invocation. Preserve
   opaque file IDs, owner-root checks, redaction and explicit analysis-run preview.
 - Keep application data, credentials, exports, dependencies and generated

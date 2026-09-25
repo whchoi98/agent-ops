@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -11,6 +12,7 @@ export function Dialog({
   size?: 'small' | 'medium' | 'large' | 'drawer'; footer?: ReactNode; actions?: ReactNode;
   className?: string; bodyClassName?: string; hideHeading?: boolean;
 }) {
+  const { t } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -64,7 +66,7 @@ export function Dialog({
         <div className={hideHeading ? 'sr-only' : 'dialog-title'}>
           <h2 id={titleId}>{title}</h2>{description && <div id={descriptionId} className="dialog-description">{description}</div>}
         </div>
-        <div className="dialog-heading-actions">{actions}<IconButton label="닫기" icon={X} onClick={onClose} /></div>
+        <div className="dialog-heading-actions">{actions}<IconButton label={t("닫기")} icon={X} onClick={onClose} /></div>
       </div>
       <div className={`dialog-body ${bodyClassName}`}>{children}</div>
       {footer && <div className="dialog-footer">{footer}</div>}

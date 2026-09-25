@@ -94,6 +94,18 @@ export function codexTitleCandidate(content: string): string {
   return '';
 }
 
+function truncateTitle(value: string): string {
+  let end = 0;
+  let characters = 0;
+  // Inspect only the prefix and keep each UTF-16 surrogate pair intact.
+  for (const character of value) {
+    if (characters === 160) break;
+    end += character.length;
+    characters++;
+  }
+  return value.slice(0, end);
+}
+
 /** Native sources use ISO strings, Unix seconds, milliseconds, and occasionally micro/nanoseconds. */
 export function timestamp(value: unknown): string | null {
   if (value instanceof Date) return Number.isFinite(value.getTime()) ? value.toISOString() : null;
@@ -333,7 +345,7 @@ export class SessionBuilder {
     }
     const agentName = `${this.agent[0].toUpperCase()}${this.agent.slice(1)}`;
     const fallbackTitle = this.agent === 'codex' && this.projectPath ? `${agentName} · ${projectName}` : `${agentName} session`;
-    const title = (this.title || firstUser || fallbackTitle).replace(/\s+/g, ' ').trim().slice(0, 160);
+    const title = truncateTitle((this.title || firstUser || fallbackTitle).replace(/\s+/g, ' ').trim());
     const messages: Message[] = this.messages.map(({ key, callId, ...message }) => ({
       ...message,
       id: `${id}:${hash(key)}`,

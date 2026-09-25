@@ -5,22 +5,24 @@ import { createKiroParser } from './kiro.js';
 import {
   collectSources, errorDescription, fingerprints, readSource, sameFingerprints, type Source,
 } from './files.js';
-import { readKiroDatabase } from './kiro-sqlite.js';
+import { readKiroDatabase, type KiroRowCache } from './kiro-sqlite.js';
 
 export { parseCodexSession } from './codex.js';
 export { parseClaudeSession } from './claude.js';
 export { parseKiroSession, parseKiroRecords } from './kiro.js';
 export type { ParseContext, ParseResult } from './common.js';
+export type { KiroRowCheckpoint, KiroRowCache } from './kiro-sqlite.js';
 
 export interface DiscoverOptions {
   shouldRead?: (path: string, fingerprint: string) => boolean;
   onRead?: (path: string, fingerprint: string) => void;
   maxFiles?: number;
+  kiroRows?: KiroRowCache;
 }
 
 export async function discoverSessions(
   roots: Record<Agent, string[]>,
-  onSession: (session: ImportedSession) => void | Promise<void>,
+  onSession: (session: ImportedSession) => void | false | Promise<void | false>,
   options: DiscoverOptions = {},
 ): Promise<{ filesScanned: number; skipped: number; warnings: string[] }> {
   const warnings: string[] = [];
@@ -60,8 +62,8 @@ export async function discoverSessions(
   async function emit(session: ImportedSession) {
     const previous = emitted.get(session.id);
     if (previous && (previous.updatedAt > session.updatedAt
-      || (previous.updatedAt === session.updatedAt && previous.messageCount >= session.messageCount))) return;
-    await onSession(session);
+      || (previous.updatedAt === session.updatedAt && previous.messageCount >= session.messageCount))) return false;
+    if (await onSession(session) === false) return false;
     emitted.set(session.id, { updatedAt: session.updatedAt, messageCount: session.messageCount });
   }
 
@@ -77,7 +79,7 @@ export async function discoverSessions(
       if (!changed) continue;
       let ok = true;
       if (primary.kind === 'sqlite') {
-        ok = await readKiroDatabase(primary, emit, warn);
+        ok = await readKiroDatabase(primary, emit, warn, options.kiroRows);
       } else {
         const context = { sourcePath: primary.path, fallbackTimestamp: primary.stat.mtimeMs };
         const parser = primary.agent === 'codex' ? createCodexParser(context)

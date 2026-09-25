@@ -20,6 +20,7 @@ See [operations](operations.md) for the proxy configuration.
 | GET | `/sessions/:id/export` | `format=json\|md\|html` | attachment |
 | POST | `/handoff` | `{sessionId,targetAgent,instruction?}` | `Handoff` |
 | POST | `/sync` | `{}` | `SyncReport` |
+| POST | `/sync/start` | `{}` | `202 { syncing: boolean }`; progress through bootstrap/SSE |
 | GET | `/runs/:id` | | `RunDetail` |
 | POST | `/runs/preview` | `RunRequest` | `CommandPreview` |
 | POST | `/runs` | `RunRequest` | `Run` |

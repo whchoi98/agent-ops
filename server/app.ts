@@ -4,13 +4,15 @@ import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z, ZodError } from 'zod';
-import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent, type PromptTemplate, type Project } from '../shared/types.js';
+import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent } from '../shared/types.js';
 import { Store, newId } from './store.js';
 import { VERSION } from './config.js';
 import { computeAnalytics } from './analytics.js';
 import { redact, buildHandoff, exportSession } from './privacy.js';
 import { seedDemo, seedTemplates } from './seed.js';
-import { SyncService } from './sync.js';
+import { SyncService, type SyncController } from './sync.js';
+import { BackgroundSync } from './background-sync.js';
+import { retryWrite } from './write-retry.js';
 import { Runner } from './runner.js';
 import { detectConnectors, invalidateConnectorCache } from './connectors.js';
 import { enforceAccess, parsePublicUrl, stripProxyPrefix } from './access.js';
@@ -59,7 +61,7 @@ function error(statusCode: number, message: string): Error & { statusCode: numbe
 }
 const idParam = (params: unknown) => z.object({ id: shortText }).parse(params).id;
 type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent };
-export interface AppContext { app: FastifyInstance; store: Store; runner: Runner; sync: SyncService }
+export interface AppContext { app: FastifyInstance; store: Store; runner: Runner; sync: SyncController }
 export interface AppOptions {
   dataDir: string;
   demo?: boolean;
@@ -95,6 +97,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   });
   const clients = new Set<FastifyReply>();
   let closing = false;
+  const write = <T,>(action: () => T) => retryWrite(store, action, () => closing);
   function broadcast(notice: Notice) {
     if (closing) return;
     const text = `data: ${JSON.stringify(notice)}\n\n`;
@@ -108,17 +111,33 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   const probe = options.connectorProbe || detectConnectors;
   const runner = new Runner(store, { demo, onEvent: broadcast, connectors: () => probe(store.getSettings()) });
   if (!demo) runner.start();
-  const sync = new SyncService(store, () => broadcast({ type: 'refresh' }), demo, () => broadcast({ type: 'refresh' }));
+  const refreshNotice = () => broadcast({ type: 'refresh' });
+  const sync: SyncController = demo
+    ? new SyncService(store, refreshNotice, true, refreshNotice)
+    : new BackgroundSync({
+      dataDir: resolve(options.dataDir),
+      entry: resolve(dirname(fileURLToPath(import.meta.url)), import.meta.url.endsWith('.ts') ? 'index.ts' : 'index.js'),
+      onComplete: refreshNotice,
+      onProgress: refreshNotice,
+    });
   let interval: NodeJS.Timeout | null = null;
+  let requestedSync: Promise<void> | null = null;
+  function startBackgroundSync() {
+    if (closing || requestedSync) return;
+    requestedSync = sync.run().then(() => {}, async () => {
+      if (closing) return;
+      try {
+        await write(() => store.setMeta('sync', { startedAt: new Date().toISOString(), finishedAt: new Date().toISOString(), imported: 0, skipped: 0, filesScanned: 0, warnings: ['Sync failed. Check source paths and permissions, then retry.'] }));
+      } catch { /* A failed/full database may also reject the diagnostic write. */ }
+      refreshNotice();
+    }).finally(() => { requestedSync = null; });
+    void requestedSync.catch(() => {});
+    refreshNotice();
+  }
   function armSync() {
     if (interval) clearInterval(interval);
     if (demo || options.autoSync === false) return;
-    interval = setInterval(() => {
-      void sync.run().catch(() => {
-        store.setMeta('sync', { startedAt: new Date().toISOString(), finishedAt: new Date().toISOString(), imported: 0, skipped: 0, filesScanned: 0, warnings: ['Sync failed. Check source paths and permissions, then retry.'] });
-        broadcast({ type: 'refresh' });
-      });
-    }, store.getSettings().scanIntervalSeconds * 1000);
+    interval = setInterval(startBackgroundSync, store.getSettings().scanIntervalSeconds * 1000);
     interval.unref();
   }
 
@@ -193,7 +212,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     if (patch.note !== undefined) patch.note = redact(patch.note);
     if (patch.tags) patch.tags = [...new Set(patch.tags)];
     const query = z.object({ includeMessages: z.enum(['true', 'false']).optional() }).parse(request.query);
-    const session = store.patchSession(idParam(request.params), patch, query.includeMessages !== 'false');
+    const session = await write(() => store.patchSession(idParam(request.params), patch, query.includeMessages !== 'false'));
     if (!session) throw error(404, '세션을 찾을 수 없습니다.');
     broadcast({ type: 'refresh' });
     return session;
@@ -215,6 +234,14 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   app.post('/api/sync', async () => {
     invalidateConnectorCache();
     return sync.run();
+  });
+  app.post('/api/sync/start', async (request, reply) => {
+    z.object({}).strict().parse(request.body);
+    z.object({}).strict().parse(request.query);
+    if (closing) throw error(503, 'Synchronization is stopping.');
+    invalidateConnectorCache();
+    startBackgroundSync();
+    return reply.code(202).send({ syncing: sync.active });
   });
   app.post('/api/runs/preview', async (request) => runner.preview(runSchema.parse(request.body)));
   app.post('/api/runs', async (request, reply) => {
@@ -251,42 +278,46 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
       try { path = realpathSync(path); if (!statSync(path).isDirectory()) throw new Error(); }
       catch { throw error(400, '프로젝트 경로가 존재하는 디렉터리인지 확인해 주세요.'); }
     }
-    const project = store.ensureProject(path, input.name);
-    store.saveProject({ ...project, name: input.name, color: input.color || project.color, executionEnabled: input.executionEnabled });
+    const project = await write(() => {
+      const existing = store.ensureProject(path, input.name);
+      return store.saveProject({ ...existing, name: input.name, color: input.color || existing.color, executionEnabled: input.executionEnabled });
+    });
     broadcast({ type: 'refresh' });
-    return reply.code(201).send(store.getProject(project.id));
+    return reply.code(201).send(project);
   });
   app.patch('/api/projects/:id', async (request) => {
     const input = z.object({ name: shortText.optional(), color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(), executionEnabled: z.boolean().optional() }).strict().parse(request.body);
-    const project = store.getProject(idParam(request.params));
-    if (!project) throw error(404, '프로젝트를 찾을 수 없습니다.');
-    if (!demo && input.executionEnabled) {
-      try { if (!statSync(project.path).isDirectory()) throw new Error(); }
-      catch { throw error(400, '실행을 켜기 전에 프로젝트 경로를 확인해 주세요.'); }
-    }
-    const updated: Project = { ...project, ...input };
-    store.saveProject(updated);
+    const updated = await write(() => {
+      const project = store.getProject(idParam(request.params));
+      if (!project) throw error(404, '프로젝트를 찾을 수 없습니다.');
+      if (!demo && input.executionEnabled) {
+        try { if (!statSync(project.path).isDirectory()) throw new Error(); }
+        catch { throw error(400, '실행을 켜기 전에 프로젝트 경로를 확인해 주세요.'); }
+      }
+      return store.saveProject({ ...project, ...input });
+    });
     broadcast({ type: 'refresh' });
     return updated;
   });
   app.post('/api/templates', async (request, reply) => {
     const input = templateSchema.parse(request.body);
-    const template = store.saveTemplate({ ...input, id: newId('template'), updatedAt: new Date().toISOString() });
+    const template = await write(() => store.saveTemplate({ ...input, id: newId('template'), updatedAt: new Date().toISOString() }));
     broadcast({ type: 'refresh' });
     return reply.code(201).send(template);
   });
   app.patch('/api/templates/:id', async (request) => {
     const id = idParam(request.params);
-    const template = store.listTemplates().find((t) => t.id === id);
-    if (!template) throw error(404, '템플릿을 찾을 수 없습니다.');
     const input = templateSchema.partial().parse(request.body);
-    const updated: PromptTemplate = { ...template, ...input, updatedAt: new Date().toISOString() };
-    store.saveTemplate(updated);
+    const updated = await write(() => {
+      const template = store.listTemplates().find((t) => t.id === id);
+      if (!template) throw error(404, '템플릿을 찾을 수 없습니다.');
+      return store.saveTemplate({ ...template, ...input, updatedAt: new Date().toISOString() });
+    });
     broadcast({ type: 'refresh' });
     return updated;
   });
   app.delete('/api/templates/:id', async (request) => {
-    if (!store.deleteTemplate(idParam(request.params))) throw error(404, '템플릿을 찾을 수 없습니다.');
+    if (!await write(() => store.deleteTemplate(idParam(request.params)))) throw error(404, '템플릿을 찾을 수 없습니다.');
     broadcast({ type: 'refresh' });
     return { ok: true };
   });
@@ -298,7 +329,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
         return resolve(path);
       }))]])) as Settings['sourceRoots'];
     }
-    const settings = store.saveSettings(patch);
+    const settings = await write(() => store.saveSettings(patch));
     invalidateConnectorCache();
     armSync();
     runner.pump();
@@ -348,7 +379,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   });
   armSync();
   if (!demo && options.autoSync !== false) {
-    void sync.run().catch(() => { /* The periodic retry records a visible diagnostic. */ });
+    startBackgroundSync();
   }
   await app.ready();
   return { app, store, runner, sync };

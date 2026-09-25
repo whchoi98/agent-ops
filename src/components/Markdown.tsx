@@ -1,3 +1,4 @@
+import { useI18n, Trans } from '../i18n/I18nProvider';
 import { Children, cloneElement, isValidElement, memo, useState, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -43,6 +44,7 @@ function textContent(children: ReactNode): string {
 }
 
 export const Markdown = memo(function Markdown({ content, find = '' }: { content: string; find?: string }) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const isLong = content.length > 32_000;
   const visible = isLong && !expanded && !find ? content.slice(0, 32_000) : content;
@@ -51,9 +53,9 @@ export const Markdown = memo(function Markdown({ content, find = '' }: { content
       a: ({ children, href }) => href
         ? <a href={href} target="_blank" rel="noreferrer noopener">{children}</a>
         : <span>{children}</span>,
-      img: ({ alt }) => <span className="markdown-image"><FileImage size={15} aria-hidden />{alt || '이미지'}<span>자동 로드하지 않음</span></span>,
+      img: ({ alt }) => <span className="markdown-image"><FileImage size={15} aria-hidden />{alt || t("이미지")}<span><Trans message={"자동 로드하지 않음"} /></span></span>,
       pre: ({ children }) => <div className="code-block">
-        <div className="code-heading"><span>CODE</span><CopyButton text={textContent(children)} compact label="코드 복사" /></div>
+        <div className="code-heading"><span>CODE</span><CopyButton text={textContent(children)} compact label={t("코드 복사")} /></div>
         <pre>{children}</pre>
       </div>,
       code: ({ children, className }) => <code className={className}>{highlightChildren(children, find)}</code>,
@@ -68,8 +70,8 @@ export const Markdown = memo(function Markdown({ content, find = '' }: { content
       th: ({ children }) => <th>{highlightChildren(children, find)}</th>,
     }}>{visible}</ReactMarkdown>
     {isLong && !expanded && !find && <div className="long-content-notice">
-      <span>긴 메시지의 앞부분을 표시하고 있습니다.</span>
-      <Button size="small" icon={Maximize2} onClick={() => setExpanded(true)}>전체 메시지 보기</Button>
+      <span><Trans message={"긴 메시지의 앞부분을 표시하고 있습니다."} /></span>
+      <Button size="small" icon={Maximize2} onClick={() => setExpanded(true)}><Trans message={"전체 메시지 보기"} /></Button>
     </div>}
   </div>;
 });

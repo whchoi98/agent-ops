@@ -45,14 +45,14 @@ npm run demo -- --port 4318
 배포용 npm 파일을 받은 경우:
 
 ```bash
-npm install -g ./agent-ops-local-1.1.0.tgz
+npm install -g ./agent-ops-local-1.1.1.tgz
 agent-ops
 ```
 
 전역 설치 없이 압축 파일로 바로 실행할 수도 있습니다.
 
 ```bash
-npm exec --package=./agent-ops-local-1.1.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.1.1.tgz -- agent-ops demo --port 4318
 ```
 
 ## 사용할 수 있는 기능
@@ -72,6 +72,10 @@ npm exec --package=./agent-ops-local-1.1.0.tgz -- agent-ops demo --port 4318
 
 `Ctrl/Cmd + K`로 명령 팔레트를 엽니다. 밝은 화면과 어두운 화면을 지원하며,
 좁은 화면에서는 모바일 내비게이션을 사용할 수 있습니다.
+
+상단 테마 버튼 옆의 **한/EN** 버튼으로 한국어와 영어를 전환합니다.
+선택한 언어는 브라우저에 저장합니다. 대화, 메모, 스킬 원문과 사용자 입력은
+번역하지 않으며 화면 언어를 바꿔도 검색 조건과 작성 중인 설정을 유지합니다.
 
 **스킬·플러그인**에서는 Codex, Claude Code, Kiro별 항목을 검색하고 등록된
 프로젝트를 선택해 해당 경로의 구성을 확인합니다. 상세 화면은 목적, 호출 조건,
@@ -112,6 +116,7 @@ CLI 설치 확인은 인증 확인이 아닙니다. 모델 이름을 비워 두�
 agent-ops --help
 agent-ops doctor
 agent-ops sync
+agent-ops optimize # 서버를 종료한 뒤 실행: 백업 + 검색 저장소 압축 + 공간 회수
 agent-ops list --agent codex --query "배포" --limit 20
 agent-ops list --json
 agent-ops export SESSION_ID --format md --out session.md

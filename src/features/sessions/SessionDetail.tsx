@@ -1,3 +1,4 @@
+import { useI18n, Trans } from '../../i18n/I18nProvider';
 import { useEffect, useState } from 'react';
 import { ArrowRightLeft, Download, Folder, MessageSquare, RotateCcw } from 'lucide-react';
 import { Dialog } from '../../components/Dialog';
@@ -16,6 +17,7 @@ const DETAIL_TABS = [
 ] as const;
 
 export function SessionDetailDialog({ id }: { id: string }) {
+  const { t } = useI18n();
   const data = useData();
   const { closeModal, openNewRun, notify, subscribe } = useApp();
   const resource = useResource(signal => api.session(id, signal), id, true);
@@ -42,25 +44,25 @@ export function SessionDetailDialog({ id }: { id: string }) {
     });
   }
   return <>
-    <Dialog title={session?.title || '세션 불러오는 중'} size="drawer" className="session-detail-dialog"
+    <Dialog title={session?.title || t("세션 불러오는 중")} size="drawer" className="session-detail-dialog"
       bodyClassName="session-detail-body" onClose={closeModal}
-      description={session && <div className="session-dialog-meta"><AgentBadge agent={session.agent} /><StatusBadge status={session.status} /><span><Folder size={13} aria-hidden />{session.projectName || '프로젝트 미지정'}</span></div>}
+      description={session && <div className="session-dialog-meta"><AgentBadge agent={session.agent} /><StatusBadge status={session.status} /><span><Folder size={13} aria-hidden />{session.projectName || t("프로젝트 미지정")}</span></div>}
       actions={session && <BookmarkButton session={session} onChange={resource.reload} />}
       footer={session && <div className="session-footer">
-        <div className="export-controls"><select aria-label="내보내기 형식" value={format} onChange={event => setFormat(event.target.value as typeof format)}>
+        <div className="export-controls"><select aria-label={t("내보내기 형식")} value={format} onChange={event => setFormat(event.target.value as typeof format)}>
           <option value="md">Markdown</option><option value="json">JSON</option><option value="html">HTML</option>
-        </select><Button icon={Download} busy={exporting} onClick={() => void download()} title="공통 자격증명 패턴을 마스킹한 파일을 다운로드합니다.">내보내기</Button></div>
-        <div className="session-continuation-actions"><Button icon={ArrowRightLeft} onClick={() => setHandoff(true)}>다른 에이전트에 전달</Button>
+        </select><Button icon={Download} busy={exporting} onClick={() => void download()} title={t("공통 자격증명 패턴을 마스킹한 파일을 다운로드합니다.")}><Trans message={"내보내기"} /></Button></div>
+        <div className="session-continuation-actions"><Button icon={ArrowRightLeft} onClick={() => setHandoff(true)}><Trans message={"다른 에이전트에 전달"} /></Button>
           <Button icon={RotateCcw} variant="primary" onClick={resume} disabled={!canResume}
-            title={canResume ? '기존 세션을 이어갈 새 실행 준비' : '이 기록은 CLI에서 직접 이어갈 수 없습니다. 작업 인계를 사용하세요.'}>이어가기</Button></div>
-        {!canResume && <span className="resume-unavailable">이 기록은 CLI에서 직접 이어갈 수 없습니다. 다른 에이전트에 맥락을 전달할 수 있습니다.</span>}
+            title={canResume ? t("기존 세션을 이어갈 새 실행 준비") : t("이 기록은 CLI에서 직접 이어갈 수 없습니다. 작업 인계를 사용하세요.")}><Trans message={"이어가기"} /></Button></div>
+        {!canResume && <span className="resume-unavailable"><Trans message={"이 기록은 CLI에서 직접 이어갈 수 없습니다. 다른 에이전트에 맥락을 전달할 수 있습니다."} /></span>}
       </div>}>
       {resource.error && <ErrorState message={resource.error} retry={resource.reload} compact />}
       {!session ? <Skeleton rows={8} /> : <>
-        <div className="session-summary-strip"><span><MessageSquare size={14} aria-hidden />{number(session.messageCount)}개 메시지</span>
-          <span><TokenValue usage={session.usage} /> 토큰</span><span className="session-summary-model">{session.model || '모델 미기록'}</span>
+        <div className="session-summary-strip"><span><MessageSquare size={14} aria-hidden /><Trans message={"{0}개 메시지"} values={{ "0": number(session.messageCount) }} /></span>
+          <span><TokenValue usage={session.usage} /><Trans message={" 토큰"} /></span><span className="session-summary-model">{session.model || t("모델 미기록")}</span>
           {session.tags.map(tag => <span className="tag" key={tag}>#{tag}</span>)}</div>
-        <div className="detail-tabs" role="tablist" aria-label="세션 상세"
+        <div className="detail-tabs" role="tablist" aria-label={t("세션 상세")}
           onKeyDown={event => {
             const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
             if (!direction && event.key !== 'Home' && event.key !== 'End') return;
@@ -73,7 +75,7 @@ export function SessionDetailDialog({ id }: { id: string }) {
           }}>
           {DETAIL_TABS.map(item =>
             <button key={item.id} id={`session-tab-${item.id}`} role="tab" aria-selected={tab === item.id} aria-controls={`session-panel-${item.id}`}
-              tabIndex={tab === item.id ? 0 : -1} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}>{item.label}
+              tabIndex={tab === item.id ? 0 : -1} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}>{t(item.label)}
               {item.id === 'notes' && (session.note || session.tags.length > 0) && <i className="tab-content-dot" />}</button>)}
         </div>
         {DETAIL_TABS.map(item => <div key={item.id} id={`session-panel-${item.id}`} role="tabpanel"

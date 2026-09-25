@@ -13,6 +13,7 @@ import { Analytics } from './pages/Analytics';
 import { Templates } from './pages/Templates';
 import { Extensions } from './pages/Extensions';
 import { Settings } from './pages/Settings';
+import { I18nProvider, useI18n, Trans } from './i18n/I18nProvider';
 
 const SessionDetailDialog = lazy(() => import('./features/sessions/SessionDetail').then(module => ({ default: module.SessionDetailDialog })));
 const CompareDialog = lazy(() => import('./features/sessions/CompareDialog').then(module => ({ default: module.CompareDialog })));
@@ -20,10 +21,11 @@ const NewRunDialog = lazy(() => import('./features/runs/NewRunDialog').then(modu
 const RunDetailDialog = lazy(() => import('./features/runs/RunDetailDialog').then(module => ({ default: module.RunDetailDialog })));
 
 function WorkspaceContent() {
+  const { t, notice } = useI18n();
   const { data, error, refreshing, refresh, page } = useApp();
-  if (!data && error) return <div className="panel connection-error"><EmptyState icon={RefreshCw} title="워크스페이스를 불러오지 못했습니다"
-    description={error} action={<Button variant="primary" icon={RefreshCw} busy={refreshing} onClick={() => void refresh()}>다시 연결</Button>} /></div>;
-  if (!data) return <div className="workspace-skeleton" aria-label="워크스페이스 불러오는 중">
+  if (!data && error) return <div className="panel connection-error"><EmptyState icon={RefreshCw} title={t("워크스페이스를 불러오지 못했습니다")}
+    description={notice(error)} action={<Button variant="primary" icon={RefreshCw} busy={refreshing} onClick={() => void refresh()}><Trans message={"다시 연결"} /></Button>} /></div>;
+  if (!data) return <div className="workspace-skeleton" aria-label={t("워크스페이스 불러오는 중")}>
     <Skeleton rows={2} /><div className="stats-grid">{[0, 1, 2, 3].map(index => <div className="panel" key={index}><Skeleton rows={3} /></div>)}</div>
     <div className="panel"><Skeleton rows={5} /></div><div className="panel"><Skeleton rows={6} /></div>
   </div>;
@@ -42,7 +44,7 @@ function WorkspaceContent() {
 function ModalHost() {
   const { data, modal } = useApp();
   if (!data || !modal) return null;
-  return <Suspense fallback={<div className="modal-loading" role="status">화면 불러오는 중…</div>}>
+  return <Suspense fallback={<div className="modal-loading" role="status"><Trans message={"화면 불러오는 중…"} /></div>}>
     {modal.type === 'session' ? <SessionDetailDialog id={modal.id} key={`session-${modal.id}`} />
       : modal.type === 'run' ? <RunDetailDialog id={modal.id} key={`run-${modal.id}`} />
         : modal.type === 'compare' ? <CompareDialog ids={modal.ids} />
@@ -59,5 +61,5 @@ function AppWorkspace() {
 }
 
 export default function App() {
-  return <ErrorBoundary><AppProvider><AppWorkspace /></AppProvider></ErrorBoundary>;
+  return <I18nProvider><ErrorBoundary><AppProvider><AppWorkspace /></AppProvider></ErrorBoundary></I18nProvider>;
 }

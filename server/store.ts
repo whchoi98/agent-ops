@@ -3,6 +3,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname, basename } from 'node:path';
 import { defaultSettings } from './config.js';
+import { createSearchIndex, registerSearchFunctions, replaceSearchDocument } from './search-index.js';
+import { assertDatabaseFile } from './database-file.js';
 import type {
   ImportedSession, Session, SessionDetail, SessionQuery, SessionPage,
   Project, PromptTemplate, Run, RunEvent, Settings, SyncReport, Message, MessagePage, MessageQuery,
@@ -17,14 +19,22 @@ export class Store {
   readonly db: Database.Database;
   private closed = false;
   constructor(readonly filename: string) {
-    if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true, mode: 0o700 });
+    if (filename !== ':memory:') {
+      assertDatabaseFile(filename);
+      mkdirSync(dirname(filename), { recursive: true, mode: 0o700 });
+    }
     this.db = new Database(filename);
+    try { this.initialize(); }
+    catch (error) { this.db.close(); throw error; }
+  }
+  private initialize() {
     const version = this.db.pragma('user_version', { simple: true }) as number;
-    if (version > 3) {
-      this.db.close();
+    if (version > 4) {
       throw new Error(`Database schema ${version} is newer than this application supports.`);
     }
-    if (filename !== ':memory:') chmodSync(filename, 0o600);
+    const newDatabase = version === 0 && !this.db.prepare("SELECT 1 FROM sqlite_schema WHERE type='table' AND name='sessions'").get();
+    registerSearchFunctions(this.db);
+    if (this.filename !== ':memory:') chmodSync(this.filename, 0o600);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('busy_timeout = 5000');
@@ -47,8 +57,6 @@ export class Store {
         WHERE tool_name IS NOT NULL AND json_extract(data,'$.role') = 'assistant';
       CREATE INDEX IF NOT EXISTS messages_session_role ON messages(session_id,json_extract(data,'$.role'));
       CREATE INDEX IF NOT EXISTS messages_identity ON messages(session_id,json_extract(data,'$.id'));
-      CREATE VIRTUAL TABLE IF NOT EXISTS session_search
-        USING fts5(session_id UNINDEXED, body, tokenize='trigram', detail=none);
       CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, path TEXT UNIQUE NOT NULL, data TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS templates (id TEXT PRIMARY KEY, data TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -65,7 +73,13 @@ export class Store {
       );
       CREATE INDEX IF NOT EXISTS events_run ON run_events(run_id, id);
     `);
-    if (version < 3) {
+    if (newDatabase) {
+      this.db.transaction(() => {
+        createSearchIndex(this.db, true);
+        this.db.pragma('user_version = 4');
+      })();
+    } else createSearchIndex(this.db, version >= 4);
+    if (!newDatabase && version < 3) {
       this.db.transaction(() => {
         // An FTS row shares its session's integer rowid. Updating one conversation
         // must not scan the text of every previously imported conversation.
@@ -97,9 +111,11 @@ export class Store {
     const body = [
       session.title, session.projectName, session.projectPath, session.model,
       session.tags.join(' '), session.note, ...messages.flatMap((message) => [message.toolName || '', message.content]),
-    ].join('\n').toLowerCase();
-    this.db.prepare('DELETE FROM session_search WHERE rowid = ?').run(row.search_rowid);
-    this.db.prepare('INSERT INTO session_search(rowid, session_id, body) VALUES (?, ?, ?)').run(row.search_rowid, id, body);
+    ].join('\n').toLowerCase()
+      // Preserve SQLite's prior UTF-8 replacement behavior for old split titles.
+      // Canonical messages and user metadata remain unchanged.
+      .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD');
+    replaceSearchDocument(this.db, Number(row.search_rowid), id, body);
   }
   upsertSession(session: ImportedSession) {
     this.db.transaction(() => {
@@ -108,11 +124,18 @@ export class Store {
         INSERT INTO sessions(id,agent,project_path,started_at,updated_at,status,data) VALUES (?,?,?,?,?,?,?)
         ON CONFLICT(id) DO UPDATE SET agent=excluded.agent, project_path=excluded.project_path,
           started_at=excluded.started_at, updated_at=excluded.updated_at, status=excluded.status, data=excluded.data
+        WHERE sessions.agent IS NOT excluded.agent OR sessions.project_path IS NOT excluded.project_path
+          OR sessions.started_at IS NOT excluded.started_at OR sessions.updated_at IS NOT excluded.updated_at
+          OR sessions.status IS NOT excluded.status OR sessions.data IS NOT excluded.data
       `).run(data.id, data.agent, data.projectPath, data.startedAt, data.updatedAt, data.status,
         JSON.stringify({ ...data, messageCount: messages.length }));
-      this.db.prepare('DELETE FROM messages WHERE session_id = ?').run(data.id);
-      const insert = this.db.prepare('INSERT INTO messages(session_id,ordinal,data,tool_name) VALUES (?,?,?,?)');
+      const insert = this.db.prepare(`
+        INSERT INTO messages(session_id,ordinal,data,tool_name) VALUES (?,?,?,?)
+        ON CONFLICT(session_id,ordinal) DO UPDATE SET data=excluded.data, tool_name=excluded.tool_name
+        WHERE messages.data IS NOT excluded.data OR messages.tool_name IS NOT excluded.tool_name
+      `);
       messages.forEach((message, i) => insert.run(data.id, i, JSON.stringify(message), message.toolName || null));
+      this.db.prepare('DELETE FROM messages WHERE session_id=? AND ordinal>=?').run(data.id, messages.length);
       if (data.projectPath) this.ensureProject(data.projectPath, data.projectName);
       this.updateSearch(data.id, messages);
     })();
@@ -182,7 +205,8 @@ export class Store {
       // are needed for literal substring search. Escaped metacharacters remain
       // literal, and lowercase index/query text gives Unicode case folding.
       const literal = [...query.q.toLowerCase()].map((char) => '[]*?'.includes(char) ? `[${char}]` : char).join('');
-      where.push('rowid IN (SELECT rowid FROM session_search WHERE body GLOB ?)');
+      // Stable identity also survives VACUUM renumbering an implicit session rowid.
+      where.push('id IN (SELECT session_id FROM session_search WHERE body GLOB ?)');
       args.push(`*${literal}*`);
     }
     if (query.agent) { where.push('agent = ?'); args.push(query.agent); }

@@ -1,3 +1,4 @@
+import { useI18n, Trans, AppNotice } from '../../i18n/I18nProvider';
 import { useEffect, useId, useRef, useState } from 'react';
 import { FileText, Terminal } from 'lucide-react';
 import type { ExtensionAnalysisDraft, ExtensionDetail, ExtensionSummary } from '../../../shared/extensions';
@@ -20,6 +21,7 @@ export function ExtensionDetailDialog({ item, projectId, onClose, onSelect, onPr
   item: ExtensionSummary; projectId?: string; onClose: () => void;
   onSelect: (item: ExtensionSummary) => void; onPrepared: (result: ExtensionAnalysisDraft) => void;
 }) {
+  const { t } = useI18n();
   const resource = useResource<ExtensionDetail>(signal => api.extension(item.id, projectId, signal), JSON.stringify([item.id, projectId]));
   const detail = resource.data;
   const [view, setView] = useState<(typeof VIEWS)[number]['id']>('analysis');
@@ -56,20 +58,20 @@ export function ExtensionDetailDialog({ item, projectId, onClose, onSelect, onPr
     bodyClassName="extension-detail-body" onClose={close}
     description={<div className="extension-dialog-meta">
       <AgentBadge agent={detail?.agent ?? item.agent} />
-      <span>{KIND_LABELS[detail?.kind ?? item.kind]} · {SCOPE_LABELS[detail?.scope ?? item.scope]}</span>
+      <span>{t(KIND_LABELS[detail?.kind ?? item.kind])} · {t(SCOPE_LABELS[detail?.scope ?? item.scope])}</span>
       <ExtensionStatusBadge status={detail?.status ?? item.status} reason={detail?.statusReason ?? item.statusReason} />
     </div>}
     footer={<div className="extension-detail-footer">
-      <p>읽기 전용 초안을 준비합니다. 실행은 다음 화면에서 직접 시작합니다.</p>
-      <div><Button onClick={close}>닫기</Button>
+      <p><Trans message={"읽기 전용 초안을 준비합니다. 실행은 다음 화면에서 직접 시작합니다."} /></p>
+      <div><Button onClick={close}><Trans message={"닫기"} /></Button>
         <Button variant="primary" icon={Terminal} busy={preparing} disabled={!detail || Boolean(resource.error)}
-          onClick={() => void prepare()}>CLI 분석 작업 준비</Button></div>
+          onClick={() => void prepare()}><Trans message={"CLI 분석 작업 준비"} /></Button></div>
     </div>}>
-    <div className="extension-detail-notice"><InlineNotice>{USAGE_NOTICE}</InlineNotice></div>
-    {error && <div className="extension-detail-notice"><InlineNotice tone="error">{error}</InlineNotice></div>}
+    <div className="extension-detail-notice"><InlineNotice><AppNotice message={USAGE_NOTICE} /></InlineNotice></div>
+    {error && <div className="extension-detail-notice"><InlineNotice tone="error"><AppNotice message={error} /></InlineNotice></div>}
     {resource.error ? <ErrorState message={resource.error} retry={resource.reload} />
       : !detail ? <Skeleton rows={7} /> : <>
-        <div className="detail-tabs extension-detail-tabs" role="group" aria-label="확장 상세 보기"
+        <div className="detail-tabs extension-detail-tabs" role="group" aria-label={t("확장 상세 보기")}
           onKeyDown={event => {
             const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
             if (!direction && event.key !== 'Home' && event.key !== 'End') return;
@@ -81,13 +83,13 @@ export function ExtensionDetailDialog({ item, projectId, onClose, onSelect, onPr
             event.currentTarget.querySelectorAll('button')[next]?.focus();
           }}>
           {VIEWS.map(tab => <button type="button" key={tab.id} id={`${viewId}-${tab.id}`} aria-pressed={view === tab.id}
-            aria-controls={`${viewId}-content`} className={view === tab.id ? 'active' : ''} onClick={() => setView(tab.id)}>{tab.label}</button>)}
+            aria-controls={`${viewId}-content`} className={view === tab.id ? 'active' : ''} onClick={() => setView(tab.id)}>{t(tab.label)}</button>)}
         </div>
         <section id={`${viewId}-content`} aria-labelledby={`${viewId}-${view}`} className="extension-detail-content">
           {view === 'analysis' ? <ExtensionAnalysisView detail={detail} onSelect={selectChild} />
             : view === 'source' ? detail.entry ? <ExtensionContentView key={detail.entry.fileId} content={detail.entry} />
-              : <EmptyState compact icon={FileText} title="표시할 원문이 없습니다"
-                description="파일 탭에서 참고 자료를 선택하거나 내용 분석의 설정 근거를 확인하세요." />
+              : <EmptyState compact icon={FileText} title={t("표시할 원문이 없습니다")}
+                description={t("파일 탭에서 참고 자료를 선택하거나 내용 분석의 설정 근거를 확인하세요.")} />
               : <ExtensionFiles extensionId={detail.id} files={detail.files} projectId={projectId} />}
         </section>
       </>}

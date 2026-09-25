@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import Database from 'better-sqlite3';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -96,8 +97,13 @@ describe('durable history', () => {
     other.title = 'Uniquely identifiable second session';
     other.messages = [];
     store.upsertSession(other);
-    // Version 1 assigned FTS row IDs independently from session rows.
-    store.db.exec('UPDATE session_search SET rowid=rowid+100; PRAGMA user_version=1;');
+    // Build an actual legacy content table. Version 1 assigned independent rowids.
+    const entries = store.db.prepare('SELECT rowid,session_id,body FROM session_search').all() as Array<{ rowid: number; session_id: string; body: string }>;
+    store.db.exec(`DROP TABLE session_search; DROP VIEW session_search_source; DROP TABLE session_search_documents;
+      CREATE VIRTUAL TABLE session_search USING fts5(session_id UNINDEXED,body,tokenize='trigram',detail=none);
+      PRAGMA user_version=1;`);
+    const insert = store.db.prepare('INSERT INTO session_search(rowid,session_id,body) VALUES(?,?,?)');
+    for (const entry of entries) insert.run(entry.rowid + 100, entry.session_id, entry.body);
     const file = store.filename;
     store.close();
     const migrated = new Store(file);
@@ -117,6 +123,51 @@ describe('durable history', () => {
     const before = digest();
     expect(() => new Store(file)).toThrow(/newer/);
     expect(digest()).toBe(before);
+  });
+  it('keeps compressed search attached to stable session IDs across rowid changes and compaction', () => {
+    const store = database();
+    const first = sample('codex:stable-one');
+    first.messages[0].content = 'first-stable-document';
+    const second = sample('codex:stable-two');
+    second.messages[0].content = 'second-stable-document';
+    store.upsertSession(first);
+    store.upsertSession(second);
+    store.db.exec('UPDATE sessions SET rowid=rowid+100; VACUUM;');
+    expect(store.listSessions({ q: 'first-stable-document' }).items.map(item => item.id)).toEqual([first.id]);
+    expect(store.listSessions({ q: 'second-stable-document' }).items.map(item => item.id)).toEqual([second.id]);
+    first.messages[0].content = 'updated-stable-document';
+    store.upsertSession(first);
+    store.patchSession(second.id, { note: 'searchable-stable-note' });
+    expect(store.listSessions({ q: 'first-stable-document' }).total).toBe(0);
+    expect(store.listSessions({ q: 'updated-stable-document' }).items.map(item => item.id)).toEqual([first.id]);
+    expect(store.listSessions({ q: 'searchable-stable-note' }).items.map(item => item.id)).toEqual([second.id]);
+    expect(store.listSessions({ q: 'second-stable-document' }).items.map(item => item.id)).toEqual([second.id]);
+  });
+  it('creates a new compressed layout and version atomically and closes a failed initialization', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'agent-ops-schema-atomic-'));
+    dirs.push(dir);
+    const filename = join(dir, 'cache.sqlite');
+    const original = Database.prototype.pragma;
+    let failed: Database.Database | undefined;
+    const spy = vi.spyOn(Database.prototype, 'pragma').mockImplementation(function (this: Database.Database, source: string, options?: Database.PragmaOptions) {
+      if (/^\s*user_version\s*=\s*4\s*$/i.test(source)) {
+        failed = this;
+        throw new Error('Synthetic version-write failure');
+      }
+      return original.call(this, source, options);
+    });
+    try {
+      expect(() => new Store(filename)).toThrow('Synthetic version-write failure');
+      expect(failed?.open).toBe(false);
+      const db = new Database(filename, { readonly: true });
+      try {
+        expect(db.pragma('user_version', { simple: true })).toBe(0);
+        expect(db.prepare("SELECT name FROM sqlite_schema WHERE name='session_search_documents'").get()).toBeUndefined();
+      } finally { db.close(); }
+    } finally {
+      spy.mockRestore();
+      if (failed?.open) failed.close();
+    }
   });
   it('analytics counts known usage separately from missing values', () => {
     const store = database();
