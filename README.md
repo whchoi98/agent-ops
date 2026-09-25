@@ -1,6 +1,6 @@
 # my-agent-ops
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.2.0](https://img.shields.io/badge/version-1.2.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.2.1](https://img.shields.io/badge/version-1.2.1-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, Claude Code, Kiro CLI의 대화와 실행 작업을 관리하는 로컬 운영 도구입니다.
 
@@ -47,12 +47,12 @@ Open **Terminal** on the Mac and run:
 node --version
 npm --version
 
-# Install my-agent-ops 1.2.0 from the GitHub release.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+# Install my-agent-ops 1.2.1 from the GitHub release.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
 
 # Confirm the installed version.
 agent-ops --version
-# 1.2.0
+# 1.2.1
 
 # Start the app.
 agent-ops
@@ -69,12 +69,12 @@ Wait for active jobs and synchronization to finish, then press **`Ctrl+C` in the
 Run:
 
 ```bash
-# Install version 1.2.0 over the existing npm installation.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+# Install version 1.2.1 over the existing npm installation.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
 
 # Confirm the new version.
 agent-ops --version
-# 1.2.0
+# 1.2.1
 
 # Restart the app.
 agent-ops
@@ -140,8 +140,8 @@ The UI labels sample sessions and runs; assistant execution, retries and MCP con
 
 ### Local npm archive
 
-After installing dependencies in a source checkout, create an archive with `npm pack`, or download the [v1.2.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz).
-Use version `1.2.0` from the [source manifest](package.json) and [GitHub release](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0); read [CHANGELOG.md](CHANGELOG.md) for release changes and upcoming work.
+After installing dependencies in a source checkout, create an archive with `npm pack`, or download the [v1.2.1 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz).
+Use version `1.2.1` from the [source manifest](package.json) and [GitHub release](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.1); read [CHANGELOG.md](CHANGELOG.md) for release changes and upcoming work.
 These commands install a local file and do not depend on a public npm release.
 
 ```bash
@@ -149,7 +149,7 @@ These commands install a local file and do not depend on a public npm release.
 npm pack
 
 # Install the archive and start the app.
-npm install -g ./agent-ops-local-1.2.0.tgz
+npm install -g ./agent-ops-local-1.2.1.tgz
 agent-ops
 ```
 
@@ -157,7 +157,7 @@ To run the archive without a global installation:
 
 ```bash
 # Start the archive in demo mode.
-npm exec --package=./agent-ops-local-1.2.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.2.1.tgz -- agent-ops demo --port 4318
 ```
 
 The archive includes the built application and public documentation.
@@ -301,7 +301,8 @@ The UI distinguishes updates, matching versions, versions ahead of the public ch
 Latest-version requests send no local version strings, settings or conversations; checking does not update a CLI.
 
 On macOS, **Settings → macOS desktop apps** reads version, build and path information from `Info.plist` for Codex App, Claude Desktop and Kiro IDE.
-It checks `Codex.app`, `Claude.app` and `Kiro.app` under `/Applications` and `~/Applications`: **6** fixed candidates, cached for up to **10 minutes**.
+It checks `Codex.app`, `ChatGPT.app`, `Claude.app` and `Kiro.app` under `/Applications` and `~/Applications`: **8** fixed candidates, cached for up to **10 minutes**.
+It recognizes `ChatGPT.app` as Codex App only when `CFBundleIdentifier` is exactly `com.openai.codex`; a different or unreadable identifier is reported separately.
 The Claude value is the app/container version including the Code tab; CLI and internal Code engine versions remain separate.
 Desktop latest versions are not inferred from CLI releases.
 
@@ -525,12 +526,12 @@ Mac의 **터미널**을 열고 다음 명령을 실행합니다.
 node --version
 npm --version
 
-# GitHub 릴리스에서 my-agent-ops 1.2.0을 설치합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+# GitHub 릴리스에서 my-agent-ops 1.2.1을 설치합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
 
 # 설치한 버전을 확인합니다.
 agent-ops --version
-# 1.2.0
+# 1.2.1
 
 # 앱을 시작합니다.
 agent-ops
@@ -547,12 +548,12 @@ npm에서 `EACCES` 오류가 발생하면 [공식 npm 권한 설정 안내](http
 다음 명령으로 업데이트합니다.
 
 ```bash
-# 기존 npm 설치본을 1.2.0으로 업데이트합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+# 기존 npm 설치본을 1.2.1으로 업데이트합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
 
 # 새 버전을 확인합니다.
 agent-ops --version
-# 1.2.0
+# 1.2.1
 
 # 앱을 다시 시작합니다.
 agent-ops
@@ -618,8 +619,8 @@ npm run demo -- --port 4318
 
 ### 로컬 npm 압축 파일
 
-소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 [v1.2.0 설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz)을 내려받습니다.
-[소스 매니페스트](package.json)와 [GitHub 릴리스](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0)의 버전은 `1.2.0`이며 릴리스 변경 사항과 다음 버전의 작업은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
+소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 [v1.2.1 설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz)을 내려받습니다.
+[소스 매니페스트](package.json)와 [GitHub 릴리스](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.1)의 버전은 `1.2.1`이며 릴리스 변경 사항과 다음 버전의 작업은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
 아래 명령은 로컬 파일을 설치하므로 npm에 공개된 릴리스가 없어도 사용할 수 있습니다.
 
 ```bash
@@ -627,7 +628,7 @@ npm run demo -- --port 4318
 npm pack
 
 # 압축 파일을 설치하고 앱을 시작합니다.
-npm install -g ./agent-ops-local-1.2.0.tgz
+npm install -g ./agent-ops-local-1.2.1.tgz
 agent-ops
 ```
 
@@ -635,7 +636,7 @@ agent-ops
 
 ```bash
 # 압축 파일을 데모 모드로 실행합니다.
-npm exec --package=./agent-ops-local-1.2.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.2.1.tgz -- agent-ops demo --port 4318
 ```
 
 압축 파일에는 빌드된 앱과 공개 문서가 포함됩니다.
@@ -787,7 +788,8 @@ stdio 점검은 설정된 프로그램을 시작하므로 시작 과정에서 �
 최신 버전 요청에 로컬 버전 문자열, 설정, 대화를 보내지 않으며 버전 확인으로 CLI를 업데이트하지 않습니다.
 
 macOS의 **설정 → macOS 데스크톱 앱**에서는 `Info.plist`에서 Codex App, Claude Desktop, Kiro IDE의 버전, 빌드, 경로를 읽습니다.
-`/Applications`와 `~/Applications` 아래 `Codex.app`, `Claude.app`, `Kiro.app`을 확인하며 고정 후보 **6**곳의 결과를 최대 **10분** 동안 캐시합니다.
+`/Applications`와 `~/Applications` 아래 `Codex.app`, `ChatGPT.app`, `Claude.app`, `Kiro.app`을 확인하며 고정 후보 **8**곳의 결과를 최대 **10분** 동안 캐시합니다.
+`ChatGPT.app`은 `CFBundleIdentifier`가 정확히 `com.openai.codex`일 때만 Codex App으로 인식하며 식별자가 다르거나 확인되지 않는 경우를 구분해 표시합니다.
 Claude의 값은 Code 탭을 포함한 앱/컨테이너 버전이며 CLI, 내부 Code 엔진 버전은 별개입니다.
 CLI 릴리스로 데스크톱 최신 버전을 추정하지 않습니다.
 

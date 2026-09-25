@@ -28,7 +28,7 @@ export const DESKTOP_EN_MESSAGES: Record<string, string> = {
   '앱 메타데이터 일부를 확인하지 못했습니다.': 'Some app metadata could not be verified.',
   '메타데이터 출처와 후보 경로': 'Metadata source and candidate locations',
   '번들 확인': 'Bundle found',
-  '후보 없음': 'Candidate absent',
+  '일치하는 앱 없음': 'No matching app',
   '경로 미확인': 'Path unverified',
   '다른 설치 위치 {0}개': '{0} other installation(s)',
   '다른 설치 위치 1개': '1 other installation',
@@ -49,5 +49,6 @@ export const DESKTOP_EN_MESSAGES: Record<string, string> = {
   '시스템 plist 변환기를 실행하지 못했거나 변환에 실패했습니다.': 'The system plist converter was unavailable or conversion failed.',
   'plist 변환 제한 시간이 초과되었습니다.': 'The plist conversion time limit was exceeded.',
   '검사 중 파일 또는 경로가 바뀌어 메타데이터를 표시하지 않습니다.': 'A file or path changed during inspection; metadata is not displayed.',
+  '번들 식별자가 이 앱과 일치하지 않습니다.': 'Bundle identifier does not match this app.',
   '데스크톱 앱 요청에는 매개변수를 지정할 수 없습니다.': 'Desktop app requests do not accept parameters.',
 };

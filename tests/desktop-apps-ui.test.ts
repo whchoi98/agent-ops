@@ -47,6 +47,22 @@ function render(overrides: Partial<DesktopAppsViewProps> = {}, language: Languag
 }
 
 describe('desktop app inventory presentation', () => {
+  it('explains why a ChatGPT.app with a different bundle identifier is excluded in both languages', () => {
+    const state = report();
+    state.items[0] = {
+      ...state.items[0], status: 'not-installed', installed: false, installations: [],
+      candidates: [{
+        path: '/Applications/ChatGPT.app', location: 'system', status: 'not-found',
+        issues: [{ code: 'bundle-identifier-mismatch', field: 'bundleIdentifier' }],
+      }],
+    };
+    expect(render({ report: state })).toContain('번들 식별자가 이 앱과 일치하지 않습니다.');
+    const english = render({ report: state }, 'en');
+    expect(english).toContain('Bundle identifier does not match this app.');
+    expect(english).toContain('/Applications/ChatGPT.app');
+    expect(english).not.toMatch(/[가-힣]/u);
+  });
+
   it('shows exact app metadata and provenance, labels the Claude container and Kiro IDE, and keeps refresh out of form submission', () => {
     const html = render();
     expect(html).toContain('macOS 데스크톱 앱');

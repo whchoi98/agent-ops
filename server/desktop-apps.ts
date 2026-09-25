@@ -21,10 +21,13 @@ export interface DesktopAppServiceOptions {
 }
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
-const definitions: Array<Pick<DesktopApp, 'id' | 'agent' | 'name' | 'versionScope'> & { bundleName: string }> = [
-  { id: 'codex-app', agent: 'codex', name: 'Codex App', versionScope: 'app', bundleName: 'Codex.app' },
-  { id: 'claude-desktop', agent: 'claude', name: 'Claude Desktop', versionScope: 'app-container', bundleName: 'Claude.app' },
-  { id: 'kiro-ide', agent: 'kiro', name: 'Kiro IDE', versionScope: 'ide', bundleName: 'Kiro.app' },
+interface BundleCandidate { name: string; expectedIdentifier?: string }
+const definitions: Array<Pick<DesktopApp, 'id' | 'agent' | 'name' | 'versionScope'> & { bundles: BundleCandidate[] }> = [
+  { id: 'codex-app', agent: 'codex', name: 'Codex App', versionScope: 'app', bundles: [
+    { name: 'Codex.app' }, { name: 'ChatGPT.app', expectedIdentifier: 'com.openai.codex' },
+  ] },
+  { id: 'claude-desktop', agent: 'claude', name: 'Claude Desktop', versionScope: 'app-container', bundles: [{ name: 'Claude.app' }] },
+  { id: 'kiro-ide', agent: 'kiro', name: 'Kiro IDE', versionScope: 'ide', bundles: [{ name: 'Kiro.app' }] },
 ];
 
 function bounded(value: number | undefined, fallback: number): number {
@@ -64,7 +67,7 @@ export class DesktopAppService {
   private async discover(): Promise<DesktopAppReport> {
     const demo = this.options.demo ?? false;
     const status = demo ? 'demo' : this.platform === 'darwin' ? 'supported' : 'unsupported-host';
-    const items: DesktopApp[] = definitions.map(({ bundleName: _bundleName, ...definition }) => ({
+    const items: DesktopApp[] = definitions.map(({ bundles: _bundles, ...definition }) => ({
       ...definition, status: status === 'unsupported-host' ? 'unsupported-host' : 'unverified', installed: null,
       installations: [], candidates: [],
       unverified: { authentication: 'unverified', cloudChats: 'unverified', privateHistories: 'unverified', codeEngineVersion: 'unverified' },
@@ -79,10 +82,12 @@ export class DesktopAppService {
       for (const [index, definition] of definitions.entries()) {
         const item = items[index];
         for (const root of roots) {
-          const result = await inspectDesktopCandidate(root.path, definition.bundleName, root.location,
-            input => readPlistMetadata(input, converter, this.converterTimeoutMs));
-          item.candidates.push(result.candidate);
-          if (result.installation) item.installations.push(result.installation);
+          for (const bundle of definition.bundles) {
+            const result = await inspectDesktopCandidate(root.path, bundle.name, root.location,
+              input => readPlistMetadata(input, converter, this.converterTimeoutMs), bundle.expectedIdentifier);
+            item.candidates.push(result.candidate);
+            if (result.installation) item.installations.push(result.installation);
+          }
         }
         item.installed = item.installations.length ? true : item.candidates.some(candidate => candidate.status === 'unverified') ? null : false;
         item.status = item.installed === true ? 'installed' : item.installed === false ? 'not-installed' : 'unverified';

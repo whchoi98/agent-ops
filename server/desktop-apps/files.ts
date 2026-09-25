@@ -60,6 +60,7 @@ async function readMetadataFile(path: string, snapshots: Snapshot[]): Promise<Bu
 export async function inspectDesktopCandidate(
   root: string, bundleName: string, location: DesktopAppLocation,
   parse: (input: Buffer) => Promise<DesktopMetadata>,
+  expectedIdentifier?: string,
 ): Promise<CandidateResult> {
   const candidate: DesktopAppCandidate = { path: join(root, bundleName), location, status: 'not-found', issues: [] };
   let rootSnapshot: Snapshot;
@@ -101,6 +102,17 @@ export async function inspectDesktopCandidate(
     Object.assign(installation, metadata);
   } catch (error) {
     installation.issues.push({ code: error instanceof DesktopAppProbeError ? error.code : 'plist-unreadable' });
+  }
+  // An ambiguous bundle name establishes this app's presence only after its identifier matches.
+  if (expectedIdentifier && installation.bundleIdentifier !== expectedIdentifier) {
+    if (installation.bundleIdentifier === null) {
+      candidate.status = 'unverified';
+      candidate.issues.push(...installation.issues);
+    } else {
+      candidate.status = 'not-found';
+      candidate.issues.push({ code: 'bundle-identifier-mismatch', field: 'bundleIdentifier' });
+    }
+    return { candidate, installation: null };
   }
   return { candidate, installation };
 }

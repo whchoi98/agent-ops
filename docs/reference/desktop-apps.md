@@ -15,23 +15,29 @@ Demo mode returns unverified entries without inspecting the host.
 
 | App ID | Display name | Version meaning | Fixed bundle name |
 |---|---|---|---|
-| `codex-app` | Codex App | Desktop app | `Codex.app` |
+| `codex-app` | Codex App | Desktop app | `Codex.app`, `ChatGPT.app` with identifier `com.openai.codex` |
 | `claude-desktop` | Claude Desktop | App/container containing the Code tab | `Claude.app` |
 | `kiro-ide` | Kiro IDE | IDE, separate from Kiro CLI | `Kiro.app` |
 
 For each name, only `/Applications/<name>` and the current server user's
-`~/Applications/<name>` are candidates: six paths in total. This is a bounded
-candidate policy, not an exhaustive installed-application index. Renamed apps,
+`~/Applications/<name>` are candidates: eight paths in total. This is a bounded
+candidate policy, not an exhaustive installed-application index. Other renamed apps,
 nested folders, mounted installer images and other users' homes are not searched.
 No directory enumeration, Spotlight search or broad home scan is used.
 
 `items[].installations` contains all observed copies, ordered **system then
-user**. The UI displays the first copy even if its metadata is incomplete.
+user**, with `Codex.app` before `ChatGPT.app` within each root. The UI displays the first copy even if its metadata is incomplete.
 It neither chooses the highest version nor silently substitutes a lower-priority
-copy. `not-installed` means no bundle was found at any supported candidate.
+copy. `not-installed` means no matching app was found at any supported candidate.
 Inaccessible or unsafe candidates without a found copy yield `unverified`.
-A regular candidate bundle directory establishes presence, not signature
-authenticity, launchability or account access.
+For `Codex.app`, `Claude.app` and `Kiro.app`, a regular bundle directory establishes
+presence; signature authenticity, launchability and account access remain unverified.
+
+The ambiguous `ChatGPT.app` name requires an exact `CFBundleIdentifier` match
+to `com.openai.codex`. A different valid identifier is excluded with
+`bundle-identifier-mismatch`; an unreadable, missing or invalid identifier leaves
+that candidate `unverified`. Neither case contributes a Codex installation or
+version. An identifier match preserves missing version/build fields as `null`.
 
 Each installation records its path, location, metadata status, diagnostic codes,
 and `source.path` / `source.keys`:
@@ -72,7 +78,7 @@ is accepted per plist. The service supplies validated bytes over stdin to:
 The command and arguments are fixed; no shell, target app executable, app
 `--version` command or user-selected path is executed. XML and binary plists use
 the same converter. Each helper has a two-second timeout, a 256 KiB output limit,
-a minimal fixed environment and `SIGKILL` termination. At most six helpers run,
+a minimal fixed environment and `SIGKILL` termination. At most eight helpers run,
 sequentially, per discovery; filesystem work is also restricted to the fixed
 paths. JSON has a depth limit of 24 and a 4,096-node limit. Version/build strings
 are limited to 128 characters / 256 UTF-8 bytes; identifiers to 255 ASCII
@@ -135,10 +141,10 @@ not an inspection of any installed app or a new MCP adapter.
 - **Codex:** Local Codex state follows `CODEX_HOME`, defaulting to `~/.codex`.
   Current OpenAI documentation describes shared desktop/CLI/IDE MCP
   configuration in `config.toml`. The old Codex documentation URLs now redirect
-  to ChatGPT Learn and call the desktop client the ChatGPT desktop app. This
-  inventory retains the explicitly requested `Codex.app` candidate; it does not
-  treat `ChatGPT.app` as an alias or infer app identity/version from a shared
-  configuration directory.
+  to ChatGPT Learn and call the desktop client the ChatGPT desktop app.
+  This inventory checks both `Codex.app` and `ChatGPT.app`; the latter requires
+  identifier `com.openai.codex`. Shared configuration directories alone do not
+  establish app identity or version.
 - **Claude:** The Code tab belongs to the Claude desktop container and runs a
   Code engine. Current docs say local Code sessions also load Chat's
   `claude_desktop_config.json`, along with `~/.claude.json` and project
@@ -165,7 +171,7 @@ Primary sources:
 npm test -- tests/desktop-apps.test.ts tests/desktop-apps-api.test.ts tests/desktop-apps-plutil.test.ts tests/desktop-apps-ui.test.ts tests/desktop-apps-client.test.ts
 ```
 
-Result: **71 tests passed in five files**. Tests use temporary bundles, an
+Baseline result before the 1.2.1 correction: **71 tests passed in five files**. Tests use temporary bundles, an
 injected plist converter, a mocked child-process boundary, Fastify injection and
 React server rendering. The binary fixture was also decoded with Python's
 `plistlib` to confirm it is a valid binary plist.
@@ -197,22 +203,31 @@ Mac에서 서버를 실행해야 합니다. Linux·Windows 등에서는
 
 | 앱 ID | 표시 이름 | 버전의 의미 | 고정 번들 이름 |
 |---|---|---|---|
-| `codex-app` | Codex App | 데스크톱 앱 | `Codex.app` |
+| `codex-app` | Codex App | 데스크톱 앱 | `Codex.app`, 식별자가 `com.openai.codex`인 `ChatGPT.app` |
 | `claude-desktop` | Claude Desktop | Code 탭을 포함한 앱/컨테이너 | `Claude.app` |
 | `kiro-ide` | Kiro IDE | Kiro CLI와 별개인 IDE | `Kiro.app` |
 
 각 이름에 대해 `/Applications/<이름>`과 서버 실행 사용자의
-`~/Applications/<이름>`만 확인합니다. 후보는 총 여섯 곳이며, 전체 설치 앱
-목록을 만드는 기능은 아닙니다. 이름을 바꾼 앱, 하위 폴더, 설치 디스크 이미지,
+`~/Applications/<이름>`만 확인합니다. 후보는 총 여덟 곳이며, 전체 설치 앱
+목록을 만드는 기능은 아닙니다. 이외의 이름으로 바꾼 앱, 하위 폴더, 설치 디스크 이미지,
 다른 사용자의 홈은 탐색하지 않습니다. 디렉터리 열거·Spotlight 검색·홈 전체
 검색도 사용하지 않습니다.
 
 `items[].installations`에는 확인된 설치본이 **시스템 → 사용자** 순서로
-들어갑니다. UI는 첫 설치본의 메타데이터가 부족해도 그 설치본을 표시합니다.
+들어가며 각 루트에서는 `Codex.app`, `ChatGPT.app` 순서로 확인합니다.
+UI는 첫 설치본의 메타데이터가 부족해도 그 설치본을 표시합니다.
 버전 크기로 정렬하거나 다른 설치본으로 조용히 대체하지 않습니다.
-`not-installed`는 지원 후보에서 번들을 찾지 못했다는 뜻입니다. 접근 불가나
-안전 경계에 걸린 후보만 있다면 `unverified`입니다. 일반 `.app` 디렉터리의
-존재는 서명 진위·실행 가능 여부·계정 접근을 보증하지 않습니다.
+`not-installed`는 지원 후보에서 일치하는 앱을 찾지 못했다는 뜻입니다. 접근 불가나
+안전 경계에 걸린 후보만 있다면 `unverified`입니다. `Codex.app`, `Claude.app`,
+`Kiro.app`은 일반 번들 디렉터리가 있으면 설치된 것으로 표시합니다.
+서명 진위, 실행 가능 여부와 계정 접근 권한은 미확인으로 남깁니다.
+
+`ChatGPT.app`은 `CFBundleIdentifier`가 정확히 `com.openai.codex`일 때만
+Codex App으로 인식합니다. 유효한 다른 식별자라면
+`bundle-identifier-mismatch`로 제외하고 식별자를 읽지 못했거나 값이
+누락되거나 형식이 잘못된 경우에는 후보를 `unverified`로 표시합니다.
+이 경우 Codex 설치본이나 버전을 표시하지 않습니다. 식별자가 일치해도
+버전이나 빌드가 없으면 해당 값은 `null`로 유지합니다.
 
 설치 위치, 메타데이터 상태, 진단 코드와 함께 `source.path`·`source.keys`를
 제공합니다. 버전은 `CFBundleShortVersionString`, 빌드는 `CFBundleVersion`,
@@ -243,7 +258,7 @@ macOS의 `/var` → `/private/var` 같은 시스템 경로 별칭을 허용합�
 `/usr/bin/plutil -convert json -o - -`의 표준 입력에 전달합니다. 명령과 인수는
 고정되어 있으며 셸이나 대상 앱, 앱의 `--version` 명령을 실행하지 않습니다.
 변환기마다 2초 제한, 출력 256 KiB 제한, 고정 최소 환경, `SIGKILL` 종료를
-적용합니다. 검사 한 번에 최대 여섯 변환기를 순차 실행하며 파일 조회도 고정
+적용합니다. 검사 한 번에 최대 여덟 변환기를 순차 실행하며 파일 조회도 고정
 경로로 제한합니다. JSON 깊이는 24, 노드는 4,096개까지입니다. 버전·빌드는
 128자·UTF-8 256바이트, 식별자는 ASCII 255자까지 허용합니다.
 진단에는 고정 코드만 담고 변환기 출력이나 임의 메타데이터를 노출하지 않습니다.
@@ -294,9 +309,9 @@ ProviderMark와 기존 카드·버전·반응형 스타일을 재사용하며 �
 - **Codex:** 로컬 상태는 `CODEX_HOME`을 따르며 기본값은 `~/.codex`입니다.
   현재 문서는 데스크톱·CLI·IDE의 `config.toml` 공유를 설명합니다.
   이전 Codex 문서 주소는 ChatGPT Learn으로 이동하며 데스크톱 제품 이름도
-  ChatGPT desktop app으로 표기합니다. 이 기능은 요청받은 `Codex.app`
-  후보를 유지합니다. `ChatGPT.app`을 별칭으로 추가하거나 공유 설정 경로에서
-  앱의 정체·버전을 추정하지 않습니다.
+  ChatGPT desktop app으로 표기합니다. 이 기능은 `Codex.app`과
+  `ChatGPT.app`을 확인하며, 후자는 식별자가 `com.openai.codex`여야 합니다.
+  공유 설정 경로만으로 앱의 정체나 버전을 판단하지 않습니다.
 - **Claude:** Code 탭은 Claude 앱에 포함됩니다. 현재 문서상 로컬 Code 세션은
   Chat의 `claude_desktop_config.json`, `~/.claude.json`, 프로젝트
   `.mcp.json`을 함께 읽습니다. 이름 충돌 시 Chat 설정이 우선하며,
@@ -309,7 +324,8 @@ ProviderMark와 기존 카드·버전·반응형 스타일을 재사용하며 �
 
 ### Linux 검증 기록 — 2026-09-25
 
-영문 절의 대상 npm 테스트 명령으로 **5개 파일, 71개 테스트가 통과**했습니다.
+1.2.1 수정 전 기준 검증에서 영문 절의 대상 npm 테스트 명령으로
+**5개 파일, 71개 테스트가 통과**했습니다.
 임시 번들, 주입한 plist 변환기, 모의 child-process 경계, Fastify 요청 주입,
 React 서버 렌더링을 사용했습니다. 바이너리 plist 픽스처는 Python
 `plistlib`으로도 유효성을 확인했습니다.

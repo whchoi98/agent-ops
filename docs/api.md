@@ -104,3 +104,5 @@ candidates on the server host are inspected. Other hosts report `unsupported-hos
 with unknown installation state. App/container/IDE versions and builds come from
 Info.plist and are not compared to CLI release versions. Authentication and full
 private/cloud histories remain unverified. See [desktop apps](reference/desktop-apps.md).
+The `ChatGPT.app` Codex candidate requires bundle identifier `com.openai.codex`;
+a mismatch uses diagnostic code `bundle-identifier-mismatch` and contributes no installation.

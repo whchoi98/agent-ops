@@ -90,7 +90,7 @@ describe('bounded desktop app inventory', () => {
       expect(item.unverified).toEqual({
         authentication: 'unverified', cloudChats: 'unverified', privateHistories: 'unverified', codeEngineVersion: 'unverified',
       });
-      expect(item.candidates).toHaveLength(2);
+      expect(item.candidates).toHaveLength(item.id === 'codex-app' ? 4 : 2);
     }
     expect(JSON.stringify(report)).not.toMatch(/fixture-private-value|must-not-be-imported|latestVersion/);
     await expect(access(marker, constants.F_OK)).rejects.toMatchObject({ code: 'ENOENT' });
@@ -111,7 +111,7 @@ describe('bounded desktop app inventory', () => {
     expect(report.items[1].installations[0]).toMatchObject({ version: null, build: '001', metadataStatus: 'partial' });
   });
 
-  it('checks only six fixed candidates and never searches other homes, nested folders or renamed apps', async () => {
+  it('checks only eight fixed candidates and never searches other homes, nested folders or other renamed apps', async () => {
     const f = await fixture();
     await f.bundle('Codex.app', join(f.base, 'Other User', 'Applications'));
     await f.bundle('Claude.app', join(f.homeDir, 'Downloads'));
@@ -122,7 +122,8 @@ describe('bounded desktop app inventory', () => {
     const report = await f.service.report();
     expect(report.items.every(item => item.status === 'not-installed' && item.installed === false)).toBe(true);
     expect(report.items.flatMap(item => item.candidates.map(candidate => candidate.path))).toEqual([
-      join(f.applicationsDir, 'Codex.app'), join(f.userApplications, 'Codex.app'),
+      join(f.applicationsDir, 'Codex.app'), join(f.applicationsDir, 'ChatGPT.app'),
+      join(f.userApplications, 'Codex.app'), join(f.userApplications, 'ChatGPT.app'),
       join(f.applicationsDir, 'Claude.app'), join(f.userApplications, 'Claude.app'),
       join(f.applicationsDir, 'Kiro.app'), join(f.userApplications, 'Kiro.app'),
     ]);
@@ -138,8 +139,88 @@ describe('bounded desktop app inventory', () => {
     const report = await f.service.report();
     expect(report.items[0].installations.map(item => item.path)).toEqual([system.path, user.path]);
     expect(report.items[0].installations[0]).toMatchObject({ version: null, build: '10', metadataStatus: 'partial' });
-    expect(report.items[0].candidates.map(item => item.status)).toEqual(['found', 'found']);
+    expect(report.items[0].candidates.map(item => item.status)).toEqual(['found', 'not-found', 'found', 'not-found']);
     expect(f.conversions).toHaveLength(2);
+  });
+
+  it.each(['system', 'user'] as const)('recognizes Codex in %s ChatGPT.app by its exact bundle identifier', async location => {
+    const f = await fixture();
+    const app = await f.bundle('ChatGPT.app', location === 'system' ? f.applicationsDir : f.userApplications, {
+      ...metadata, CFBundleIdentifier: 'com.openai.codex', CFBundleName: 'ChatGPT',
+    });
+    const item = (await f.service.report()).items[0];
+    expect(item).toMatchObject({ id: 'codex-app', name: 'Codex App', installed: true, status: 'installed' });
+    expect(item.installations).toEqual([expect.objectContaining({
+      path: app.path, location, version: '2026.09.25-beta.1', build: '000042',
+      bundleIdentifier: 'com.openai.codex', metadataStatus: 'complete',
+      source: expect.objectContaining({ path: app.plistPath }),
+    })]);
+    expect(await readFile(app.plistPath)).toEqual(app.input);
+  });
+
+  it.each(['com.openai.chat', 'com.openai.codex.preview'])('excludes ChatGPT.app with a different identifier: %s', async identifier => {
+    const f = await fixture();
+    const app = await f.bundle('ChatGPT.app', f.applicationsDir, { ...metadata, CFBundleIdentifier: identifier });
+    const item = (await f.service.report()).items[0];
+    expect(item).toMatchObject({ installed: false, status: 'not-installed', installations: [] });
+    expect(item.candidates.find(candidate => candidate.path === app.path)).toMatchObject({
+      status: 'not-found', issues: [{ code: 'bundle-identifier-mismatch', field: 'bundleIdentifier' }],
+    });
+    expect(JSON.stringify(item)).not.toContain('2026.09.25-beta.1');
+  });
+
+  it.each([
+    { properties: { CFBundleShortVersionString: '1.2.3', CFBundleVersion: '001' }, issue: 'field-missing' },
+    { properties: { ...metadata, CFBundleIdentifier: 'invalid/identifier' }, issue: 'field-invalid' },
+  ])('keeps ChatGPT.app identity unverified when its identifier is $issue', async ({ properties, issue }) => {
+    const f = await fixture();
+    const app = await f.bundle('ChatGPT.app', f.applicationsDir, properties);
+    const item = (await f.service.report()).items[0];
+    expect(item).toMatchObject({ installed: null, status: 'unverified', installations: [] });
+    expect(item.candidates.find(candidate => candidate.path === app.path)).toMatchObject({
+      status: 'unverified', issues: [{ code: issue, field: 'bundleIdentifier' }],
+    });
+  });
+
+  it('does not infer Codex identity from ChatGPT.app when its plist cannot be read', async () => {
+    const f = await fixture();
+    const app = await f.bundle('ChatGPT.app', f.applicationsDir, { ...metadata, CFBundleIdentifier: 'com.openai.codex' });
+    await rm(app.plistPath);
+    const item = (await f.service.report()).items[0];
+    expect(item).toMatchObject({ installed: null, status: 'unverified', installations: [] });
+    expect(item.candidates.find(candidate => candidate.path === app.path)).toMatchObject({
+      status: 'unverified', issues: [{ code: 'plist-missing' }],
+    });
+  });
+
+  it('preserves system and legacy-name precedence while listing matching aliases in both roots', async () => {
+    const f = await fixture();
+    const systemCodex = await f.bundle('Codex.app');
+    const systemAlias = await f.bundle('ChatGPT.app', f.applicationsDir, { ...metadata, CFBundleIdentifier: 'com.openai.codex' });
+    const userCodex = await f.bundle('Codex.app', f.userApplications);
+    const userAlias = await f.bundle('ChatGPT.app', f.userApplications, { ...metadata, CFBundleIdentifier: 'com.openai.codex' });
+    expect((await f.service.report()).items[0].installations.map(item => item.path))
+      .toEqual([systemCodex.path, systemAlias.path, userCodex.path, userAlias.path]);
+  });
+
+  it('retains unknown version fields after the ChatGPT.app identifier establishes Codex identity', async () => {
+    const f = await fixture();
+    await f.bundle('ChatGPT.app', f.applicationsDir, { CFBundleIdentifier: 'com.openai.codex', CFBundleVersion: '001' });
+    const item = (await f.service.report()).items[0];
+    expect(item).toMatchObject({ installed: true, status: 'installed' });
+    expect(item.installations[0]).toMatchObject({
+      version: null, build: '001', bundleIdentifier: 'com.openai.codex', metadataStatus: 'partial',
+      issues: [{ code: 'field-missing', field: 'version' }],
+    });
+  });
+
+  it('rechecks alias identity only on refresh after a cached different-app result', async () => {
+    const f = await fixture();
+    await f.bundle('ChatGPT.app', f.applicationsDir, { ...metadata, CFBundleIdentifier: 'com.openai.chat' });
+    expect((await f.service.report()).items[0].installed).toBe(false);
+    await f.bundle('ChatGPT.app', f.applicationsDir, { ...metadata, CFBundleIdentifier: 'com.openai.codex' });
+    expect((await f.service.report()).items[0].installed).toBe(false);
+    expect((await f.service.refresh()).items[0]).toMatchObject({ installed: true, status: 'installed' });
   });
 
   it.each(['linux', 'win32', 'freebsd'] as const)('reports unsupported-host on %s even when bundles exist in injected roots', async platform => {

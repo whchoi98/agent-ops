@@ -7,7 +7,7 @@ export type DesktopAppMetadataField = 'version' | 'build' | 'bundleIdentifier';
 export type DesktopAppIssueCode =
   | 'unsafe-path' | 'path-unavailable' | 'plist-missing' | 'plist-unreadable' | 'plist-too-large'
   | 'plist-invalid' | 'metadata-limit' | 'field-missing' | 'field-invalid'
-  | 'conversion-failed' | 'conversion-timeout' | 'changed-during-read';
+  | 'conversion-failed' | 'conversion-timeout' | 'changed-during-read' | 'bundle-identifier-mismatch';
 
 export interface DesktopAppIssue {
   code: DesktopAppIssueCode;

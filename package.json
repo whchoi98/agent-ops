@@ -1,6 +1,6 @@
 {
   "name": "agent-ops-local",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A local operations workbench for Codex, Claude Code, and Kiro",
   "type": "module",
   "license": "MIT",

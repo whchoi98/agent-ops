@@ -39,6 +39,7 @@ const issueLabels: Record<DesktopAppIssueCode, string> = {
   'conversion-failed': '시스템 plist 변환기를 실행하지 못했거나 변환에 실패했습니다.',
   'conversion-timeout': 'plist 변환 제한 시간이 초과되었습니다.',
   'changed-during-read': '검사 중 파일 또는 경로가 바뀌어 메타데이터를 표시하지 않습니다.',
+  'bundle-identifier-mismatch': '번들 식별자가 이 앱과 일치하지 않습니다.',
 };
 
 function Issue({ issue }: { issue: DesktopAppIssue }) {
@@ -89,7 +90,7 @@ function AppCard({ item }: { item: DesktopApp }) {
         {installation.issues.map((issue, index) => <Issue key={index} issue={issue} />)}
       </>}
       {item.candidates.map(candidate => <div key={candidate.path}>
-        <span>{t(candidate.status === 'found' ? '번들 확인' : candidate.status === 'not-found' ? '후보 없음' : '경로 미확인')}</span>
+        <span>{t(candidate.status === 'found' ? '번들 확인' : candidate.status === 'not-found' ? '일치하는 앱 없음' : '경로 미확인')}</span>
         <code className="cli-version-meta" dir="ltr">{candidate.path}</code>
         {candidate.issues.map((issue, index) => <Issue key={index} issue={issue} />)}
       </div>)}
