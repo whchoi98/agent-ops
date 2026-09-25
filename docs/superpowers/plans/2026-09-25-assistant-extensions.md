@@ -107,7 +107,7 @@ await expect(page.getByRole('heading', { name: '스킬·플러그인', exact: tr
 - [x] Inspect local inventory aggregates without printing instruction content or
   secrets. Review boundary tests and resolve material findings.
 - [x] Update README, API/operating docs, changelog and verification evidence.
-- [ ] Build and verify distribution, integrate the feature, update the existing
+- [x] Build and verify distribution, integrate the feature, update the existing
   service, and confirm live health/catalog responses without credential login.
 
 ## Task 6: Installed/latest CLI version comparison (user addition)
@@ -137,7 +137,7 @@ Consumes existing `ConnectorStatus` probes; produces `VersionReport` through
   coalescing; test real temporary sources and responsiveness.
 - [x] Apply evidence-backed storage/write optimizations without deleting history
   or changing user metadata; verify compatibility and search behavior.
-- [ ] Revalidate the affected APIs, package and live service; record limitations.
+- [x] Revalidate the affected APIs, package and live service; record limitations.
 
 ## Task 8: Korean and English interface (user addition)
 
