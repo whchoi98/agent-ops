@@ -122,3 +122,20 @@ it('rolls back compressed schema conversion if writing its version marker fails'
     expect(existsSync(join(dir, 'backups'))).toBe(true);
   } finally { db.close(); }
 });
+
+it('rebuilds obsolete derived postings from preserved content without a redundant full FTS integrity pass', async () => {
+  const { dir, filename, body } = legacy();
+  const db = new Database(filename);
+  // Remove only derived postings; the canonical history and search content remain.
+  db.unsafeMode(true);
+  db.prepare('DELETE FROM session_search_data WHERE id > 10').run();
+  db.close();
+  const result = await optimizeStorage(dir);
+  expect(result.documents).toBe(1);
+  const store = new Store(filename);
+  try {
+    expect(store.getSession('codex:kept')!.messages[0].content).toBe(body);
+    expect(store.listSessions({ q: '고유검색문장' }).total).toBe(1);
+    expect(store.listSessions({ q: 'alpha[meta]*?' }).total).toBe(1);
+  } finally { store.close(); }
+});

@@ -29,6 +29,8 @@
 
 #### Fixed
 
+- Avoid retokenizing the entire old FTS corpus during offline prechecks; verify
+  stored tables and rebuild derived postings from the preserved document bodies.
 - Keep HTTP requests responsive during native import by running owned background
   synchronization with bounded output, cancellation and coalescing.
 - Persist Kiro row fingerprints and update only changed messages/search content
@@ -60,6 +62,8 @@
 
 #### 수정
 
+- 오프라인 사전 검사에서 기존 검색 본문 전체를 다시 토큰화하던 중복 작업을 줄이고,
+  저장 테이블을 검사한 뒤 보존된 본문으로 검색 색인을 다시 만듭니다.
 - 원본 수집을 별도 프로세스에서 실행해 동기화 중 서버 응답 정체를 줄입니다.
 - Kiro 행별 지문을 저장하고 변경된 메시지·검색 본문만 갱신해 중복 쓰기를 줄입니다.
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산합니다.

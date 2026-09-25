@@ -28,9 +28,14 @@ function databaseBytes(filename: string): number {
 }
 
 function quickCheck(db: Database.Database): void {
-  const result = db.pragma('quick_check') as Array<{ quick_check: string }>;
-  if (result.length !== 1 || result[0].quick_check !== 'ok') {
-    throw new Error('Database integrity check failed. The existing backup was retained.');
+  // FTS5 ignores the quick-check flag and rechecks its complete inverted index.
+  // Check ordinary/shadow B-trees (including sqlite_schema/free pages) directly;
+  // migration validates every source body and rebuilds the derived FTS postings.
+  const tables = db.pragma('main.table_list') as Array<{ name: string; type: string }>;
+  for (const table of tables) {
+    if (table.type !== 'table' && table.type !== 'shadow') continue;
+    const result = db.pragma(`quick_check('${table.name.replaceAll("'", "''")}')`) as Array<{ quick_check: string }>;
+    if (result.length !== 1 || result[0].quick_check !== 'ok') throw new Error('Database integrity check failed.');
   }
 }
 
@@ -69,6 +74,7 @@ export async function optimizeStorage(
     registerSearchFunctions(reader);
     const version = reader.pragma('user_version', { simple: true }) as number;
     if (version > 4) throw new Error(`Database schema ${version} is newer than this application supports.`);
+    onProgress('Checking database structure and stored history…');
     quickCheck(reader);
     const beforeCounts = counts(reader);
     const backups = join(directory, 'backups');
@@ -132,6 +138,7 @@ export async function optimizeStorage(
     onProgress('Reclaiming unused database pages…');
     store.db.pragma('wal_checkpoint(TRUNCATE)');
     store.db.exec('VACUUM');
+    onProgress('Checking the compacted database…');
     quickCheck(store.db);
     if (counts(store.db) !== beforeCounts) throw new Error('Database row counts changed unexpectedly. The backup was retained.');
     store.db.pragma('wal_checkpoint(TRUNCATE)');
