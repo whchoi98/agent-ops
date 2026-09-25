@@ -1,0 +1,18 @@
+[Unit]
+Description=Agent Ops local agent workbench
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/my-project/agent-ops
+Environment=PATH=/home/ec2-user/.npm-global/bin:/home/ec2-user/.local/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/home/ec2-user/my-project/agent-ops/.data/service.env
+ExecStart=/usr/bin/node /home/ec2-user/my-project/agent-ops/dist/server/index.js serve
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

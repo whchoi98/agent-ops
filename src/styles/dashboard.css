@@ -1,0 +1,82 @@
+.date-chip, .period-chip { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 500; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
+.stats-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 15px; margin-bottom: 25px; }
+.stat-card { padding: 17px 19px 15px; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; box-shadow: var(--shadow); text-align: left; }
+.stat-clickable:hover { border-color: var(--border-strong); box-shadow: 0 4px 14px #172b4d07; }
+.stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 550; }
+.stat-icon { display: inline-flex; width: 29px; height: 29px; justify-content: center; align-items: center; border-radius: 8px; background: var(--primary-soft); color: var(--link); }
+.stat-teal { background: var(--success-soft); color: var(--success); }
+.stat-violet { background: #f1edfc; color: #7b59bf; }
+.stat-amber { background: var(--warning-soft); color: var(--warning); }
+[data-theme="dark"] .stat-violet { background: #302d49; color: #c2a8ff; }
+.stat-value { color: var(--text-strong); font: 650 32px/1.2 var(--font-display); letter-spacing: -1px; font-variant-numeric: tabular-nums; margin-top: 9px; overflow-wrap: anywhere; }
+.stat-unit { color: var(--muted); font-family: var(--font-body); font-size: 13px; margin-left: 6px; font-weight: 500; letter-spacing: 0; }
+.stat-unknown { font-family: var(--font-body); font-size: 23px; color: var(--muted); font-weight: 600; letter-spacing: -.5px; }
+.stat-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 10px; line-height: 1.6; color: var(--muted); margin-top: 12px; }
+.agent-workbench { margin-bottom: 25px; }
+.agent-lanes { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); border: 1px solid var(--border); background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.agent-lane { position: relative; padding: 18px 20px 0; min-width: 0; border-top: 3px solid var(--agent-color); }
+.agent-lane + .agent-lane { border-left: 1px solid var(--border); }
+.lane-header { display: flex; align-items: center; gap: 10px; }
+.lane-header > div { flex: 1; min-width: 0; }
+.lane-header h3 { font: 650 16px/1.3 var(--font-display); letter-spacing: -.35px; }
+.lane-install-status { display: flex; align-items: center; gap: 4px; margin-top: 5px; color: var(--muted); font-size: 10px; }
+.lane-launch { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; color: var(--muted); border: 1px solid var(--border); }
+.lane-launch:hover { color: var(--agent-text); background: var(--agent-soft); border-color: var(--agent-color); }
+.lane-activity { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 21px 0 18px; }
+.lane-session-count { text-align: left; padding: 0; flex-shrink: 0; }
+.lane-session-count > strong { font-size: 29px; line-height: 1; font-weight: 650; letter-spacing: -.5px; }
+.lane-session-count > span { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; margin-top: 7px; }
+.lane-session-count:hover > span { color: var(--agent-text); }
+.lane-mini-chart { width: 45%; max-width: 145px; color: var(--agent-color); min-width: 0; opacity: .9; }
+.lane-mini-chart svg { width: 100%; height: 40px; }
+.lane-mini-chart > span { display: block; text-align: right; font-size: 10px; color: var(--muted); margin-top: 3px; }
+.lane-latest { padding: 12px 0 16px; border-top: 1px solid var(--border); }
+.lane-caption { display: block; font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+.lane-latest > button { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 9px; color: var(--text-strong); font-size: 12px; font-weight: 550; padding: 0; text-align: left; }
+.lane-latest > button > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lane-latest > button > svg { color: var(--faint); }
+.lane-latest > button:hover { color: var(--agent-text); }
+.lane-timestamp { display: block; margin-top: 6px; color: var(--muted); font-size: 10px; }
+.lane-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 20px; margin: 0 -20px; background: var(--surface-secondary); border-top: 1px solid var(--border); color: var(--muted); }
+.lane-footer > span, .lane-footer > button { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; padding: 0; }
+.lane-footer > button:first-child:hover { color: var(--agent-text); }
+.lane-running { background: var(--agent-soft); }
+.lane-running > button:first-child { color: var(--agent-text); font-weight: 600; }
+.lane-footer .lane-history { gap: 4px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+.lane-footer .lane-history:hover { color: var(--link); }
+.overview-middle-grid { display: grid; grid-template-columns: minmax(0,1.95fr) minmax(260px,1fr); gap: 20px; margin-bottom: 24px; }
+.daily-panel { min-width: 0; }
+.activity-chart { padding: 0 19px 18px; min-width: 0; }
+.chart-plot { position: relative; min-width: 0; }
+.chart-svg { display: block; width: 100%; height: auto; }
+.chart-grid-line { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 4; }
+.chart-axis-text { fill: var(--muted); font-family: var(--font-display); font-size: 12px; font-weight: 450; }
+.chart-day { cursor: pointer; outline-offset: -2px; }
+.chart-day:focus { outline: none; }
+.chart-day:focus-visible > rect:first-child { stroke: var(--primary); stroke-width: 2; }
+.chart-tooltip { position: absolute; top: 0; width: 168px; transform: translateX(-50%); padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: 0 5px 20px #172b4d22; pointer-events: none; z-index: 2; font-size: 11px; }
+.chart-tooltip > strong { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.chart-tooltip > strong > span { font-weight: 500; color: var(--muted); font-size: 11px; }
+.chart-tooltip > span { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+.chart-tooltip i, .chart-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 2px; }
+.chart-tooltip b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.chart-tooltip .chart-tooltip-token { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 8px; }
+.chart-tooltip > small { display: block; color: var(--muted); text-align: right; font-size: 10px; margin-top: 4px; }
+.chart-bottom { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding-left: 16px; padding-top: 6px; }
+.chart-legend { display: flex; gap: 17px; }
+.chart-legend > span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font: 11px var(--font-display); }
+.chart-timezone { color: var(--muted); font-size: 10px; }
+.active-runs-panel { display: flex; flex-direction: column; overflow: hidden; }
+.active-runs-panel > .panel-heading { padding-bottom: 9px; }
+.active-runs-panel > .empty-state, .active-run-list { flex: 1; }
+.active-runs-panel > .empty-state { padding-top: 17px; }
+.active-run-row { display: flex; align-items: center; gap: 9px; width: 100%; padding: 14px 19px; text-align: left; border-bottom: 1px solid var(--border); }
+.active-run-row:last-child { border-bottom: 0; }
+.active-run-row:hover { background: var(--surface-secondary); }
+.active-run-row > div { min-width: 0; flex: 1; }
+.active-run-row strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 550; }
+.active-run-row > div > span { display: block; color: var(--muted); font-size: 10px; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.active-run-row > .status-badge { font-size: 10px; }
+.recent-sessions-panel { overflow: hidden; }
+.sync-footnote { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 2px 0; color: var(--muted); font-size: 10px; }
+.sync-footnote > button { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--warning); margin-left: auto; padding: 2px 0; }

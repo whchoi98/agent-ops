@@ -1,0 +1,65 @@
+{
+  "name": "agent-ops-local",
+  "version": "1.0.1",
+  "description": "A local operations workbench for Codex, Claude Code, and Kiro",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "bin": {
+    "agent-ops": "dist/server/index.js"
+  },
+  "files": [
+    "dist",
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs/README.md",
+    "docs/architecture.md",
+    "docs/onboarding.md",
+    "docs/operations.md",
+    "docs/api.md",
+    "docs/design.md",
+    "docs/verification.md",
+    "deploy/agent-ops.service"
+  ],
+  "scripts": {
+    "dev": "node --import tsx scripts/dev.ts",
+    "build": "tsc --noEmit && vite build && node --import tsx scripts/build.ts",
+    "start": "node dist/server/index.js serve",
+    "demo": "node dist/server/index.js demo",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "verify:native": "node --import tsx scripts/verify-native.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@fastify/static": "9.2.0",
+    "better-sqlite3": "^12.0.0",
+    "fastify": "^5.6.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.19.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "esbuild": "^0.25.10",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2",
+    "vite": "^6.4.3",
+    "vitest": "^3.2.4"
+  }
+}
