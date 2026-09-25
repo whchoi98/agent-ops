@@ -23,7 +23,7 @@ export function seedTemplates(store: Store) {
 }
 
 export function seedDemo(store: Store) {
-  if (store.getMeta('demo-seeded')) return;
+  if (store.getMeta('demo-seeded')) { seedDemoCredits(store); return; }
   const projects = [
     { path: '/workspace/commerce-api', name: 'commerce-api', color: '#3564e8' },
     { path: '/workspace/atlas-web', name: 'atlas-web', color: '#0e9f8f' },
@@ -143,4 +143,21 @@ export function seedDemo(store: Store) {
     if (spec.status === 'failed') store.appendEvent(run.id, 'stderr', 'FAIL deploy/cache.test.ts: missing cache namespace');
   });
   store.setMeta('demo-seeded', true);
+  seedDemoCredits(store);
+}
+
+function seedDemoCredits(store: Store) {
+  if (store.getMeta('demo-credits-seeded')) return;
+  store.db.transaction(() => {
+    const rows = store.db.prepare(`SELECT id FROM sessions WHERE agent='kiro'
+      AND id GLOB 'demo-kiro-[0-9][0-9][0-9]'
+      AND json_extract(data,'$.sourcePath') LIKE 'demo://kiro/%' ORDER BY id`).all() as Array<{ id: string }>;
+    const update = store.db.prepare(`UPDATE sessions SET data=json_set(data,
+      '$.usage.credits',json(?),'$.usage.creditsPartial',json(?)) WHERE id=?`);
+    rows.forEach((row, index) => {
+      const credits = index % 9 === 0 ? null : index % 7 === 0 ? 0 : Number(((index + 1) * 0.137).toFixed(4));
+      update.run(JSON.stringify(credits), JSON.stringify(credits !== null && index % 5 === 0), row.id);
+    });
+    store.setMeta('demo-credits-seeded', true);
+  })();
 }

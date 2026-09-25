@@ -8,9 +8,12 @@ import { AGENTS, type Agent } from '../../shared/types';
 import { ActivityChart } from '../components/ActivityChart';
 import { SessionTable } from '../components/SessionTable';
 import { StatCard } from '../components/Stats';
-import { Button, EmptyState, PageHeading, Panel, ProviderMark, StatusBadge } from '../components/ui';
+import { Button, EmptyState, PageHeading, Panel, ProviderMark, StatusBadge, UsageValue } from '../components/ui';
 import { AGENT_META, compactNumber, isActiveRun, number } from '../lib/format';
 import { useApp, useData } from '../state/AppProvider';
+import { CreditSummary } from '../features/usage/CreditSummary';
+import { DailyCredits } from '../features/usage/DailyCredits';
+import { useCreditI18n } from '../features/usage/i18n';
 
 function AgentLane({ agent }: { agent: Agent }) {
   const { relativeTime } = useFormat();
@@ -37,7 +40,7 @@ function AgentLane({ agent }: { agent: Agent }) {
           <line x1="0" y1="42" x2="144" y2="42" stroke="var(--border)" />
           {days.map((day, index) => <rect key={day.date} x={index * (144 / Math.max(days.length, 1)) + 2}
             y={41 - day[agent] / max * 34} width={Math.max(3, 144 / Math.max(days.length, 1) - 5)}
-            height={day[agent] / max * 34} rx={2} fill="currentColor"><title><Trans message={"{0} · {1}개"} values={{ "0": day.date, "1": day[agent] }} /></title></rect>)}
+            height={day[agent] / max * 34} rx={2} fill="currentColor"><title>{t("{0} · {1}개", { "0": day.date, "1": day[agent] })}</title></rect>)}
         </svg><span><Trans message={"최근 14일"} /></span>
       </div>
     </div>
@@ -59,6 +62,7 @@ function AgentLane({ agent }: { agent: Agent }) {
 export function Overview() {
   const { dateTime, money, relativeTime } = useFormat();
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const data = useData();
   const { navigate, openRun, openNewRun, sync, syncing } = useApp();
   const { analytics } = data;
@@ -82,6 +86,7 @@ export function Overview() {
         detail={<><span className={running.length ? 'live-dot' : 'idle-dot'} /><Trans message={"대기 {0}개 · 동시 실행 한도 {1}"} values={{ "0": queued.length, "1": data.settings.concurrency }} /></>}
         icon={Workflow} accent="amber" onClick={() => navigate('runs')} />
     </div>
+    <CreditSummary totals={analytics} />
     <section className="agent-workbench" aria-labelledby="agent-activity-title">
       <div className="section-title"><div><h2 id="agent-activity-title"><Trans message={"에이전트 활동"} /></h2><span><Trans message={"세 개의 에이전트, 하나의 작업 공간"} /></span></div>
         <button className="text-button" onClick={() => navigate('settings')}><Trans message={"커넥터 설정"} /><ArrowRight size={14} aria-hidden /></button>
@@ -89,12 +94,14 @@ export function Overview() {
       <div className="agent-lanes">{AGENTS.map(agent => <AgentLane key={agent} agent={agent} />)}</div>
     </section>
     <div className="overview-middle-grid">
-      <Panel title={t("날짜별 활동")} description={t("최근 30일 · 기록된 세션 수")} actions={<button className="text-button" onClick={() => navigate('analytics')}><Trans message={"분석 보기"} /><ArrowUpRight size={14} aria-hidden /></button>} className="daily-panel">
+      <Panel title={t("날짜별 활동")} description={creditT('최근 {0}일, 세션 시작일 (UTC) 기준', { 0: 30 })} actions={<button className="text-button" onClick={() => navigate('analytics')}><Trans message={"분석 보기"} /><ArrowUpRight size={14} aria-hidden /></button>} className="daily-panel">
         <ActivityChart daily={analytics.daily} days={30} />
+        <DailyCredits daily={analytics.daily} days={30} />
       </Panel>
       <Panel title={t("실행 중인 작업")} description={t("my-agent-ops에서 시작한 작업")} actions={<span className="count-badge">{active.length}</span>} className="active-runs-panel">
         {active.length > 0 ? <div className="active-run-list">{active.slice(0, 4).map(run => <button key={run.id} className="active-run-row" onClick={() => openRun(run.id)}>
-          <ProviderMark agent={run.agent} /><div><strong>{run.title}</strong><span>{run.projectName}</span></div>
+          <ProviderMark agent={run.agent} /><div><strong>{run.title}</strong><span>{run.projectName}</span>
+            <span className="active-run-usage"><UsageValue agent={run.agent} usage={run.usage} /></span></div>
           <StatusBadge status={run.status} />
         </button>)}</div> : <EmptyState compact icon={CirclePlay} title={t("다음 작업을 시작해 보세요")}
           description={t("시작한 작업의 상태와 로그가 이곳에 표시됩니다.")}

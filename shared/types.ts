@@ -10,6 +10,10 @@ export interface Usage {
   cacheReadTokens: number | null;
   cacheWriteTokens: number | null;
   costUsd: number | null;
+  /** Recorded Kiro credits; absent legacy fields and null both mean unrecorded. */
+  credits?: number | null;
+  /** Some metered turns or values were unavailable; this is a recorded partial sum. */
+  creditsPartial?: boolean;
 }
 export interface Message {
   id: string;
@@ -141,6 +145,8 @@ export interface Settings {
   concurrency: number;
   timeoutMinutes: number;
   scanIntervalSeconds: number;
+  syncMode?: SyncMode;
+  syncMaxSeconds?: number;
   sourceRoots: Record<Agent, string[]>;
   theme: 'light' | 'dark' | 'system';
 }
@@ -152,7 +158,14 @@ export interface SyncReport {
   warnings: string[];
   filesScanned: number;
 }
-export interface Analytics {
+export interface CreditTotals {
+  /** Sum of recorded Kiro credits; null means the aggregate exceeded numeric limits. */
+  recordedCredits?: number | null;
+  knownCreditSessions?: number;
+  partialCreditSessions?: number;
+  kiroSessions?: number;
+}
+export interface Analytics extends CreditTotals {
   totalSessions: number;
   totalMessages: number;
   totalToolCalls: number;
@@ -160,10 +173,10 @@ export interface Analytics {
   knownTokenSessions: number;
   recordedCostUsd: number;
   knownCostSessions: number;
-  daily: Array<{ date: string; sessions: number; tokens: number; knownTokenSessions: number; codex: number; claude: number; kiro: number }>;
-  agents: Array<{ agent: Agent; sessions: number; tokens: number; knownTokenSessions: number; costUsd: number; knownCostSessions: number }>;
-  models: Array<{ model: string; sessions: number; tokens: number; knownTokenSessions: number }>;
-  projects: Array<{ path: string; name: string; sessions: number; tokens: number; knownTokenSessions: number }>;
+  daily: Array<{ date: string; sessions: number; tokens: number; knownTokenSessions: number; codex: number; claude: number; kiro: number } & CreditTotals>;
+  agents: Array<{ agent: Agent; sessions: number; tokens: number; knownTokenSessions: number; costUsd: number; knownCostSessions: number } & CreditTotals>;
+  models: Array<{ model: string; sessions: number; tokens: number; knownTokenSessions: number } & CreditTotals>;
+  projects: Array<{ path: string; name: string; sessions: number; tokens: number; knownTokenSessions: number } & CreditTotals>;
   tools: Array<{ name: string; count: number }>;
   cacheReadTokens: number;
   inputTokens: number;
@@ -182,6 +195,7 @@ export interface Bootstrap {
   analytics: Analytics;
   sync: SyncReport | null;
   syncing: boolean;
+  syncStatus?: SyncStatus;
 }
 export interface SessionQuery {
   q?: string;
@@ -192,7 +206,7 @@ export interface SessionQuery {
   tag?: string;
   since?: string;
   until?: string;
-  sort?: 'recent' | 'oldest' | 'tokens';
+  sort?: 'recent' | 'oldest' | 'tokens' | 'credits';
   limit?: number;
   offset?: number;
 }
@@ -208,3 +222,4 @@ export const emptyUsage = (): Usage => ({
   inputTokens: null, outputTokens: null, cacheReadTokens: null,
   cacheWriteTokens: null, costUsd: null,
 });
+import type { SyncMode, SyncStatus } from './sync-control.js';

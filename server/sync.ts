@@ -1,12 +1,12 @@
 import { discoverSessions, type KiroRowCheckpoint } from './providers/index.js';
 import { timestamp } from './providers/common.js';
 import type { Store } from './store.js';
-import type { SyncReport } from '../shared/types.js';
+import type { Agent, SyncReport } from '../shared/types.js';
 import { setImmediate as yieldToIO } from 'node:timers/promises';
 
 // Parser identity changes require unchanged native files to be read once again.
-const parserFormat = 'format-v3';
-const importFingerprint = (fingerprint: string) => `${parserFormat}:${fingerprint}`;
+const parserFormat = (agent?: Agent) => agent === 'kiro' ? 'format-v4-kiro-credits' : 'format-v3';
+const importFingerprint = (fingerprint: string, agent?: Agent) => `${parserFormat(agent)}:${fingerprint}`;
 
 export interface SyncController {
   readonly active: boolean;
@@ -55,8 +55,8 @@ export class SyncService implements SyncController {
         // SQLite rows otherwise resolve through microtasks without polling sockets.
         await yieldToIO();
       }, {
-        shouldRead: (path, fingerprint) => !this.stopping && this.store.getFingerprint(path) !== importFingerprint(fingerprint),
-        onRead: (path, fingerprint) => { if (!this.stopping) this.store.setFingerprint(path, importFingerprint(fingerprint)); },
+        shouldRead: (path, fingerprint, agent) => !this.stopping && this.store.getFingerprint(path) !== importFingerprint(fingerprint, agent),
+        onRead: (path, fingerprint, agent) => { if (!this.stopping) this.store.setFingerprint(path, importFingerprint(fingerprint, agent)); },
         kiroRows: {
           get: (key) => {
             if (this.stopping) throw new Error('Synchronization cancelled.');
@@ -64,13 +64,13 @@ export class SyncService implements SyncController {
             if (!saved) return null;
             try {
               const value = JSON.parse(saved) as Partial<KiroRowCheckpoint> & { format?: string };
-              if (value.format !== parserFormat || typeof value.fingerprint !== 'string' || typeof value.sessionId !== 'string') return null;
+              if (value.format !== parserFormat('kiro') || typeof value.fingerprint !== 'string' || typeof value.sessionId !== 'string') return null;
               if (!this.store.db.prepare('SELECT 1 FROM sessions WHERE id=?').get(value.sessionId)) return null;
               return { fingerprint: value.fingerprint, sessionId: value.sessionId };
             } catch { return null; }
           },
           set: (key, checkpoint) => {
-            if (!this.stopping) this.store.setFingerprint(key, JSON.stringify({ format: parserFormat, ...checkpoint }));
+            if (!this.stopping) this.store.setFingerprint(key, JSON.stringify({ format: parserFormat('kiro'), ...checkpoint }));
           },
         },
         maxFiles: 20000,

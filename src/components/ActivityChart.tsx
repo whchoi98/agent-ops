@@ -38,7 +38,7 @@ export function ActivityChart({ daily, days = 30 }: { daily: Analytics['daily'];
   return <div className="activity-chart">
     <div className="chart-plot" ref={plotRef}>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={chartId} className="chart-svg">
-        <title id={chartId}><Trans message={"최근 {0}일 날짜별 세션 수. {1}부터 {2}까지, UTC 기준."} values={{ "0": days, "1": entries[0].date, "2": entries.at(-1)!.date }} /></title>
+        <title id={chartId}>{t("최근 {0}일 날짜별 세션 수. {1}부터 {2}까지, UTC 기준.", { "0": days, "1": entries[0].date, "2": entries.at(-1)!.date })}</title>
         {[0, 1, 2, 3, 4].map(tick => {
           const value = maximum * tick / 4;
           const y = top + graphHeight - graphHeight * tick / 4;

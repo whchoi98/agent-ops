@@ -11,6 +11,7 @@ import { useNow } from '../../hooks/useResource';
 import { useRunDetail } from '../../hooks/useRunDetail';
 import { useApp } from '../../state/AppProvider';
 import { RunActions } from './RunActions';
+import { RunUsage } from '../usage/RunUsage';
 
 export function RunDetailDialog({ id }: { id: string }) {
   const { dateTime, duration, money } = useFormat();
@@ -43,12 +44,14 @@ export function RunDetailDialog({ id }: { id: string }) {
       <div className="run-summary-grid"><div><span><Trans message={"시작 시간"} /></span><strong>{run.startedAt ? dateTime(run.startedAt, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : t("실행 대기")}</strong></div>
         <div><span><Trans message={"실행 시간"} /></span><strong><Clock3 size={14} aria-hidden />{elapsed === null ? t("아직 시작하지 않음") : duration(elapsed)}</strong></div>
         <div><span><Trans message={"작업 권한"} /></span><strong className="mono">{run.policy}</strong></div><div><span><Trans message={"모델"} /></span><strong className="mono">{run.model || t("CLI 기본 모델")}</strong></div></div>
+      <RunUsage run={run} />
       {run.error && <InlineNotice tone="error"><AppNotice message={run.error} /></InlineNotice>}
       <details className="run-request-details"><summary><Trans message={"실행 정보와 프롬프트"} /></summary><div className="run-request-content">
         <dl className="detail-properties"><div><dt><Trans message={"프로젝트 경로"} /></dt><dd><code>{run.projectPath}</code></dd></div>
           <div><dt><Trans message={"생성 시간"} /></dt><dd>{dateTime(run.createdAt)}</dd></div>{run.finishedAt && <div><dt><Trans message={"종료 시간"} /></dt><dd>{dateTime(run.finishedAt)}</dd></div>}
           {run.agent !== 'codex' && run.policy === 'workspace-write' && <div><dt><Trans message={"터미널 명령"} /></dt><dd>{run.allowShell ? t("자동 실행 허용") : t("자동 실행 허용 안 함")}</dd></div>}
-          <div><dt><Trans message={"기록된 사용량"} /></dt><dd><TokenValue usage={run.usage} /><Trans message={" 토큰 · {0}"} values={{ "0": money(run.usage.costUsd) }} /></dd></div></dl>
+          <div><dt><Trans message={"총 토큰"} /></dt><dd><TokenValue usage={run.usage} compact={false} /></dd></div>
+          <div><dt><Trans message={"기록된 비용"} /></dt><dd>{money(run.usage.costUsd)}</dd></div></dl>
         <div className="code-block"><div className="code-heading"><span>COMMAND</span><CopyButton text={run.command} compact label={t("명령 복사")} /></div><pre><code>{run.command || t("명령 미기록")}</code></pre></div>
         <div className="run-prompt"><span className="field-label"><Trans message={"프롬프트"} /></span><pre>{run.prompt}</pre></div>
       </div></details>

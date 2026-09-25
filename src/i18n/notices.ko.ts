@@ -1,5 +1,20 @@
+const CREDIT_KO_NOTICES: Record<string, string> = {
+  'Too many Kiro credit turns; recorded credits are unknown.': 'Kiro credit turn이 너무 많아 사용량을 확인할 수 없습니다.',
+  'Some Kiro credit values were invalid; recorded credits may be partial.': '일부 Kiro credit 값이 잘못되어 부분 사용량만 표시합니다.',
+  'Kiro credit values exceeded the numeric limit; recorded credits are unknown.': 'Kiro credit 값이 숫자 범위를 초과해 사용량을 확인할 수 없습니다.',
+  'Too many Kiro credit identities; recorded credits are unknown.': 'Kiro credit 식별자 수가 한도를 초과해 사용량을 확인할 수 없습니다.',
+  'Kiro credit turn identities were ambiguous; recorded credits are unknown.': 'Kiro credit turn을 구분할 수 없어 사용량을 확인할 수 없습니다.',
+  'A Kiro credit turn had no stable identity; recorded credits may be partial.': '일부 Kiro credit turn의 식별자가 없어 부분 사용량만 표시합니다.',
+};
+
 /** Known application-generated English notices; raw CLI/user output is excluded. */
 export const NOTICE_KO_MESSAGES: Record<string, string> = {
+  ...CREDIT_KO_NOTICES,
+  ...Object.fromEntries(Object.entries(CREDIT_KO_NOTICES).map(([source, translated]) => [`{0}: ${source}`, `{0}: ${translated}`])),
+  'Synchronization is stopping.': '동기화가 종료 중입니다.',
+  'Synchronization cancelled.': '동기화를 취소했습니다.',
+  'Synchronization time limit exceeded.': '동기화 제한 시간이 초과되었습니다.',
+  'Synchronization failed.': '동기화에 실패했습니다.',
   'A run request is required.': '실행 요청이 필요합니다.',
   'Unsupported run request field: {0}': '지원하지 않는 실행 요청 필드입니다: {0}',
   'Unknown agent.': '알 수 없는 에이전트입니다.',

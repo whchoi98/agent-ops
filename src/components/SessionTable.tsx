@@ -6,7 +6,8 @@ import type { Session } from '../../shared/types';
 import { api } from '../lib/api';
 import { errorMessage } from '../lib/format';
 import { useApp } from '../state/AppProvider';
-import { AgentBadge, IconButton, StatusBadge, TokenValue } from './ui';
+import { AgentBadge, IconButton, StatusBadge, UsageValue } from './ui';
+import { useCreditI18n } from '../features/usage/i18n';
 
 export function BookmarkButton({ session, onChange }: { session: Session; onChange?: () => void }) {
   const { t } = useI18n();
@@ -36,6 +37,7 @@ export function SessionTable({
 }) {
   const { relativeTime, dateTime } = useFormat();
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const { openSession } = useApp();
   return <div className={`session-table-wrap ${compact ? 'session-table-compact' : ''}`}>
     <table className="session-table">
@@ -43,7 +45,7 @@ export function SessionTable({
         {onSelect && <th className="selection-cell"><span className="sr-only"><Trans message={"비교 선택"} /></span></th>}
         <th><Trans message={"세션"} /></th><th className="provider-cell"><Trans message={"에이전트"} /></th>
         {!compact && <th className="session-status-cell"><Trans message={"상태"} /></th>}
-        <th className="tokens-cell"><Trans message={"토큰"} /></th><th className="time-cell"><Trans message={"최근 기록"} /></th>
+        <th className="tokens-cell session-usage-cell">{creditT('사용량')}</th><th className="time-cell"><Trans message={"최근 기록"} /></th>
         <th className="bookmark-cell"><span className="sr-only"><Trans message={"북마크"} /></span></th>
       </tr></thead>
       <tbody>{sessions.map(session => <tr key={session.id} className={selected?.has(session.id) ? 'row-selected' : ''}>
@@ -57,13 +59,14 @@ export function SessionTable({
                 <span className="meta-separator">·</span><span><Trans message={"{0}개 메시지"} values={{ "0": session.messageCount }} /></span>
                 {session.tags.length > 0 && <span className="row-tag">#{session.tags[0]}</span>}
               </span>
-              <span className="session-mobile-meta"><AgentBadge agent={session.agent} compact /><span>{relativeTime(session.updatedAt)}</span></span>
+              <span className="session-mobile-meta"><AgentBadge agent={session.agent} compact /><span>{relativeTime(session.updatedAt)}</span>
+                <UsageValue agent={session.agent} usage={session.usage} /></span>
             </span><ChevronRight size={15} className="session-row-chevron" aria-hidden />
           </button>
         </td>
         <td className="provider-cell"><AgentBadge agent={session.agent} compact /></td>
         {!compact && <td className="session-status-cell"><StatusBadge status={session.status} /></td>}
-        <td className="tokens-cell"><TokenValue usage={session.usage} /></td>
+        <td className="tokens-cell session-usage-cell"><UsageValue agent={session.agent} usage={session.usage} /></td>
         <td className="time-cell"><time dateTime={session.updatedAt} title={dateTime(session.updatedAt)}>{relativeTime(session.updatedAt)}</time></td>
         <td className="bookmark-cell"><BookmarkButton session={session} onChange={onChange} /></td>
       </tr>)}</tbody>

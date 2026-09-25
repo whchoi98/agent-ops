@@ -7,11 +7,15 @@ import { NOTICE_EN_MESSAGES } from './notices.en';
 import { NOTICE_KO_MESSAGES } from './notices.ko';
 import { RESOURCE_EN_MESSAGES } from './resources.en';
 import { DESKTOP_EN_MESSAGES } from './desktop.en';
+import { SYNC_EN_MESSAGES } from './sync.en';
+import { CREDIT_EN_MESSAGES } from './credits.en';
+import { APP_UPDATE_EN_MESSAGES } from './app-update.en';
 import { createNoticeTranslator, LANGUAGE_STORAGE_KEY, messageTemplate, readLanguage, translate, type Language, type MessageValues } from './core';
 
 export const MESSAGES = {
   ...EN_MESSAGES, ...UI_EN_MESSAGES, ...NOTICE_EN_MESSAGES,
   ...RESOURCE_EN_MESSAGES, ...DESKTOP_EN_MESSAGES,
+  ...SYNC_EN_MESSAGES, ...CREDIT_EN_MESSAGES, ...APP_UPDATE_EN_MESSAGES,
 };
 
 export function createI18n(language: Language) {

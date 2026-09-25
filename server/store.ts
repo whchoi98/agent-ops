@@ -120,6 +120,8 @@ export class Store {
   upsertSession(session: ImportedSession) {
     this.db.transaction(() => {
       const { messages, ...data } = session;
+      const previousRow = this.db.prepare('SELECT * FROM sessions WHERE id=?').get(data.id) as Row | undefined;
+      const previous = previousRow ? this.sessionFromRow(previousRow) : null;
       this.db.prepare(`
         INSERT INTO sessions(id,agent,project_path,started_at,updated_at,status,data) VALUES (?,?,?,?,?,?,?)
         ON CONFLICT(id) DO UPDATE SET agent=excluded.agent, project_path=excluded.project_path,
@@ -134,10 +136,17 @@ export class Store {
         ON CONFLICT(session_id,ordinal) DO UPDATE SET data=excluded.data, tool_name=excluded.tool_name
         WHERE messages.data IS NOT excluded.data OR messages.tool_name IS NOT excluded.tool_name
       `);
-      messages.forEach((message, i) => insert.run(data.id, i, JSON.stringify(message), message.toolName || null));
-      this.db.prepare('DELETE FROM messages WHERE session_id=? AND ordinal>=?').run(data.id, messages.length);
+      let changedMessages = 0;
+      messages.forEach((message, i) => {
+        changedMessages += insert.run(data.id, i, JSON.stringify(message), message.toolName || null).changes;
+      });
+      changedMessages += this.db.prepare('DELETE FROM messages WHERE session_id=? AND ordinal>=?').run(data.id, messages.length).changes;
       if (data.projectPath) this.ensureProject(data.projectPath, data.projectName);
-      this.updateSearch(data.id, messages);
+      const displayedTitle = previousRow?.title_override == null ? data.title : String(previousRow.title_override);
+      const searchChanged = !previous || changedMessages > 0 || previous.title !== displayedTitle
+        || previous.projectPath !== data.projectPath || previous.projectName !== data.projectName || previous.model !== data.model;
+      // Usage/time/status-only changes must not inflate or rebuild a large search body.
+      if (searchChanged) this.updateSearch(data.id, messages);
     })();
   }
   getSession(id: string, includeMessages = true): SessionDetail | null {
@@ -220,6 +229,9 @@ export class Store {
     const total = (this.db.prepare(`SELECT COUNT(*) AS count FROM sessions ${clause}`).get(...args) as { count: number }).count;
     const order = query.sort === 'oldest' ? 'updated_at ASC,id ASC' : query.sort === 'tokens'
       ? `(COALESCE(json_extract(data,'$.usage.inputTokens'),0)+COALESCE(json_extract(data,'$.usage.outputTokens'),0)) DESC, updated_at DESC`
+      : query.sort === 'credits'
+        ? `CASE WHEN agent='kiro' AND json_type(data,'$.usage.credits') IN ('integer','real')
+            AND json_extract(data,'$.usage.credits') >= 0 THEN json_extract(data,'$.usage.credits') END DESC, updated_at DESC,id ASC`
       : 'updated_at DESC,id ASC';
     const rows = this.db.prepare(`SELECT * FROM sessions ${clause} ORDER BY ${order} LIMIT ? OFFSET ?`)
       .all(...args, Math.min(200, Math.max(1, query.limit ?? 60)), Math.max(0, query.offset ?? 0)) as Row[];

@@ -21,6 +21,8 @@ See [operations](operations.md) for the proxy configuration.
 | POST | `/handoff` | `{sessionId,targetAgent,instruction?}` | `Handoff` |
 | POST | `/sync` | `{}` | `SyncReport` |
 | POST | `/sync/start` | `{}` | `202 { syncing: boolean }`; progress through bootstrap/SSE |
+| GET | `/sync/status` | none | cached `SyncStatus`; no import |
+| POST | `/sync/cancel` | `{}` or no body; no query | `202 { stopping: boolean, status: SyncStatus }` |
 | GET | `/runs/:id` | | `RunDetail` |
 | POST | `/runs/preview` | `RunRequest` | `CommandPreview` |
 | POST | `/runs` | `RunRequest` | `Run` |
@@ -33,7 +35,7 @@ See [operations](operations.md) for the proxy configuration.
 | PATCH | `/templates/:id` | template fields excluding id/updatedAt | `PromptTemplate` |
 | DELETE | `/templates/:id` | | `{ok:true}` |
 | PATCH | `/settings` | partial `Settings` | `Settings` |
-| GET | `/events` | SSE | default message `{type:"refresh"}` or `{type:"run-event",runId,event}` |
+| GET | `/events` | SSE | default message `{type:"refresh"}`, `{type:"run-event",runId,event}` or `{type:"sync-state",status}` |
 | GET | `/health` | | `{ok:true,version,demo}` |
 | GET | `/extensions` | `agent?,kind?,status?,scope?,projectId?,q?,offset?,limit?` | `ExtensionCatalog` |
 | POST | `/extensions/refresh` | `{projectId?}` | `{ok:true}` |
@@ -52,6 +54,8 @@ See [operations](operations.md) for the proxy configuration.
 | POST | `/mcp/checks/:checkId/cancel` | `{}` | cancellation of an owned probe |
 | GET | `/desktop-apps` | none | cached server-host `DesktopAppReport` |
 | POST | `/desktop-apps/refresh` | `{}` or no body | refreshed `DesktopAppReport` |
+| GET | `/app-update` | no query/body | cached `AppUpdateReport`; no external request |
+| POST | `/app-update/check` | `{}` or no body; no query | `AppUpdateReport` after an explicit bounded check |
 
 `Bootstrap.sessions` is the most recent 60 sessions. Use `/sessions` for full search
 and pagination. `Bootstrap.analytics` is computed from the entire local archive.
@@ -106,3 +110,95 @@ Info.plist and are not compared to CLI release versions. Authentication and full
 private/cloud histories remain unverified. See [desktop apps](reference/desktop-apps.md).
 The `ChatGPT.app` Codex candidate requires bundle identifier `com.openai.codex`;
 a mismatch uses diagnostic code `bundle-identifier-mismatch` and contributes no installation.
+
+## Recorded credits
+
+`Usage.credits?: number | null` and `Usage.creditsPartial?: boolean` describe
+recorded Kiro credit usage. Missing legacy fields and null remain unrecorded;
+zero and fractional values are preserved. These fields are independent of token
+counts and `costUsd`. Never assign a resumed session's total to a single run.
+`SessionQuery.sort` additionally accepts `credits`, ordering recorded Kiro values
+descending. JSON, Markdown and HTML session exports include recorded credits.
+
+`Analytics` and its daily/agent/model/project groups add `recordedCredits`,
+`knownCreditSessions`, `partialCreditSessions` and `kiroSessions`. Read the sum
+with its coverage: zero covered sessions is not evidence of zero consumption.
+`partialCreditSessions` counts covered sessions marked partial, and numeric
+overflow leaves `recordedCredits: null`. Daily groups use the UTC session start
+date, not individual turn or charge times.
+
+## Import policy and status
+
+`PATCH /settings` accepts `syncMode: "interval" | "idle" | "manual"` (default
+`interval`) and integer `syncMaxSeconds` from 30 through 1800 (default 1800).
+`scanIntervalSeconds` remains an integer from 15 through 3600, default 60.
+The fields use existing settings JSON; no schema migration is added.
+
+`SyncStatus` is defined in `shared/sync-control.ts` and is also returned as
+`Bootstrap.syncStatus`:
+
+- `policy`: `{ mode, intervalSeconds, maxSeconds }`.
+- `demo`, `autoEnabled`.
+- `activity`: `idle`, `running` or `stopping`.
+- `automaticState`: `scheduled`, `manual`, `waiting-for-idle` or `disabled`.
+- `nextCheckAt`: ISO timestamp or null.
+- `currentAttempt`: null or `{ id, trigger, startedAt, maxSeconds }`, where
+  `trigger` is `automatic` or `manual`.
+- `lastAttempt`: null or the attempt plus `finishedAt`, `outcome`, `error` and
+  an optional `report` only when the import returned one. Outcomes are
+  `completed`, `cancelled`, `timed-out` and `failed`.
+
+Status reads do not initiate imports. Manual starts bypass automatic/idle gating
+and coalesce with active work while retaining the starting budget. Idle gating
+uses this workbench's queued/running CLI jobs, not machine-wide activity.
+Settings changes affect later budgets; the next interval starts after termination.
+Schedule/attempt state is in RAM, while the existing persisted import report is
+retained separately. Interrupted attempts retain already committed sessions.
+
+`POST /sync` still waits for a `SyncReport`; cancellation returns 409 and budget
+expiry returns 408. `POST /sync/start` still returns 202 immediately. A cancel
+response with `stopping: false` means no new stop was initiated, including a
+repeated request. Shutdown uses permanent cancellation, while ordinary stop is
+reusable. These controls do not affect independently started `agent-ops sync`
+commands. In demo mode, `/sync` returns a zero-count no-op report, `/sync/start`
+returns `{ syncing: false }` and cancel returns `stopping: false`; no native
+history driver starts.
+
+`sync-state` SSE messages carry lightweight status on a 2-second cadence while
+active, omitting `lastAttempt.report`. They do not trigger archive/bootstrap
+reloads per tick. A terminal attempt triggers one archive refresh. Use the cached
+status route when the full available last-attempt report is needed.
+
+## Workbench update checks
+
+`AppUpdateReport` from `shared/app-update.ts` contains `currentVersion`, `demo`,
+`status`, `checking`, `latest`, `checkedAt`, `nextCheckAt`, `sourceUrl`, `error`
+and `{ npm, git }` in `commands`. Status is `not-checked`, `current`,
+`update-available`, `ahead`, `unavailable` or `demo`.
+
+`latest` is null or `{ version, tag, publishedAt, releaseUrl, archive }`;
+`archive` is null or `{ name, url }`. `checkedAt` is the last explicit attempt's
+completion time, including failure. `nextCheckAt` is the earliest allowed check,
+not an automatic schedule. Both timestamps are null before the first attempt.
+External failures return an unavailable report with a fixed error code, rather
+than exposing remote response or exception text. Error codes are
+`invalid-current-version`, `invalid-release`, `request-failed`,
+`redirect-rejected`, `response-too-large`, `timeout` and `closed`.
+
+Only explicit checks contact the fixed public
+`https://api.github.com/repos/whchoi98/agent-ops/releases/latest` source. There is
+one in-flight request, an 8-second total deadline, a 256 KiB body limit and a
+60-second minimum interval between attempts, including failures. Construction,
+GET and demo make no external request. Metadata is held only in bounded RAM.
+Requests include no credentials, local data or current-version query and reject
+redirects, drafts, prereleases and malformed metadata.
+
+Release and archive URLs must match the exact repository, stable SemVer tag and
+`agent-ops-local-<version>.tgz` filename. Only a validated newer release supplies
+commands. Without a validated archive, release information and Git instructions
+may remain available but `commands.npm` is null. A failed check clears stale
+release metadata and commands. The API never installs or restarts the app;
+shutdown aborts owned checks.
+
+Read [usage, import controls and updates](reference/usage-and-sync.md#english)
+for user flows, source boundaries and upgrade instructions.

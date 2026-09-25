@@ -1,0 +1,17 @@
+.sync-control-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sync-control-section { margin-top: 24px; }
+.sync-control-body { padding: 0 23px 18px; }
+.sync-control-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 8px 0 20px; }
+.sync-control-values div { min-width: 0; }
+.sync-control-values dt { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.sync-control-values dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.sync-last-attempt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; font-size: 13px; }
+.sync-last-attempt span { color: var(--muted); }
+.sync-last-attempt p { flex-basis: 100%; margin: 0; }
+.settings-sync-policy { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; padding: 0 23px 12px; }
+.settings-sync-note { padding: 0 23px 18px; margin: 0; }
+@media (max-width: 700px) {
+  .sync-control-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-sync-policy { grid-template-columns: minmax(0, 1fr); padding-inline: 18px; }
+  .settings-sync-note, .sync-control-body { padding-inline: 18px; }
+}

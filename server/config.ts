@@ -2,7 +2,7 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { Settings } from '../shared/types.js';
 
-export const VERSION = '1.2.1';
+export const VERSION = '1.3.0';
 export const defaultSettings = (): Settings => {
   const home = homedir();
   const codex = process.env.CODEX_HOME || join(home, '.codex');
@@ -11,6 +11,8 @@ export const defaultSettings = (): Settings => {
     concurrency: 2,
     timeoutMinutes: 30,
     scanIntervalSeconds: 60,
+    syncMode: 'interval',
+    syncMaxSeconds: 1800,
     theme: 'light',
     sourceRoots: {
       codex: [join(codex, 'sessions'), join(codex, 'archived_sessions')],

@@ -30,6 +30,8 @@ try {
   const help = await run(process.execPath, [entry, '--help'], { timeout: 10000 });
   assert.match(help.stdout, /Agent Ops/);
   assert.match(help.stdout, /agent-ops optimize/);
+  const installedVersion = await run(process.execPath, [entry, '--version'], { timeout: 10000 });
+  assert.equal(installedVersion.stdout.trim(), version);
   const listener = createServer();
   listener.listen(0, '127.0.0.1');
   await once(listener, 'listening');
@@ -63,6 +65,7 @@ try {
     await new Promise((done) => setTimeout(done, 100));
   }
   assert.equal(health?.demo, true, diagnostics);
+  assert.equal(health.version, version);
   const html = await (await request('/')).text();
   assert.match(html, /<title>my-agent-ops<\/title>/);
   const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
@@ -83,6 +86,17 @@ try {
   assert.equal(data.demo, true);
   assert.equal(data.connectors.every((connector) => !connector.installed), true);
   assert.ok(data.sessionTotal > 80);
+  assert.ok(data.analytics.recordedCredits > 0);
+  assert.ok(data.sessions.some(session => session.agent === 'kiro' && session.usage.credits > 0));
+  const syncStatus = await (await request('/api/sync/status')).json();
+  assert.equal(syncStatus.demo, true);
+  assert.equal(syncStatus.automaticState, 'disabled');
+  assert.equal(syncStatus.activity, 'idle');
+  const appUpdate = await (await request('/api/app-update')).json();
+  assert.equal(appUpdate.currentVersion, version);
+  assert.equal(appUpdate.status, 'demo');
+  assert.equal(appUpdate.commands.npm, null);
+  assert.equal(appUpdate.commands.git, null);
   const resources = await (await request('/api/resources')).json();
   assert.equal(resources.sampleIntervalSeconds, 5);
   assert.equal(resources.diskIntervalSeconds, 60);
@@ -98,7 +112,7 @@ try {
   const desktopApps = await (await request('/api/desktop-apps')).json();
   assert.equal(desktopApps.status, 'demo');
   assert.equal(desktopApps.items.every(item => item.installed === null && item.candidates.length === 0), true);
-  for (const document of ['resources.md', 'mcp.md', 'desktop-apps.md']) {
+  for (const document of ['resources.md', 'mcp.md', 'desktop-apps.md', 'usage-and-sync.md']) {
     const body = await readFile(join(directory, 'node_modules/agent-ops-local/docs/reference', document), 'utf8');
     assert.ok(body.includes('## 한국어'));
   }
@@ -141,8 +155,8 @@ try {
     assert.match((await preview.json()).displayCommand, new RegExp(agent === 'kiro' ? 'kiro-cli' : agent));
     assert.equal((await request('/api/runs', input)).status, 403);
   }
+  phase = 'demo server shutdown';
   server.kill('SIGTERM');
-  phase = 'shutdown';
   const termination = await Promise.race([exit, new Promise((_, reject) => setTimeout(() => reject(new Error('Package shutdown timed out')), 5000).unref())]);
   assert.equal(termination[0], 0);
   phase = 'offline storage optimization';
@@ -193,6 +207,7 @@ try {
   assert.equal(updated.status, 200);
   assert.equal((await updated.json()).imported, 1);
   assert.equal((await (await request('/api/sessions?q=' + encodeURIComponent('Changed packaged import marker'))).json()).total, 1);
+  phase = 'live server shutdown';
   server.kill('SIGTERM');
   const liveTermination = await Promise.race([exit, new Promise((_, reject) => setTimeout(() => reject(new Error('Package shutdown timed out')), 5000).unref())]);
   assert.equal(liveTermination[0], 0);
@@ -208,6 +223,10 @@ try {
   await mkdir('artifacts', { recursive: true });
   await writeFile('artifacts/package-smoke.json', JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report, null, 2));
+} catch (cause) {
+  console.error(`Package verification failed during ${phase}.`);
+  if (diagnostics) console.error(diagnostics);
+  throw cause;
 } finally {
   clearInterval(heartbeat);
   if (server && server.exitCode === null && server.signalCode === null) {

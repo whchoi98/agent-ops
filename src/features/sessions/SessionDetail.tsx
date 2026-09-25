@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRightLeft, Download, Folder, MessageSquare, RotateCcw } from 'lucide-react';
 import { Dialog } from '../../components/Dialog';
 import { BookmarkButton } from '../../components/SessionTable';
-import { AgentBadge, Button, ErrorState, InlineNotice, Skeleton, StatusBadge, TokenValue } from '../../components/ui';
+import { AgentBadge, Button, ErrorState, InlineNotice, Skeleton, StatusBadge, UsageValue } from '../../components/ui';
 import { api } from '../../lib/api';
 import { errorMessage, number } from '../../lib/format';
 import { useResource } from '../../hooks/useResource';
@@ -60,7 +60,7 @@ export function SessionDetailDialog({ id }: { id: string }) {
       {resource.error && <ErrorState message={resource.error} retry={resource.reload} compact />}
       {!session ? <Skeleton rows={8} /> : <>
         <div className="session-summary-strip"><span><MessageSquare size={14} aria-hidden /><Trans message={"{0}개 메시지"} values={{ "0": number(session.messageCount) }} /></span>
-          <span><TokenValue usage={session.usage} /><Trans message={" 토큰"} /></span><span className="session-summary-model">{session.model || t("모델 미기록")}</span>
+          <span><UsageValue agent={session.agent} usage={session.usage} /></span><span className="session-summary-model">{session.model || t("모델 미기록")}</span>
           {session.tags.map(tag => <span className="tag" key={tag}>#{tag}</span>)}</div>
         <div className="detail-tabs" role="tablist" aria-label={t("세션 상세")}
           onKeyDown={event => {

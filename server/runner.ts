@@ -86,7 +86,7 @@ function usageOf(value: unknown, extraCost?: unknown): Usage {
 }
 function mergeUsage(current: Usage, reported: Usage, add: boolean): Usage {
   const next = { ...current };
-  for (const key of Object.keys(reported) as Array<keyof Usage>) {
+  for (const key of ['inputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens', 'costUsd'] as const) {
     const value = reported[key];
     if (value !== null) next[key] = add && current[key] !== null ? current[key]! + value : value;
   }
@@ -189,6 +189,9 @@ export class Runner {
   private pumpAgain = false;
   private closingPromise?: Promise<void>;
   constructor(private readonly store: Store, private readonly options: Options = {}) {}
+
+  /** Cheap workbench-only signal for idle import scheduling, including accepted queued work. */
+  get busy(): boolean { return this.owned.size > 0 || this.queuedWorkspaces.size > 0; }
 
   /** Metadata only; callers cannot obtain or signal the owned ChildProcess. */
   get resourceRoots(): OwnedProcessRoot[] {

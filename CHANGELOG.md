@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-25
+
+### Added
+
+- Add recorded Kiro credits with distinct zero, unknown and partial coverage in summaries, analytics, comparisons, sorting and exports.
+- Add interval, workbench-idle and manual import controls with per-import time budgets, reusable cancellation and cached attempt status.
+- Add explicit workbench release checks with validated GitHub metadata and copyable npm/Git update instructions, without automatic installation or restart.
+
+### Changed
+
+- Schedule automatic imports after completion and defer idle-mode imports while workbench CLI jobs are queued or running.
+- Re-import only Kiro records for credit backfill and avoid inflating or rebuilding unchanged search content when only usage changes.
+- Refresh the archive once at import termination while streaming lightweight sync status separately.
+
 ## [1.2.1] - 2026-09-25
 
 ### Fixed
@@ -55,7 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and cross-origin request guards.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0
 
@@ -70,6 +85,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 따릅니다.
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-09-25
+
+### Added
+
+- Kiro credit을 요약, 분석, 비교, 정렬과 내보내기에 표시하며 기록된 0, 미확인, 부분 기록을 구분하는 기능 추가.
+- 주기, 앱 작업 유휴, 수동 수집 제어와 수집별 시간 제한, 재사용 가능한 중단, 캐시된 시도 상태 추가.
+- 자동 설치나 재시작 없이 앱 릴리스를 직접 확인하고 검증된 GitHub 메타데이터와 복사 가능한 npm/Git 명령을 제공하는 안내 추가.
+
+### Changed
+
+- 수집 완료 후 다음 자동 수집을 예약하고 앱의 CLI 작업이 대기 또는 실행 중이면 유휴 모드 수집을 미루도록 변경.
+- credit 보충 수집은 Kiro 기록만 다시 읽고 사용량만 바뀌면 기존 검색 본문의 압축 해제와 재구축을 건너뛰도록 변경.
+- 작은 동기화 상태를 별도로 전송하고 수집 종료 시 한 번만 이력을 새로고침하도록 변경.
 
 ## [1.2.1] - 2026-09-25
 
@@ -118,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산하도록 수정.
 - 로컬 연결, 교차 출처 요청 보호를 유지하며 설정한 프록시 출처를 허용하도록 수정.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0

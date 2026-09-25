@@ -1,0 +1,12 @@
+.app-update-body { padding: 0 22px 22px; }
+.app-update-body > .inline-notice { margin-top: 14px; }
+.app-update-instructions { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.app-update-instructions h3 { font-size: 13px; color: var(--text-strong); }
+.app-update-instructions > p { margin-top: 9px; font-size: 12px; line-height: 1.8; color: var(--muted); }
+.app-update-instructions .code-heading > span { font-family: var(--font-body); letter-spacing: 0; }
+.app-update-instructions pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .app-update > .panel-heading { flex-wrap: wrap; }
+  .app-update-body { padding: 0 17px 18px; }
+}

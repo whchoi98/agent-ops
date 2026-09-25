@@ -1,6 +1,6 @@
 # my-agent-ops
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.2.1](https://img.shields.io/badge/version-1.2.1-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.3.0](https://img.shields.io/badge/version-1.3.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, Claude Code, Kiro CLI의 대화와 실행 작업을 관리하는 로컬 운영 도구입니다.
 
@@ -18,8 +18,10 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 
 - **Search and organize** - Import native history, search full conversations, filter sessions, add notes and tags, compare sessions and export results.
 - **Control execution** - Preview CLI commands, queue jobs, follow live logs, cancel owned work and prepare editable handoffs.
+- **Track recorded Kiro credits** - Keep recorded zero, missing and partial usage distinct across summaries, analytics, comparisons, sorting and exports.
+- **Control history imports** - Choose interval, workbench-idle or manual imports, set a time budget and stop the current owned import.
 - **Inspect assistant configuration** - Browse skills, plugins, Powers and MCP declarations with source evidence, redacted previews and explicit analysis or connection checks.
-- **Monitor resources and versions** - View app CPU/RSS and storage, compare installed/latest CLI versions and inspect supported macOS app metadata on the server host.
+- **Monitor resources and versions** - View app CPU/RSS and storage, compare CLI versions, inspect supported macOS app metadata and explicitly check workbench updates.
 - **Use either language** - Switch between Korean and English, keep original content, choose light/dark themes and explore an isolated demo on desktop or mobile.
 
 ## Prerequisites
@@ -36,6 +38,8 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 | `npm install -g` installation | [macOS upgrade (npm)](#macos-upgrade-npm) |
 | `git clone` installation | [Upgrade a source checkout](#upgrade-a-source-checkout) |
 
+These examples target source version **1.3.0**.
+
 ### macOS quick start
 
 Use a supported [Node.js LTS release](https://nodejs.org/en/download) that meets the prerequisites above.
@@ -47,12 +51,12 @@ Open **Terminal** on the Mac and run:
 node --version
 npm --version
 
-# Install my-agent-ops 1.2.1 from the GitHub release.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
+# Install my-agent-ops 1.3.0 from the GitHub release.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
 
 # Confirm the installed version.
 agent-ops --version
-# 1.2.1
+# 1.3.0
 
 # Start the app.
 agent-ops
@@ -69,12 +73,12 @@ Wait for active jobs and synchronization to finish, then press **`Ctrl+C` in the
 Run:
 
 ```bash
-# Install version 1.2.1 over the existing npm installation.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
+# Install version 1.3.0 over the existing npm installation.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
 
 # Confirm the new version.
 agent-ops --version
-# 1.2.1
+# 1.3.0
 
 # Restart the app.
 agent-ops
@@ -140,8 +144,8 @@ The UI labels sample sessions and runs; assistant execution, retries and MCP con
 
 ### Local npm archive
 
-After installing dependencies in a source checkout, create an archive with `npm pack`, or download the [v1.2.1 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz).
-Use version `1.2.1` from the [source manifest](package.json) and [GitHub release](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.1); read [CHANGELOG.md](CHANGELOG.md) for release changes and upcoming work.
+After installing dependencies in a source checkout, create an archive with `npm pack`, or download the [v1.3.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz).
+The [source manifest](package.json) specifies version `1.3.0`. See the [v1.3.0 release](https://github.com/whchoi98/agent-ops/releases/tag/v1.3.0) and [CHANGELOG.md](CHANGELOG.md) for changes.
 These commands install a local file and do not depend on a public npm release.
 
 ```bash
@@ -149,7 +153,7 @@ These commands install a local file and do not depend on a public npm release.
 npm pack
 
 # Install the archive and start the app.
-npm install -g ./agent-ops-local-1.2.1.tgz
+npm install -g ./agent-ops-local-1.3.0.tgz
 agent-ops
 ```
 
@@ -157,7 +161,7 @@ To run the archive without a global installation:
 
 ```bash
 # Start the archive in demo mode.
-npm exec --package=./agent-ops-local-1.2.1.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.3.0.tgz -- agent-ops demo --port 4318
 ```
 
 The archive includes the built application and public documentation.
@@ -174,12 +178,12 @@ The archive includes the built application and public documentation.
 | Runs | Create jobs, preview commands, inspect the queue and live logs, cancel or retry |
 | Handoff | Prepare a prompt from a session's context and notes for another assistant |
 | Projects | Register working directories, enable execution per project and browse related history |
-| Analytics | Inspect recorded tokens/costs, model/project/tool distributions, cache usage and run outcomes |
+| Analytics | Inspect recorded Kiro credits and coverage, tokens/costs, model/project/tool distributions, cache usage and run outcomes |
 | Templates | Use review, implementation, debugging and documentation prompts, or save your own |
 | Skills & plugins | Inspect definitions, cached installs, activation evidence, scope, source/reference files and declared tools/MCP/hooks |
 | Resources | Inspect server and owned-work CPU/RSS, recent trends, data files and filesystem availability |
 | MCP | Inspect client-specific declarations and run previewed metadata checks |
-| Settings | Check CLI versions and macOS app metadata; configure history roots, concurrency, timeouts and theme |
+| Settings | Check workbench/CLI versions and macOS app metadata; configure history roots, import mode/budget, concurrency, timeouts and theme |
 
 Open the command palette with `Ctrl/Cmd + K`. Use light/dark themes and mobile navigation on narrow screens.
 The **한/EN** control beside the theme button switches languages and saves the choice in the browser.
@@ -251,9 +255,39 @@ Add other roots in Settings. Native files and SQLite databases are read-only.
 Malformed files and unsupported records appear in sync diagnostics while other imports continue.
 
 Usage totals include **recorded values only**. Input tokens are normalized to include cache-read and cache-write input.
-Missing token and cost records remain marked as unknown.
+Missing token, credit and cost records remain marked as unknown.
 Cost totals are partial sums of sessions with cost records, not invoices.
 Tool duration and session timestamps do not measure CPU usage; use Resources for OS measurements.
+
+Kiro summaries prefer credits recorded in modern local turn metadata. Valid
+nonnegative decimal values, including zero, remain separate from tokens and USD.
+Repeated turn snapshots replace earlier observations instead of adding the same
+usage again. Missing or ambiguous records stay unknown or partial.
+
+Analytics shows separate Kiro credit totals and coverage; comparisons, credit
+sorting and JSON/Markdown/HTML exports retain that measurement. Daily totals use
+the session start date in UTC. Plain run output may contain no credits, and a
+resumed session's total is never assigned to one run.
+
+### Import controls and app updates
+
+In **Settings**, choose **Automatic sync mode**, set **Sync time budget**, then
+save. `interval` is the default; `idle` defers automatic imports while workbench
+CLI jobs are queued or running, and `manual` leaves starts to **Sync now**.
+The interval starts after completion. Use **Import controls → Stop current sync**
+to stop owned import work and start another import later; committed sessions stay
+saved. These controls do not manage separately launched `agent-ops sync` commands.
+
+The separate **my-agent-ops updates** card reads cached state on opening.
+**Check app release** explicitly checks the public GitHub release with one request,
+an **8-second** deadline, a **256 KiB** response limit and a **60-second** cooldown.
+Demo checks make no GitHub request. Valid newer releases offer copyable commands;
+npm instructions require a validated installation archive. Stop the app in its
+server terminal before running them, then reuse your data directory, environment
+variables and startup options. The card does not install or restart the app.
+
+Read [recorded usage, import controls and updates](docs/reference/usage-and-sync.md#english)
+for coverage, limits, status fields and operating steps.
 
 ### Skills, plugins and Powers
 
@@ -349,7 +383,16 @@ Open `http://127.0.0.1:4317` locally. CLI execution and project paths still belo
 
 `-` means unset. CLI flags `--data-dir`, `--port` and `--public-url` override the matching environment variables.
 Demo adds `demo/` to the selected base. Development uses `.data`, or `.data/demo` with `--demo`.
-Settings also controls history roots, the **2**-job concurrency default, the **30-minute** timeout and the **60-second** history scan interval.
+Settings also controls history roots, the **2**-job concurrency default and the **30-minute** job timeout.
+
+| Import setting | Allowed values | Default |
+|---|---|---|
+| `syncMode` | `interval`, `idle`, `manual` | `interval` |
+| `scanIntervalSeconds` | Integer, 15-3,600 seconds | `60` |
+| `syncMaxSeconds` | Integer, 30-1,800 seconds | `1800` |
+
+Save these fields in Settings. They use the existing settings JSON. A running
+import keeps its starting budget; changes apply to subsequent imports.
 
 ```bash
 # Start with an explicit port and data directory.
@@ -495,8 +538,10 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 
 - **검색과 정리** - 원본 이력을 가져와 전체 대화를 검색하고 세션 필터, 메모, 태그, 세션 비교와 내보내기를 사용합니다.
 - **실행 제어** - CLI 명령을 미리 보고 작업을 대기열에 넣으며 실시간 로그 확인, 소유 작업 취소와 편집 가능한 작업 인계를 지원합니다.
+- **기록된 Kiro credit 확인** - 기록된 0, 미기록, 부분 사용량을 구분하고 요약, 분석, 비교, 정렬과 내보내기에 표시합니다.
+- **이력 수집 제어** - 주기, 앱 작업 유휴, 수동 방식을 선택하고 시간 제한을 설정하며 현재 소유 수집 작업을 중단합니다.
 - **어시스턴트 설정 확인** - 출처 근거와 마스킹된 미리보기로 스킬, 플러그인, Power, MCP 선언을 살펴보고 분석이나 연결 점검을 직접 선택합니다.
-- **자원과 버전 확인** - 앱의 CPU, RSS와 저장 공간, CLI 현재, 최신 버전, 서버 호스트의 지원 대상 macOS 앱 정보를 확인합니다.
+- **자원과 버전 확인** - 앱의 CPU, RSS와 저장 공간, CLI 버전, 지원 대상 macOS 앱 정보를 확인하고 앱 자체의 업데이트를 직접 조회합니다.
 - **한국어와 영어 사용** - 원문을 보존하며 언어와 밝은 테마, 어두운 테마를 바꾸고 데스크톱이나 모바일에서 격리된 데모를 살펴봅니다.
 
 ## 사전 요구 사항
@@ -515,6 +560,8 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 | `npm install -g`로 설치 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
 | `git clone`으로 설치 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
 
+아래 예시는 소스 버전 **1.3.0**을 기준으로 합니다.
+
 ### macOS 처음 설치
 
 위 사전 요구 사항에 맞는 [Node.js LTS 버전](https://nodejs.org/en/download)을 사용합니다.
@@ -526,12 +573,12 @@ Mac의 **터미널**을 열고 다음 명령을 실행합니다.
 node --version
 npm --version
 
-# GitHub 릴리스에서 my-agent-ops 1.2.1을 설치합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
+# GitHub 릴리스에서 my-agent-ops 1.3.0을 설치합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
 
 # 설치한 버전을 확인합니다.
 agent-ops --version
-# 1.2.1
+# 1.3.0
 
 # 앱을 시작합니다.
 agent-ops
@@ -548,12 +595,12 @@ npm에서 `EACCES` 오류가 발생하면 [공식 npm 권한 설정 안내](http
 다음 명령으로 업데이트합니다.
 
 ```bash
-# 기존 npm 설치본을 1.2.1으로 업데이트합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz
+# 기존 npm 설치본을 1.3.0으로 업데이트합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
 
 # 새 버전을 확인합니다.
 agent-ops --version
-# 1.2.1
+# 1.3.0
 
 # 앱을 다시 시작합니다.
 agent-ops
@@ -619,8 +666,8 @@ npm run demo -- --port 4318
 
 ### 로컬 npm 압축 파일
 
-소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 [v1.2.1 설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.2.1/agent-ops-local-1.2.1.tgz)을 내려받습니다.
-[소스 매니페스트](package.json)와 [GitHub 릴리스](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.1)의 버전은 `1.2.1`이며 릴리스 변경 사항과 다음 버전의 작업은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
+소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 [v1.3.0 설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz)을 내려받습니다.
+[소스 매니페스트](package.json)의 버전은 `1.3.0`입니다. 변경 사항은 [v1.3.0 릴리스](https://github.com/whchoi98/agent-ops/releases/tag/v1.3.0)와 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
 아래 명령은 로컬 파일을 설치하므로 npm에 공개된 릴리스가 없어도 사용할 수 있습니다.
 
 ```bash
@@ -628,7 +675,7 @@ npm run demo -- --port 4318
 npm pack
 
 # 압축 파일을 설치하고 앱을 시작합니다.
-npm install -g ./agent-ops-local-1.2.1.tgz
+npm install -g ./agent-ops-local-1.3.0.tgz
 agent-ops
 ```
 
@@ -636,7 +683,7 @@ agent-ops
 
 ```bash
 # 압축 파일을 데모 모드로 실행합니다.
-npm exec --package=./agent-ops-local-1.2.1.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.3.0.tgz -- agent-ops demo --port 4318
 ```
 
 압축 파일에는 빌드된 앱과 공개 문서가 포함됩니다.
@@ -655,12 +702,12 @@ npm exec --package=./agent-ops-local-1.2.1.tgz -- agent-ops demo --port 4318
 | 실행 | 작업 생성, 명령 미리보기, 대기열, 실시간 로그 확인, 취소와 재실행 |
 | 작업 인계 | 세션의 맥락과 메모를 다른 에이전트용 프롬프트로 준비 |
 | 프로젝트 | 작업 경로 등록, 프로젝트별 실행 허용과 관련 이력 탐색 |
-| 분석 | 기록된 토큰, 비용, 모델, 프로젝트, 도구별 분포, 캐시 사용량과 실행 결과 확인 |
+| 분석 | 기록된 Kiro credit과 기록 범위, 토큰, 비용, 모델, 프로젝트, 도구별 분포, 캐시 사용량과 실행 결과 확인 |
 | 템플릿 | 검토, 구현, 디버깅, 문서화 프롬프트 사용과 사용자 템플릿 저장 |
 | 스킬, 플러그인 | 정의, 캐시, 활성화 근거, 적용 범위, 원문, 참조 파일과 선언된 도구, MCP, 훅 확인 |
 | 자원 | 서버와 소유 작업의 CPU, RSS, 최근 추이, 데이터 파일과 파일시스템 여유 공간 확인 |
 | MCP | 클라이언트별 선언 확인과 미리보기 후 메타데이터 점검 |
-| 설정 | CLI 버전, macOS 앱 정보 확인, 이력 경로, 동시 실행 수, 시간 제한, 테마 설정 |
+| 설정 | 앱 자체와 CLI 버전, macOS 앱 정보 확인, 이력 경로, 수집 방식과 시간 제한, 동시 실행 수, 작업 시간 제한, 테마 설정 |
 
 `Ctrl/Cmd + K`로 명령 팔레트를 여세요. 밝은 테마, 어두운 테마를 지원하며 좁은 화면에서는 모바일 탐색 메뉴를 사용합니다.
 테마 버튼 옆의 **한/EN**으로 언어를 전환하면 선택한 언어를 브라우저에 저장합니다.
@@ -738,9 +785,39 @@ agent-ops optimize
 잘못된 파일과 지원하지 않는 기록은 동기화 진단에 표시하고 나머지 수집을 계속합니다.
 
 사용량은 **기록된 값만** 집계합니다. 입력 토큰은 캐시 읽기, 쓰기 입력을 포함하는 기준으로 정규화합니다.
-토큰과 비용 기록이 없으면 미확인 상태로 표시합니다.
+토큰, credit, 비용 기록이 없으면 미확인 상태로 표시합니다.
 비용 합계는 비용 기록이 있는 세션의 부분 합계이며 청구서가 아닙니다.
 도구 실행 시간과 세션 기록 시각은 CPU 사용량이 아닙니다. 운영체제 측정값은 자원 화면에서 확인하세요.
+
+Kiro 요약은 최신 형식의 로컬 turn 메타데이터에 기록된 credit을 우선 표시합니다.
+0을 포함한 유효한 비음수 소수를 유지하며 토큰, USD와 별도로 다룹니다.
+같은 turn의 반복 스냅샷은 앞선 기록을 교체하며 사용량을 중복 합산하지 않습니다.
+누락되거나 식별이 모호한 기록은 미확인 또는 부분 기록으로 남깁니다.
+
+분석에서는 Kiro credit 합계와 기록 범위를 별도로 보여 주며 세션 비교, credit
+정렬과 JSON/Markdown/HTML 내보내기에도 반영합니다. 날짜별 합계는 UTC 세션
+시작일 기준입니다. 일반 실행 출력에는 credit이 없을 수 있으며 재개한 세션의
+전체 사용량을 실행 한 번에 배정하지 않습니다.
+
+### 수집 제어와 앱 업데이트
+
+**설정**에서 **자동 동기화 방식**과 **동기화 시간 제한**을 정한 뒤 저장합니다.
+기본값은 `interval`이며 `idle`은 앱의 CLI 작업이 대기 또는 실행 중이면 자동
+수집을 미룹니다. `manual`에서는 **지금 동기화**로 시작합니다. 수집이 끝나면
+다음 주기를 계산합니다. **수집 제어 → 현재 동기화 중단**으로 소유 수집 작업을
+멈추고 나중에 다시 시작할 수 있으며 이미 저장한 세션은 유지합니다.
+별도로 실행한 `agent-ops sync` 명령은 이 제어의 대상이 아닙니다.
+
+별도의 **my-agent-ops 업데이트** 카드는 열 때 캐시 상태만 읽습니다.
+**앱 최신 릴리스 확인**을 누르면 공개 GitHub 릴리스를 요청 하나, **8초**,
+응답 **256 KiB**, 확인 간격 **60초**로 제한해 조회합니다. 데모는 GitHub를
+조회하지 않습니다. 검증된 새 릴리스에만 복사할 명령을 표시하며 npm 명령에는
+검증된 설치 파일이 필요합니다. 서버 터미널에서 앱을 중지한 뒤 명령을 실행하고
+기존 데이터 디렉터리, 환경 변수와 시작 옵션을 유지합니다. 카드가 설치나
+재시작을 직접 실행하지는 않습니다.
+
+기록 범위, 한도, 상태 필드와 사용 순서는
+[기록된 사용량, 수집 제어와 업데이트](docs/reference/usage-and-sync.md#한국어)를 참고하세요.
 
 ### 스킬, 플러그인, Power
 
@@ -838,7 +915,16 @@ ssh -N -L 4317:127.0.0.1:4317 "$agent_ops_ssh_target"
 
 `-`는 미설정입니다. CLI의 `--data-dir`, `--port`, `--public-url`은 해당 환경 변수보다 우선합니다.
 데모는 선택한 기준 경로에 `demo/`를 추가합니다. 개발 모드에서는 `.data`, `--demo`를 함께 쓰면 `.data/demo`를 사용합니다.
-설정에서 이력 경로와 기본 동시 실행 **2**개, 시간 제한 **30분**, 이력 수집 주기 **60초**도 변경합니다.
+설정에서 이력 경로와 기본 동시 실행 **2**개, 작업 시간 제한 **30분**도 변경합니다.
+
+| 수집 설정 | 허용값 | 기본값 |
+|---|---|---|
+| `syncMode` | `interval`, `idle`, `manual` | `interval` |
+| `scanIntervalSeconds` | 정수, 15-3,600초 | `60` |
+| `syncMaxSeconds` | 정수, 30-1,800초 | `1800` |
+
+설정 화면에서 저장하며 기존 설정 JSON을 사용합니다. 진행 중인 수집은 시작할 때의
+시간 제한을 유지하고 변경한 값은 다음 수집부터 적용합니다.
 
 ```bash
 # 포트와 데이터 디렉터리를 지정해 시작합니다.

@@ -8,6 +8,11 @@ import { StatCard } from '../components/Stats';
 import { AgentBadge, AggregateTokenValue, EmptyState, InlineNotice, PageHeading, Panel, StatusBadge } from '../components/ui';
 import { compactNumber, number } from '../lib/format';
 import { useApp, useData } from '../state/AppProvider';
+import type { CreditTotals } from '../../shared/types';
+import { AggregateCreditValue } from '../features/usage/CreditValue';
+import { CreditSummary } from '../features/usage/CreditSummary';
+import { DailyCredits } from '../features/usage/DailyCredits';
+import { useCreditI18n } from '../features/usage/i18n';
 
 const OUTCOMES: Array<{ status: RunStatus; color: string }> = [
   { status: 'completed', color: '#0e9f8f' }, { status: 'running', color: '#3564e8' },
@@ -16,10 +21,11 @@ const OUTCOMES: Array<{ status: RunStatus; color: string }> = [
 ];
 
 function Breakdown({ title, description, rows, onSelect }: {
-  title: string; description: string; rows: Array<{ id: string; label: string; detail?: string; sessions: number; tokens: number; knownTokenSessions: number }>;
+  title: string; description: string; rows: Array<{ id: string; label: string; detail?: string; sessions: number; tokens: number; knownTokenSessions: number } & CreditTotals>;
   onSelect?: (id: string) => void;
 }) {
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const [expanded, setExpanded] = useState(false);
   const max = Math.max(1, ...rows.map(row => row.sessions));
   return <Panel title={title} description={description} className="breakdown-panel">
@@ -30,6 +36,7 @@ function Breakdown({ title, description, rows, onSelect }: {
             : <strong title={row.detail ?? row.label}>{row.label}</strong>}
             <span className="breakdown-track"><i style={{ width: `${row.sessions / max * 100}%` }} /></span>
           </div><span className="numeric">{number(row.sessions)}</span><AggregateTokenValue tokens={row.tokens} sessions={row.sessions} knownTokenSessions={row.knownTokenSessions} />
+          <div className="breakdown-credits"><span>{creditT('Kiro 크레딧')}</span><AggregateCreditValue totals={row} /></div>
         </div>)}
       </div>
       {rows.length > 7 && <button className="panel-footer-link" onClick={() => setExpanded(value => !value)}>{expanded ? t("간략히 보기") : t("전체 {0}개 보기", { "0": rows.length })}</button>}
@@ -40,6 +47,7 @@ function Breakdown({ title, description, rows, onSelect }: {
 export function Analytics() {
   const { money } = useFormat();
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const { analytics } = useData();
   const { navigate } = useApp();
   const [days, setDays] = useState(30);
@@ -60,18 +68,21 @@ export function Analytics() {
         detail={cacheRatio === null ? t("입력 토큰 기록이 필요합니다") : t("캐시 읽기 {0} / 입력 {1}", { "0": compactNumber(analytics.cacheReadTokens), "1": compactNumber(analytics.inputTokens) })}
         icon={DatabaseZap} accent="amber" />
     </div>
+    <CreditSummary totals={analytics} />
     <div className="analytics-record-notice"><InlineNotice>
       <strong><Trans message={"기록된 값만 집계합니다."} /></strong><Trans message={" 토큰·비용의 미기록 값은 합계에서 제외하며, 요금으로 환산하거나 추정하지 않습니다.{0}"} values={{ "0": analytics.totalSessions > 0 && <span>{t(' 비용 미기록 {0}개 · 토큰 미기록 {1}개 세션.', { 0: number(Math.max(0, analytics.totalSessions - analytics.knownCostSessions)), 1: number(Math.max(0, analytics.totalSessions - analytics.knownTokenSessions)) })}</span> }} /></InlineNotice></div>
-    <Panel title={t("날짜별 활동")} description={t("최근 {0}일 · 기록된 세션 수 · 다른 집계는 전체 기간 기준", { "0": days })}
+    <Panel title={t("날짜별 활동")} description={creditT('최근 {0}일, 세션 시작일 (UTC) 기준, 다른 집계는 전체 기간 기준', { 0: days })}
       actions={<select aria-label={t("활동 차트 기간")} value={days} onChange={event => setDays(Number(event.target.value))}><option value={7}><Trans message={"최근 7일"} /></option><option value={14}><Trans message={"최근 14일"} /></option><option value={30}><Trans message={"최근 30일"} /></option></select>}>
       <ActivityChart daily={analytics.daily} days={days} />
+      <DailyCredits daily={analytics.daily} days={days} />
     </Panel>
     <div className="analytics-grid">
       <Panel title={t("에이전트별 사용량")} description={t("기록된 세션, 토큰과 비용")} className="provider-analytics-panel">
-        {analytics.agents.length ? <div className="table-scroll"><table className="data-table provider-analytics-table">
-          <thead><tr><th><Trans message={"에이전트"} /></th><th><Trans message={"세션"} /></th><th><Trans message={"토큰"} /></th><th><Trans message={"기록된 비용"} /></th></tr></thead><tbody>
+        {analytics.agents.length ? <div className="table-scroll"><table className="data-table provider-analytics-table provider-credit-table">
+          <thead><tr><th><Trans message={"에이전트"} /></th><th><Trans message={"세션"} /></th><th><Trans message={"토큰"} /></th><th>{creditT('Kiro 크레딧')}</th><th><Trans message={"기록된 비용"} /></th></tr></thead><tbody>
             {analytics.agents.map(agent => <tr key={agent.agent}><td><button className="provider-table-button" onClick={() => navigate('sessions', { agent: agent.agent })}><AgentBadge agent={agent.agent} /></button></td>
               <td className="numeric">{number(agent.sessions)}</td><td><AggregateTokenValue tokens={agent.tokens} sessions={agent.sessions} knownTokenSessions={agent.knownTokenSessions} /></td>
+              <td>{agent.agent === 'kiro' ? <AggregateCreditValue totals={agent} /> : <span className="text-muted">{creditT('해당 없음')}</span>}</td>
               <td><span className={`numeric ${!agent.knownCostSessions ? 'text-muted' : ''}`}>{agent.knownCostSessions ? money(agent.costUsd) : t("미기록")}</span>
                 {agent.knownCostSessions > 0 && <small className="table-secondary"><Trans message={"{0}개 세션 기록"} values={{ "0": agent.knownCostSessions }} /></small>}</td></tr>)}
           </tbody></table></div> : <EmptyState compact title={t("에이전트 기록이 없습니다")} description={t("세션을 가져와 사용량을 확인하세요.")} />}
@@ -84,10 +95,10 @@ export function Analytics() {
         </div> : <EmptyState compact title={t("아직 실행 기록이 없습니다")} description={t("에이전트를 실행하면 결과가 집계됩니다.")} />}
       </Panel>
       <Breakdown title={t("프로젝트별 활동")} description={t("전체 기간 · 세션 수 기준")}
-        rows={analytics.projects.map(project => ({ id: project.path, label: project.name, detail: project.path, sessions: project.sessions, tokens: project.tokens, knownTokenSessions: project.knownTokenSessions }))}
+        rows={analytics.projects.map(project => ({ ...project, id: project.path, label: project.name, detail: project.path }))}
         onSelect={path => navigate('sessions', { project: path })} />
       <Breakdown title={t("모델별 사용량")} description={t("세션에 마지막으로 기록된 모델 기준")}
-        rows={analytics.models.map(model => ({ id: model.model, label: model.model || '모델 미기록', sessions: model.sessions, tokens: model.tokens, knownTokenSessions: model.knownTokenSessions }))} />
+        rows={analytics.models.map(model => ({ ...model, id: model.model, label: model.model || t('모델 미기록') }))} />
       <Panel title={t("도구 사용")} description={t("전체 기간 · {0}회 도구 호출", { "0": number(analytics.totalToolCalls) })} actions={<Wrench size={17} className="text-muted" aria-hidden />} className="tools-analytics-panel">
         {analytics.tools.length ? <><div className="tool-usage-list">{(allTools ? analytics.tools : analytics.tools.slice(0, 8)).map(tool => <div className="tool-usage-row" key={tool.name}>
           <code>{tool.name}</code><span className="tool-usage-track"><i style={{ width: `${tool.count / maxTool * 100}%` }} /></span><strong className="numeric">{number(tool.count)}</strong>

@@ -3,10 +3,11 @@ import { useI18n, Trans, AppNotice } from '../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { Clock3, Folder, LayoutGrid, List, Plus, Search, Terminal, X } from 'lucide-react';
 import { AGENTS, type Agent, type Run, type RunStatus } from '../../shared/types';
-import { AgentBadge, Button, EmptyState, IconButton, PageHeading, ProviderMark, StatusBadge } from '../components/ui';
+import { AgentBadge, Button, EmptyState, IconButton, PageHeading, ProviderMark, StatusBadge, UsageValue } from '../components/ui';
 import { RunActions } from '../features/runs/RunActions';
 import { AGENT_META, isActiveRun, number } from '../lib/format';
 import { useApp, useData } from '../state/AppProvider';
+import { useCreditI18n } from '../features/usage/i18n';
 
 const COLUMNS: Array<{ title: string; statuses: RunStatus[]; className: string }> = [
   { title: '대기 중', statuses: ['queued'], className: 'queued' },
@@ -24,6 +25,7 @@ function RunCard({ run }: { run: Run }) {
       <div className="run-card-top"><ProviderMark agent={run.agent} size="small" /><span>{AGENT_META[run.agent].name}</span><StatusBadge status={run.status} /></div>
       <h3>{run.title}</h3><p className="run-card-prompt">{run.prompt}</p>
       <span className="run-card-project"><Folder size={13} aria-hidden />{run.projectName}</span>
+      <span className="run-card-usage"><UsageValue agent={run.agent} usage={run.usage} /></span>
       {run.status === 'running' && <span className="running-indicator"><i /><i /><i /><span><Trans message={"로그 확인하기"} /></span></span>}
       {run.error && <span className="run-card-error"><AppNotice message={run.error} /></span>}
       <div className="run-card-time"><Clock3 size={12} aria-hidden /><time dateTime={run.createdAt} title={dateTime(run.createdAt)}>{relativeTime(run.createdAt)}</time>
@@ -36,6 +38,7 @@ function RunCard({ run }: { run: Run }) {
 export function Runs() {
   const { relativeTime } = useFormat();
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const data = useData();
   const { openNewRun, openRun } = useApp();
   const [view, setView] = useState<'board' | 'list'>('board');
@@ -78,10 +81,11 @@ export function Runs() {
                 {!runs.length && <div className="run-column-empty"><Trans message={"이 상태의 작업이 없습니다."} /></div>}</div>
             </section>;
           })}
-        </div> : <div className="panel run-list-panel"><div className="table-scroll"><table className="data-table run-list-table">
-          <thead><tr><th><Trans message={"실행"} /></th><th><Trans message={"에이전트"} /></th><th><Trans message={"상태"} /></th><th><Trans message={"프로젝트"} /></th><th><Trans message={"생성 시간"} /></th><th><span className="sr-only"><Trans message={"실행 작업"} /></span></th></tr></thead>
+        </div> : <div className="panel run-list-panel"><div className="table-scroll"><table className="data-table run-list-table usage-run-table">
+          <thead><tr><th><Trans message={"실행"} /></th><th><Trans message={"에이전트"} /></th><th><Trans message={"상태"} /></th><th><Trans message={"프로젝트"} /></th><th>{creditT('사용량')}</th><th><Trans message={"생성 시간"} /></th><th><span className="sr-only"><Trans message={"실행 작업"} /></span></th></tr></thead>
           <tbody>{filtered.map(run => <tr key={run.id}><td><button className="table-title-button" onClick={() => openRun(run.id)}>{run.title}</button></td>
             <td><AgentBadge agent={run.agent} compact /></td><td><StatusBadge status={run.status} /></td><td>{run.projectName}</td>
+            <td><UsageValue agent={run.agent} usage={run.usage} /></td>
             <td><time dateTime={run.createdAt}>{relativeTime(run.createdAt)}</time></td><td><RunActions run={run} small /></td></tr>)}</tbody>
         </table></div></div>}
     <p className="page-footnote"><Trans message={"{0}개 실행 표시 · 완료된 작업은 다시 시작되지 않습니다. 실패·취소·중단된 작업은 같은 설정으로 다시 시도할 수 있습니다."} values={{ "0": number(filtered.length) }} /></p>

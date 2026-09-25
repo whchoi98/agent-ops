@@ -1,11 +1,13 @@
 import {
-  SessionBuilder, array, firstString, hash, json, object, readUsage, string, text,
+  SessionBuilder, array, firstString, hash, json, object, readUsage, string, text, timestamp,
   type JsonObject, type ParseContext, type ParseResult, type SessionParser,
 } from './common.js';
 import type { Message } from '../../shared/types.js';
+import { KiroCreditLedger, kiroCreditTurnIdentity } from './kiro-credits.js';
 
 export function createKiroParser(context: ParseContext): SessionParser {
   const builder = new SessionBuilder('kiro', context);
+  const credits = new KiroCreditLedger(message => builder.warn(message));
   const messageTimes = new Map<string, unknown>();
   const metadataResponses = new Map<string, { message: JsonObject; time: unknown }>();
   const eventMessages = new Set<string>();
@@ -124,8 +126,11 @@ export function createKiroParser(context: ParseContext): SessionParser {
     builder.model = firstString(modelInfo.model_id, modelInfo.model_name, record.model, builder.model);
     builder.usage.total(readUsage(record.usage ?? record.token_usage));
     const turns = array(object(state.conversation_metadata).user_turn_metadatas);
+    const snapshotAt = timestamp(record.updated_at) ?? timestamp(record.updatedAt);
     turns.forEach((value, index) => {
       const turn = object(value);
+      credits.record(kiroCreditTurnIdentity(turn, index), turn.metering_usage, turn.end_timestamp,
+        snapshotAt);
       const ids = array(turn.message_ids);
       const identity = turn.loop_id !== undefined ? hash(json(turn.loop_id))
         : ids.length ? hash(json(ids)) : `turn:${index}`;
@@ -196,7 +201,10 @@ export function createKiroParser(context: ParseContext): SessionParser {
             : 'Kiro metadata contains only final responses; a matching transcript is needed for full history.');
         }
       }
-      return builder.finish();
+      const creditUsage = credits.finish();
+      const result = builder.finish();
+      if (result.session) result.session.usage = { ...result.session.usage, ...creditUsage };
+      return result;
     },
   };
 }

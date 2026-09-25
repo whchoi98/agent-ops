@@ -5,10 +5,13 @@ import {
   Check, CheckCircle2, Clock3, FolderSearch, Monitor, Moon, RefreshCw, Save, Sun, Terminal,
 } from 'lucide-react';
 import { AGENTS, type Agent, type Settings as SettingsContract } from '../../shared/types';
+import type { SyncMode } from '../../shared/sync-control';
 import { Button, Field, InlineNotice, PageHeading, Panel, ProviderMark } from '../components/ui';
 import { VersionComparison } from '../features/versions/VersionComparison';
 import { VersionSection } from '../features/versions/VersionSection';
 import { DesktopApps } from '../features/versions/DesktopApps';
+import { SyncControls } from '../features/sync-controls/SyncControls';
+import { AppUpdate } from '../features/app-update';
 import { useVersions } from '../features/versions/useVersions';
 import { api } from '../lib/api';
 import { AGENT_META, errorMessage, number } from '../lib/format';
@@ -23,23 +26,31 @@ export function Settings() {
   const { relativeTime, dateTime } = useFormat();
   const { t } = useI18n();
   const data = useData();
-  const { refresh, notify, sync, syncing, setTheme, themeSaving } = useApp();
+  const { refresh, notify, sync, syncing, cancelSync, stoppingSync, setTheme, themeSaving } = useApp();
   const versions = useVersions();
   const [roots, setRoots] = useState(() => rootText(data.settings.sourceRoots));
   const [concurrency, setConcurrency] = useState(String(data.settings.concurrency));
   const [timeout, setTimeout] = useState(String(data.settings.timeoutMinutes));
   const [interval, setInterval] = useState(String(data.settings.scanIntervalSeconds));
+  const [syncMode, setSyncMode] = useState<SyncMode>(data.settings.syncMode ?? 'interval');
+  const [syncMaxSeconds, setSyncMaxSeconds] = useState(String(data.settings.syncMaxSeconds ?? 1800));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const payload = {
     concurrency: Number(concurrency), timeoutMinutes: Number(timeout), scanIntervalSeconds: Number(interval),
+    syncMode, syncMaxSeconds: Number(syncMaxSeconds),
     sourceRoots: { codex: normalizeRoots(roots.codex), claude: normalizeRoots(roots.claude), kiro: normalizeRoots(roots.kiro) },
   };
   const baseline = {
     concurrency: data.settings.concurrency, timeoutMinutes: data.settings.timeoutMinutes,
     scanIntervalSeconds: data.settings.scanIntervalSeconds, sourceRoots: data.settings.sourceRoots,
+    syncMode: data.settings.syncMode ?? 'interval', syncMaxSeconds: data.settings.syncMaxSeconds ?? 1800,
   };
-  const dirty = JSON.stringify(payload) !== JSON.stringify(baseline);
+  const dirty = payload.concurrency !== baseline.concurrency || payload.timeoutMinutes !== baseline.timeoutMinutes
+    || payload.scanIntervalSeconds !== baseline.scanIntervalSeconds || payload.syncMode !== baseline.syncMode
+    || payload.syncMaxSeconds !== baseline.syncMaxSeconds || AGENTS.some(agent =>
+      payload.sourceRoots[agent].length !== baseline.sourceRoots[agent].length
+      || payload.sourceRoots[agent].some((path, index) => path !== baseline.sourceRoots[agent][index]));
   async function save(event: FormEvent) {
     event.preventDefault();
     if (Object.values(payload.sourceRoots).some(paths => paths.length > 20)) { setError('에이전트별 기록 경로는 20개까지 저장할 수 있습니다.'); return; }
@@ -48,6 +59,7 @@ export function Settings() {
       const settings = await api.updateSettings(payload);
       setRoots(rootText(settings.sourceRoots)); setConcurrency(String(settings.concurrency));
       setTimeout(String(settings.timeoutMinutes)); setInterval(String(settings.scanIntervalSeconds));
+      setSyncMode(settings.syncMode ?? 'interval'); setSyncMaxSeconds(String(settings.syncMaxSeconds ?? 1800));
       await refresh(true); notify('설정을 저장했습니다.');
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setBusy(false); }
@@ -55,6 +67,7 @@ export function Settings() {
   function reset() {
     setRoots(rootText(data.settings.sourceRoots)); setConcurrency(String(data.settings.concurrency));
     setTimeout(String(data.settings.timeoutMinutes)); setInterval(String(data.settings.scanIntervalSeconds)); setError('');
+    setSyncMode(data.settings.syncMode ?? 'interval'); setSyncMaxSeconds(String(data.settings.syncMaxSeconds ?? 1800));
   }
   return <>
     <PageHeading title={t("설정")} description={t("에이전트의 기록 경로와 실행 환경을 관리하세요.")} eyebrow="WORKSPACE SETTINGS"
@@ -102,6 +115,22 @@ export function Settings() {
             <div className="input-with-unit"><input id="settings-interval" type="number" min={15} max={3600} step={1} required value={interval}
               onChange={event => setInterval(event.target.value)} /><span><Trans message={"초"} /></span></div></Field>
         </div>
+        <div className="settings-sync-policy">
+          <Field label={t('자동 동기화 방식')} htmlFor="settings-sync-mode"
+            hint={t('수동 모드에서도 지금 동기화를 사용할 수 있습니다.')}>
+            <select id="settings-sync-mode" value={syncMode} disabled={busy} onChange={event => setSyncMode(event.target.value as SyncMode)}>
+              <option value="interval">{t('주기적으로 동기화')}</option>
+              <option value="idle">{t('앱 작업이 없을 때 동기화')}</option>
+              <option value="manual">{t('수동으로만 동기화')}</option>
+            </select>
+          </Field>
+          <Field label={t('동기화 시간 제한')} htmlFor="settings-sync-budget" hint={t('30~1,800초, 다음 수집부터 적용')}>
+            <div className="input-with-unit"><input id="settings-sync-budget" type="number" min={30} max={1800} step={1}
+              required disabled={busy} value={syncMaxSeconds} onChange={event => setSyncMaxSeconds(event.target.value)} />
+              <span>{t('초')}</span></div>
+          </Field>
+        </div>
+        <p className="page-footnote settings-sync-note">{t('앱의 CLI 작업이 대기 또는 실행 중이면 유휴 모드의 자동 수집을 미룹니다.')}</p>
       </Panel>
       {error && <InlineNotice tone="error"><AppNotice message={error} /></InlineNotice>}
       <div className={`settings-save-bar ${dirty ? 'has-changes' : ''}`}>
@@ -109,6 +138,9 @@ export function Settings() {
         <div><Button disabled={!dirty || busy} onClick={reset}><Trans message={"변경 취소"} /></Button><Button type="submit" variant="primary" icon={Save} busy={busy} disabled={!dirty}><Trans message={"설정 저장"} /></Button></div>
       </div>
     </form>
+    <SyncControls status={data.syncStatus ?? null} syncing={syncing} stopping={stoppingSync}
+      onStart={sync} onStop={cancelSync} />
+    <AppUpdate demo={data.demo} />
     <Panel title={t("화면 모드")} description={t("선택한 모드는 자동으로 저장됩니다.")} className="theme-settings">
       <div className="theme-options">{([
         { id: 'light', name: '라이트', description: '밝고 선명한 작업 공간', icon: Sun },

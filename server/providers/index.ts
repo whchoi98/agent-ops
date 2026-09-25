@@ -14,8 +14,8 @@ export type { ParseContext, ParseResult } from './common.js';
 export type { KiroRowCheckpoint, KiroRowCache } from './kiro-sqlite.js';
 
 export interface DiscoverOptions {
-  shouldRead?: (path: string, fingerprint: string) => boolean;
-  onRead?: (path: string, fingerprint: string) => void;
+  shouldRead?: (path: string, fingerprint: string, agent?: Agent) => boolean;
+  onRead?: (path: string, fingerprint: string, agent?: Agent) => void;
   maxFiles?: number;
   kiroRows?: KiroRowCache;
 }
@@ -73,7 +73,7 @@ export async function discoverSessions(
     const primary = group[0];
     try {
       const before = await fingerprints(group);
-      const shouldRead = group.map(source => options.shouldRead?.(source.path, before.get(source.path)!) ?? true);
+      const shouldRead = group.map(source => options.shouldRead?.(source.path, before.get(source.path)!, source.agent) ?? true);
       changed = shouldRead.filter(Boolean).length;
       skipped += group.length - changed;
       if (!changed) continue;
@@ -104,7 +104,7 @@ export async function discoverSessions(
       }
       if (ok) {
         // A callback failure, damaged file, or unstable WAL must remain retryable.
-        for (const source of group) await options.onRead?.(source.path, before.get(source.path)!);
+        for (const source of group) await options.onRead?.(source.path, before.get(source.path)!, source.agent);
       } else skipped += changed;
     } catch (error) {
       skipped += changed;

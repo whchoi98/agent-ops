@@ -9,10 +9,13 @@ import { api } from '../../lib/api';
 import { number, recordedDuration } from '../../lib/format';
 import { useResource } from '../../hooks/useResource';
 import { useApp } from '../../state/AppProvider';
+import { CreditValue } from '../usage/CreditValue';
+import { useCreditI18n } from '../usage/i18n';
 
 export function CompareDialog({ ids }: { ids: [string, string] }) {
   const { money, dateTime, duration } = useFormat();
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const { closeModal, openSession } = useApp();
   const resource = useResource(signal => Promise.all(ids.map(id => api.session(id, signal))), JSON.stringify(ids));
   const metric = (value: number | null) => value === null ? <span className="text-muted"><Trans message={"미기록"} /></span> : number(value);
@@ -23,6 +26,8 @@ export function CompareDialog({ ids }: { ids: [string, string] }) {
     { label: '상태', render: session => <StatusBadge status={session.status} /> },
     { label: '메시지', render: session => number(session.messageCount) },
     { label: '도구 호출', render: session => number(session.toolCallCount) },
+    { label: '기록된 Kiro 크레딧', render: session => session.agent === 'kiro'
+      ? <CreditValue usage={session.usage} compact={false} /> : creditT('해당 없음') },
     { label: '입력 토큰', render: session => metric(session.usage.inputTokens) },
     { label: '출력 토큰', render: session => metric(session.usage.outputTokens) },
     { label: '총 토큰', render: session => <TokenValue usage={session.usage} compact={false} /> },
@@ -38,7 +43,7 @@ export function CompareDialog({ ids }: { ids: [string, string] }) {
       <InlineNotice><Trans message={"미기록은 0이 아닙니다. 기록 시간 범위에는 대화 사이의 대기 시간도 포함됩니다."} /></InlineNotice>
       <div className="comparison-scroll"><table className="comparison-table"><thead><tr><th><Trans message={"비교 항목"} /></th>{resource.data.map(session =>
         <th key={session.id}><span>{session.title}</span><Button variant="ghost" size="small" icon={ArrowUpRight} onClick={() => openSession(session.id)}><Trans message={"대화 열기"} /></Button></th>)}</tr></thead>
-        <tbody>{rows.map(row => <tr key={row.label}><th>{t(row.label)}</th>{resource.data!.map(session => <td key={session.id}>{row.render(session)}</td>)}</tr>)}</tbody>
+        <tbody>{rows.map(row => <tr key={row.label}><th>{creditT(row.label)}</th>{resource.data!.map(session => <td key={session.id}>{row.render(session)}</td>)}</tr>)}</tbody>
       </table></div>
     </>}
   </Dialog>;

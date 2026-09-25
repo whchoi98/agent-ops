@@ -1,4 +1,5 @@
 import type { Agent, Handoff, SessionDetail } from '../shared/types.js';
+import { creditValue } from '../shared/credits.js';
 
 export function redact(input: string): string {
   return input
@@ -18,16 +19,29 @@ export function exportSession(session: SessionDetail, format: 'json' | 'md' | 'h
   // Source paths are internal provenance, not needed in a shareable conversation.
   clean.sourcePath = '';
   if (format === 'json') return { type: 'application/json; charset=utf-8', extension: 'json', body: JSON.stringify(clean, null, 2) };
+  const measurement = (value: number | null | undefined) =>
+    typeof value === 'number' && Number.isFinite(value) && value >= 0 ? String(value) : 'Unrecorded';
+  const credits = creditValue(clean.usage);
+  const usage = [
+    ['Input tokens', measurement(clean.usage.inputTokens)],
+    ['Output tokens', measurement(clean.usage.outputTokens)],
+    ['Cache read tokens', measurement(clean.usage.cacheReadTokens)],
+    ['Cache write tokens', measurement(clean.usage.cacheWriteTokens)],
+    ['Recorded cost USD', measurement(clean.usage.costUsd)],
+    ...(clean.agent === 'kiro' ? [['Recorded Kiro credits',
+      `${measurement(credits)}${credits !== null && clean.usage.creditsPartial ? ' (partial)' : ''}`]] : []),
+  ];
   const markdown = [
     `# ${clean.title}`, '', `Agent: ${clean.agent} · Model: ${clean.model || 'Unknown'}`,
     `Project: ${clean.projectName}`, `Started: ${clean.startedAt}`, '',
+    '## Recorded usage', ...usage.map(([label, value]) => `${label}: ${value}`), '',
     ...(clean.note ? ['## Note', clean.note, ''] : []),
     ...clean.messages.flatMap((m) => [`## ${m.role}${m.toolName ? ` · ${m.toolName}` : ''}`, `_${m.timestamp}_`, '', m.content, '']),
   ].join('\n');
   if (format === 'md') return { type: 'text/markdown; charset=utf-8', extension: 'md', body: markdown };
   return {
     type: 'text/html; charset=utf-8', extension: 'html',
-    body: `<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>${escapeHtml(clean.title)}</title><style>body{font:16px/1.7 system-ui,sans-serif;max-width:900px;margin:48px auto;padding:0 24px;color:#172b4d}pre{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #dce4ef;border-radius:12px;padding:20px;background:#f3f6fb}small{color:#63738b}section{margin:32px 0}h1{line-height:1.25}h2{font-size:16px}</style><body><h1>${escapeHtml(clean.title)}</h1><small>${escapeHtml(clean.agent)} · ${escapeHtml(clean.model)} · ${escapeHtml(clean.projectName)}</small>${clean.note ? `<section><h2>Note</h2><pre>${escapeHtml(clean.note)}</pre></section>` : ''}${clean.messages.map((m) => `<section><h2>${escapeHtml(m.role)}${m.toolName ? ` · ${escapeHtml(m.toolName)}` : ''}</h2><small>${escapeHtml(m.timestamp)}</small><pre>${escapeHtml(m.content)}</pre></section>`).join('')}</body></html>`,
+    body: `<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>${escapeHtml(clean.title)}</title><style>body{font:16px/1.7 system-ui,sans-serif;max-width:900px;margin:48px auto;padding:0 24px;color:#172b4d}pre{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #dce4ef;border-radius:12px;padding:20px;background:#f3f6fb}small{color:#63738b}section{margin:32px 0}h1{line-height:1.25}h2{font-size:16px}</style><body><h1>${escapeHtml(clean.title)}</h1><small>${escapeHtml(clean.agent)} · ${escapeHtml(clean.model)} · ${escapeHtml(clean.projectName)}</small><section><h2>Recorded usage</h2><dl>${usage.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}</dl></section>${clean.note ? `<section><h2>Note</h2><pre>${escapeHtml(clean.note)}</pre></section>` : ''}${clean.messages.map((m) => `<section><h2>${escapeHtml(m.role)}${m.toolName ? ` · ${escapeHtml(m.toolName)}` : ''}</h2><small>${escapeHtml(m.timestamp)}</small><pre>${escapeHtml(m.content)}</pre></section>`).join('')}</body></html>`,
   };
 }
 

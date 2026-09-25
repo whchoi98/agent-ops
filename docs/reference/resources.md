@@ -98,8 +98,9 @@ network/proxy latency. Heap deltas include runtime noise. See
 | Resource trends, storage categories, low-space notice | Implemented with bounded memory and cached metadata |
 | MCP discovery and explicit metadata checks | Separate menu; cached declarations and user-triggered, bounded probes |
 | macOS desktop app inventory | Fixed bundle candidates and cached plist metadata; see [desktop apps](desktop-apps.md) |
-| Kiro credit usage | CLI `metering_usage` source confirmed; UI/import work remains and needs deduplication and a distinct credit field |
-| Import schedules or budgets | Candidate improvement using the existing owned sync controller |
+| Kiro credit usage | Implemented from local `metering_usage`, with separate coverage and a ledger capped at 20,000 turns and 40,000 message identities; see [usage and sync](usage-and-sync.md#english) |
+| Import schedules and budgets | Implemented interval/idle/manual policies, 30-1,800-second budgets and reusable stop for one owned import; see [usage and sync](usage-and-sync.md#english) |
+| Workbench update guide | Explicit GitHub checks only, one request, 8 seconds, 256 KiB and a 60-second cooldown; cached in RAM with no installer execution |
 | Retention/backup cleanup | Candidate improvement requiring a concrete preview and verified recovery; no automatic deletion here |
 
 ## 한국어
@@ -195,6 +196,7 @@ node --expose-gc --import tsx scripts/benchmark-resources.ts \
 | 자원 추이·저장 공간 구분·용량 부족 안내 | 메모리 보관량과 메타데이터 캐시를 제한해 구현 |
 | MCP 탐색과 명시적 메타데이터 점검 | 별도 메뉴에서 선언을 캐시하고 사용자가 선택할 때 제한된 점검 실행 |
 | macOS 데스크톱 앱 정보 | 고정 번들 후보와 plist 캐시 사용; [앱 정보](desktop-apps.md) 참고 |
-| Kiro credit 사용량 | CLI `metering_usage` 출처 확인 완료; 중복 제거와 별도 credit 필드를 포함한 수집·화면 작업은 후속 대상 |
-| 수집 일정과 예산 | 기존 소유 수집 제어기를 활용할 수 있는 개선 후보 |
+| Kiro credit 사용량 | 로컬 `metering_usage`와 별도 기록 범위 표시 구현, turn 20,000개와 메시지 식별자 40,000개로 제한한 집계 사용; [사용량과 수집](usage-and-sync.md#한국어) 참고 |
+| 수집 일정과 시간 제한 | 소유 수집 하나에 주기/유휴/수동 방식, 30-1,800초 시간 제한과 재사용 가능한 중단 구현; [사용량과 수집](usage-and-sync.md#한국어) 참고 |
+| 앱 업데이트 안내 | 사용자가 선택할 때만 GitHub 조회, 요청 하나, 8초, 256 KiB, 확인 간격 60초, RAM 캐시 사용과 설치 실행 없음 |
 | 보관 정책·백업 정리 | 대상 미리보기와 검증된 복구가 필요한 개선 후보이며 자동 삭제는 적용하지 않음 |

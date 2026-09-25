@@ -7,6 +7,7 @@ import { apiUrl } from './urls';
 import type { ExtensionAnalysisDraft, ExtensionCatalog, ExtensionContent, ExtensionDetail, ExtensionQuery } from '../../shared/extensions';
 import type { VersionReport } from '../../shared/versions';
 import type { ResourceReport } from '../../shared/resources';
+import type { SyncStatus } from '../../shared/sync-control';
 
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
@@ -75,6 +76,8 @@ export const api = {
     request<Handoff>('/handoff', json('POST', body)),
   sync: () => request<SyncReport>('/sync', json('POST', {})),
   startSync: () => request<{ syncing: boolean }>('/sync/start', json('POST', {})),
+  syncStatus: (signal?: AbortSignal) => request<SyncStatus>('/sync/status', { signal }),
+  cancelSync: () => request<{ stopping: boolean; status: SyncStatus }>('/sync/cancel', json('POST', {})),
   run: (runId: string, signal?: AbortSignal) => request<RunDetail>(`/runs/${id(runId)}`, { signal }),
   runEvents: (runId: string, after: number, signal?: AbortSignal) =>
     request<RunDetail>(`/runs/${id(runId)}/events?after=${after}`, { signal }),

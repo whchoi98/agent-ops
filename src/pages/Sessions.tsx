@@ -10,6 +10,7 @@ import { api } from '../lib/api';
 import { AGENT_META, inputDate, localDateBoundary, number } from '../lib/format';
 import { useDebounced, useResource } from '../hooks/useResource';
 import { useApp, useData } from '../state/AppProvider';
+import { useCreditI18n } from '../features/usage/i18n';
 
 function readQuery(search: string): SessionQuery {
   const params = new URLSearchParams(search);
@@ -23,7 +24,7 @@ function readQuery(search: string): SessionQuery {
     bookmarked: params.get('bookmarked') === 'true' || undefined,
     tag: params.get('tag') || undefined,
     since: params.get('since') || undefined, until: params.get('until') || undefined,
-    sort: sort && ['recent', 'oldest', 'tokens'].includes(sort) ? sort : 'recent',
+    sort: sort && ['recent', 'oldest', 'tokens', 'credits'].includes(sort) ? sort : 'recent',
     limit: [20, 40, 60].includes(Number(params.get('limit'))) ? Number(params.get('limit')) : 20,
     offset: Math.max(0, Number(params.get('offset')) || 0),
   };
@@ -31,6 +32,7 @@ function readQuery(search: string): SessionQuery {
 
 export function Sessions() {
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const data = useData();
   const { search, navigate, archiveRevision, openCompare, notify, sync, syncing } = useApp();
   const query = useMemo(() => readQuery(search), [search]);
@@ -107,6 +109,7 @@ export function Sessions() {
           <label className="sort-control"><ListFilter size={14} aria-hidden /><span className="sr-only"><Trans message={"세션 정렬"} /></span><select value={query.sort}
             onChange={event => update({ sort: event.target.value as SessionQuery['sort'] })}>
             <option value="recent"><Trans message={"최근 기록순"} /></option><option value="oldest"><Trans message={"오래된 기록순"} /></option><option value="tokens"><Trans message={"토큰 많은 순"} /></option>
+            <option value="credits">{creditT('크레딧 많은 순')}</option>
           </select></label>
         </div>
       </div>

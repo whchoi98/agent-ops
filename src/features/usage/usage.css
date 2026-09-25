@@ -1,0 +1,51 @@
+.usage-value { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 4px; max-width: 100%; }
+.usage-unit { color: var(--muted); font-family: var(--font-body); font-size: .8em; font-weight: 450; letter-spacing: 0; }
+.credit-value .numeric, .credit-total .numeric { overflow-wrap: anywhere; }
+.credit-coverage { display: flex; flex-wrap: wrap; gap: 3px 8px; color: var(--muted); font-size: 10px; line-height: 1.6; margin-top: 4px; }
+.credit-total { max-width: 100%; }
+.credit-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px 28px; padding: 17px 22px; margin-bottom: 25px; }
+.credit-summary-heading { min-width: 0; }
+.credit-summary-heading h2 { font-size: 13px; font-weight: 600; }
+.credit-summary-heading p { color: var(--muted); font-size: 11px; line-height: 1.7; margin-top: 6px; }
+.credit-summary > .credit-total { flex-shrink: 0; align-items: flex-end; text-align: right; }
+.credit-summary > .credit-total > .usage-value { font-size: 23px; font-weight: 600; }
+.credit-summary > .credit-total .usage-unit { font-size: 12px; }
+.daily-credits { margin: 0 22px 18px; border-top: 1px solid var(--border); font-size: 11px; }
+.daily-credits > summary { cursor: pointer; padding-top: 13px; color: var(--text); line-height: 1.8; }
+.daily-credits > summary > span { color: var(--muted); margin-left: 12px; font-size: 10px; }
+.daily-credits > p { color: var(--muted); margin: 10px 0; line-height: 1.7; }
+.daily-credits-scroll { max-height: 260px; }
+.daily-credits-table { min-width: 290px; }
+.daily-credits-table th, .daily-credits-table td { padding: 10px 12px; }
+.daily-credits-table tbody th { color: var(--muted); font-weight: 450; }
+.daily-credits-table th:last-child, .daily-credits-table td:last-child { text-align: right; }
+.daily-credits-table .credit-total { align-items: flex-end; }
+.session-usage-cell .usage-value { flex-direction: column; align-items: flex-end; font-size: 11px; }
+.session-table .session-mobile-meta { flex-wrap: wrap; }
+.session-mobile-meta .usage-value { margin-left: auto; }
+.info-metrics .credit-value .usage-unit { font-size: 12px; }
+.provider-credit-table { min-width: 530px; }
+.provider-credit-table .credit-total { align-items: flex-end; }
+.provider-credit-table .credit-coverage { justify-content: flex-end; }
+.breakdown-credits { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 11px; }
+.breakdown-credits > span:first-child { color: var(--muted); }
+.breakdown-credits .credit-total { align-items: flex-end; text-align: right; }
+.breakdown-credits .credit-coverage { justify-content: flex-end; }
+.project-credit-summary { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 7px 15px; margin-top: 13px; font-size: 12px; }
+.project-credit-summary > span:first-child { color: var(--muted); font-size: 10px; }
+.project-credit-summary .credit-total { align-items: flex-end; }
+.run-card-usage { display: block; margin-top: 9px; font-size: 11px; }
+.run-recorded-usage { padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.run-recorded-usage > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+.run-recorded-usage > div > span:first-child { color: var(--muted); font-size: 11px; }
+.run-recorded-usage > p { color: var(--muted); font-size: 11px; line-height: 1.7; margin-top: 8px; }
+.run-list-table.usage-run-table { min-width: 790px; }
+.active-run-usage { margin-top: 4px; }
+
+@media (max-width: 540px) {
+  .credit-summary { flex-wrap: wrap; padding: 15px 18px; }
+  .credit-summary > .credit-total { align-items: flex-start; text-align: left; }
+  .daily-credits { margin-inline: 18px; }
+  .daily-credits > summary > span { display: block; margin-left: 0; }
+  .run-recorded-usage { padding-inline: 18px; }
+}

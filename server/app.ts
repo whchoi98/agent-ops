@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z, ZodError } from 'zod';
 import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent } from '../shared/types.js';
+import type { SyncPolicy, SyncStatus } from '../shared/sync-control.js';
 import { Store, newId } from './store.js';
 import { VERSION } from './config.js';
 import { computeAnalytics } from './analytics.js';
@@ -22,6 +23,8 @@ import { VersionService, type VersionServiceOptions } from './versions.js';
 import { ResourceMonitor, type ResourceMonitorOptions } from './resources/monitor.js';
 import { McpService, registerMcpRoutes, type McpServiceOptions } from './mcp/index.js';
 import { DesktopAppService, registerDesktopAppRoutes, type DesktopAppServiceOptions } from './desktop-apps.js';
+import { SyncManager, type SyncDriver } from './sync-manager.js';
+import { AppUpdateService, registerAppUpdateRoutes, type AppUpdateServiceOptions } from './app-update.js';
 
 const agentSchema = z.enum(AGENTS);
 const policySchema = z.enum(['read-only', 'workspace-write']);
@@ -39,7 +42,7 @@ const sessionQuerySchema = z.object({
   status: z.enum(['completed', 'failed', 'recorded']).optional(),
   bookmarked: z.enum(['true', 'false']).transform((s) => s === 'true').optional(),
   tag: z.string().max(60).optional(), since: dateSchema.optional(), until: dateSchema.optional(),
-  sort: z.enum(['recent', 'oldest', 'tokens']).optional(),
+  sort: z.enum(['recent', 'oldest', 'tokens', 'credits']).optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   offset: z.coerce.number().int().min(0).max(100000000).optional(),
 });
@@ -51,6 +54,8 @@ const settingsSchema = z.object({
   concurrency: z.number().int().min(1).max(8),
   timeoutMinutes: z.number().int().min(1).max(240),
   scanIntervalSeconds: z.number().int().min(15).max(3600),
+  syncMode: z.enum(['interval', 'idle', 'manual']),
+  syncMaxSeconds: z.number().int().min(30).max(1800),
   theme: z.enum(['light', 'dark', 'system']),
   sourceRoots: z.object({
     codex: z.array(z.string().min(1).max(4096)).max(20),
@@ -63,10 +68,12 @@ function error(statusCode: number, message: string): Error & { statusCode: numbe
   return Object.assign(new Error(message), { statusCode });
 }
 const idParam = (params: unknown) => z.object({ id: shortText }).parse(params).id;
-type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent };
+type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent }
+  | { type: 'sync-state'; status: SyncStatus };
 export interface AppContext {
   app: FastifyInstance; store: Store; runner: Runner; sync: SyncController;
   resources: ResourceMonitor; mcp: McpService; desktopApps: DesktopAppService;
+  syncManager: SyncManager; appUpdate: AppUpdateService;
 }
 export interface AppOptions {
   dataDir: string;
@@ -79,6 +86,9 @@ export interface AppOptions {
   resourceOptions?: Omit<ResourceMonitorOptions, 'dataDir' | 'roots'>;
   mcpOptions?: Omit<McpServiceOptions, 'demo'>;
   desktopAppOptions?: Omit<DesktopAppServiceOptions, 'demo'>;
+  appUpdateOptions?: Omit<AppUpdateServiceOptions, 'currentVersion' | 'demo'>;
+  /** Host/test injection only; HTTP requests cannot replace the owned import entry. */
+  syncDriver?: SyncDriver;
   connectorProbe?: (settings: Settings) => Promise<ConnectorStatus[]>;
 }
 
@@ -121,40 +131,33 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   const runner = new Runner(store, { demo, onEvent: broadcast, connectors: () => probe(store.getSettings()) });
   if (!demo) runner.start();
   const refreshNotice = () => broadcast({ type: 'refresh' });
-  const sync: SyncController = demo
-    ? new SyncService(store, refreshNotice, true, refreshNotice)
+  const sync: SyncController = options.syncDriver ?? (demo
+    ? new SyncService(store, () => {}, true)
     : new BackgroundSync({
       dataDir: resolve(options.dataDir),
       entry: resolve(dirname(fileURLToPath(import.meta.url)), import.meta.url.endsWith('.ts') ? 'index.ts' : 'index.js'),
-      onComplete: refreshNotice,
-      onProgress: refreshNotice,
-    });
+    }));
   const mcp = new McpService({ ...options.mcpOptions, demo }, () => store.listProjects());
   const desktopApps = new DesktopAppService({ ...options.desktopAppOptions, demo });
   const resources = new ResourceMonitor({
     ...options.resourceOptions, dataDir: options.dataDir,
     roots: () => [...runner.resourceRoots, ...(sync instanceof BackgroundSync ? sync.resourceRoots : []), ...mcp.resourceRoots],
   });
-  let interval: NodeJS.Timeout | null = null;
-  let requestedSync: Promise<void> | null = null;
-  function startBackgroundSync() {
-    if (closing || requestedSync) return;
-    requestedSync = sync.run().then(() => {}, async () => {
+  const policyFrom = (settings: Settings): SyncPolicy => ({
+    mode: settings.syncMode ?? 'interval', intervalSeconds: settings.scanIntervalSeconds,
+    maxSeconds: settings.syncMaxSeconds ?? 1800,
+  });
+  const syncManager = new SyncManager({
+    driver: sync, policy: policyFrom(store.getSettings()), demo,
+    autoEnabled: !demo && options.autoSync !== false, isBusy: () => runner.busy,
+    onChange: status => broadcast({ type: 'sync-state', status }),
+    onFinished: () => {
       if (closing) return;
-      try {
-        await write(() => store.setMeta('sync', { startedAt: new Date().toISOString(), finishedAt: new Date().toISOString(), imported: 0, skipped: 0, filesScanned: 0, warnings: ['Sync failed. Check source paths and permissions, then retry.'] }));
-      } catch { /* A failed/full database may also reject the diagnostic write. */ }
+      invalidateConnectorCache();
       refreshNotice();
-    }).finally(() => { requestedSync = null; });
-    void requestedSync.catch(() => {});
-    refreshNotice();
-  }
-  function armSync() {
-    if (interval) clearInterval(interval);
-    if (demo || options.autoSync === false) return;
-    interval = setInterval(startBackgroundSync, store.getSettings().scanIntervalSeconds * 1000);
-    interval.unref();
-  }
+    },
+  });
+  const appUpdate = new AppUpdateService({ ...options.appUpdateOptions, currentVersion: VERSION, demo });
 
   app.addHook('onRequest', async (request, reply) => {
     enforceAccess(request.headers, request.raw.socket.remoteAddress, address);
@@ -179,6 +182,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   });
   registerMcpRoutes(app, mcp);
   registerDesktopAppRoutes(app, desktopApps);
+  registerAppUpdateRoutes(app, appUpdate);
   registerExtensionRoutes(app, new ExtensionService({ ...options.extensionOptions, demo }, () => store.listProjects()));
   const versions = new VersionService({ ...options.versionOptions, demo }, () => probe(store.getSettings()));
   app.get('/api/connector-versions', async request => {
@@ -198,7 +202,8 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     return {
       version: VERSION, demo, settings, connectors, sessions: store.listSessions({ limit: 60 }).items,
       sessionTotal: sessions.length, runs, projects: store.listProjects(), templates: store.listTemplates(),
-      analytics: computeAnalytics(sessions, runner.listRuns(100000), store.toolCounts()), sync: store.lastSync(), syncing: sync.active,
+      analytics: computeAnalytics(sessions, runner.listRuns(100000), store.toolCounts()),
+      sync: store.lastSync(), syncing: sync.active, syncStatus: syncManager.snapshot(),
     };
   });
   app.get('/api/sessions', async (request) => store.listSessions(sessionQuerySchema.parse(request.query)));
@@ -252,16 +257,40 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     if (!session) throw error(404, '세션을 찾을 수 없습니다.');
     return buildHandoff(session, body.targetAgent, body.instruction);
   });
-  app.post('/api/sync', async () => {
+  app.get('/api/sync/status', async request => {
+    z.object({}).strict().parse(request.query);
+    return syncManager.snapshot();
+  });
+  app.post('/api/sync/cancel', async (request, reply) => {
+    z.object({}).strict().parse(request.query);
+    z.object({}).strict().parse(request.body ?? {});
+    if (closing) throw error(503, '동기화가 종료 중입니다.');
+    const stopping = demo ? false : syncManager.stopCurrent();
+    return reply.code(202).send({ stopping, status: syncManager.snapshot() });
+  });
+  app.post('/api/sync', async request => {
+    z.object({}).strict().parse(request.query);
+    z.object({}).strict().parse(request.body ?? {});
+    if (closing) throw error(503, '동기화가 종료 중입니다.');
+    if (demo) {
+      const at = new Date().toISOString();
+      return { startedAt: at, finishedAt: at, imported: 0, skipped: 0, filesScanned: 0, warnings: [] };
+    }
     invalidateConnectorCache();
-    return sync.run();
+    try { return await syncManager.runManual(); }
+    catch (cause) {
+      if (cause instanceof Error && cause.name === 'AbortError') throw error(409, '동기화를 취소했습니다.');
+      if (cause instanceof Error && cause.name === 'SyncTimeoutError') throw error(408, '동기화 제한 시간이 초과되었습니다.');
+      throw cause;
+    }
   });
   app.post('/api/sync/start', async (request, reply) => {
     z.object({}).strict().parse(request.body);
     z.object({}).strict().parse(request.query);
     if (closing) throw error(503, 'Synchronization is stopping.');
+    if (demo) return reply.code(202).send({ syncing: false });
     invalidateConnectorCache();
-    startBackgroundSync();
+    void syncManager.runManual().catch(() => {});
     return reply.code(202).send({ syncing: sync.active });
   });
   app.post('/api/runs/preview', async (request) => runner.preview(runSchema.parse(request.body)));
@@ -352,7 +381,11 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     }
     const settings = await write(() => store.saveSettings(patch));
     invalidateConnectorCache();
-    armSync();
+    const policy = policyFrom(settings);
+    const previous = syncManager.snapshot().policy;
+    if (policy.mode !== previous.mode || policy.intervalSeconds !== previous.intervalSeconds || policy.maxSeconds !== previous.maxSeconds) {
+      syncManager.configure(policy);
+    }
     runner.pump();
     broadcast({ type: 'refresh' });
     return settings;
@@ -389,22 +422,19 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   app.addHook('preClose', async () => {
     closing = true;
     resources.stop();
-    if (interval) clearInterval(interval);
-    sync.cancel();
+    syncManager.close();
+    appUpdate.close();
     for (const reply of clients) reply.raw.end();
     clients.clear();
     await mcp.close();
     await runner.close();
   });
   app.addHook('onClose', async () => {
-    try { await sync.wait(); }
+    try { await syncManager.wait(); }
     finally { store.close(); }
   });
-  armSync();
-  if (!demo && options.autoSync !== false) {
-    startBackgroundSync();
-  }
   await app.ready();
   resources.start();
-  return { app, store, runner, sync, resources, mcp, desktopApps };
+  syncManager.start();
+  return { app, store, runner, sync, resources, mcp, desktopApps, syncManager, appUpdate };
 }

@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import type { Agent, RunStatus, SessionStatus, Usage } from '../../shared/types';
 import { AGENT_META, compactNumber, number, STATUS_LABEL, tokenUsage } from '../lib/format';
 import { useApp, type Toast } from '../state/AppProvider';
+import { CreditValue } from '../features/usage/CreditValue';
 
 export function Button({
   children, variant = 'secondary', size = 'normal', busy = false, icon: Icon,
@@ -69,6 +70,12 @@ export function TokenValue({ usage, compact = true }: { usage: Usage; compact?: 
     {total === null ? t("미기록") : compact ? compactNumber(total) : number(total)}
     {total !== null && !complete && <span className="partial-indicator" aria-label={t("부분 기록")}>*</span>}
   </span>;
+}
+
+export function UsageValue({ agent, usage, compact = true }: { agent: Agent; usage: Usage; compact?: boolean }) {
+  const { t } = useI18n();
+  return agent === 'kiro' ? <CreditValue usage={usage} compact={compact} />
+    : <span className="usage-value"><TokenValue usage={usage} compact={compact} />{' '}<span className="usage-unit">{t('토큰')}</span></span>;
 }
 
 export function AggregateTokenValue({ tokens, knownTokenSessions, sessions, showCoverage = true }: {

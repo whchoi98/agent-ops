@@ -1,6 +1,6 @@
 # Implementation reference
 
-<a href="#english">English</a> · <a href="#korean">한국어</a>
+[![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 <a id="english"></a>
 ## English
@@ -20,6 +20,8 @@ Code paths refer to the source checkout; npm archives provide compiled code in
 | Execution/sharing | `server/commands.ts`, `server/runner.ts`, `server/privacy.ts` | [API](../api.md), [local-workbench decision](../decisions/0001-local-workbench.md) |
 | Extensions/versions | `server/extensions/`, `server/versions.ts`, `shared/extensions.ts`, `shared/versions.ts` | [Operations](../operations.md), [API](../api.md) |
 | Resource monitoring | `server/resources/`, `shared/resources.ts`, `src/pages/Resources.tsx` | [Resources](resources.md) |
+| Recorded credits/import controls | `server/providers/kiro-credits.ts`, `server/sync-manager.ts`, `shared/credits.ts`, `shared/sync-control.ts` | [Usage and sync](usage-and-sync.md#english), [API](../api.md) |
+| Workbench updates | `server/app-update.ts`, `server/app-update/`, `shared/app-update.ts`, `src/features/app-update/` | [Usage and sync](usage-and-sync.md#english), [operations](../operations.md) |
 | MCP configuration/checks | `server/mcp/`, `shared/mcp.ts`, `src/features/mcp/` | [MCP](mcp.md), [API](../api.md) |
 | macOS desktop apps | `server/desktop-apps/`, `shared/desktop-apps.ts`, `src/features/versions/DesktopApps.tsx` | [Desktop apps](desktop-apps.md) |
 | UI/language | `src/App.tsx`, `src/state/`, `src/i18n/`, `src/features/`, `src/pages/` | [Architecture](../architecture.md), [design](../design.md) |
@@ -50,6 +52,8 @@ import concurrency, stable search identity and offline conversion.
 | 실행·공유 | `server/commands.ts`, `server/runner.ts`, `server/privacy.ts` | [API](../api.md), [로컬 워크벤치 결정](../decisions/0001-local-workbench.md) |
 | 확장·버전 | `server/extensions/`, `server/versions.ts`, `shared/extensions.ts`, `shared/versions.ts` | [운영](../operations.md), [API](../api.md) |
 | 자원 모니터링 | `server/resources/`, `shared/resources.ts`, `src/pages/Resources.tsx` | [자원](resources.md) |
+| 기록된 credit과 수집 제어 | `server/providers/kiro-credits.ts`, `server/sync-manager.ts`, `shared/credits.ts`, `shared/sync-control.ts` | [사용량과 수집](usage-and-sync.md#한국어), [API](../api.md) |
+| 앱 자체 업데이트 | `server/app-update.ts`, `server/app-update/`, `shared/app-update.ts`, `src/features/app-update/` | [사용량과 수집](usage-and-sync.md#한국어), [운영](../operations.md) |
 | MCP 설정·점검 | `server/mcp/`, `shared/mcp.ts`, `src/features/mcp/` | [MCP](mcp.md), [API](../api.md) |
 | macOS 데스크톱 앱 | `server/desktop-apps/`, `shared/desktop-apps.ts`, `src/features/versions/DesktopApps.tsx` | [앱 정보](desktop-apps.md) |
 | UI·언어 | `src/App.tsx`, `src/state/`, `src/i18n/`, `src/features/`, `src/pages/` | [아키텍처](../architecture.md), [설계](../design.md) |

@@ -10,6 +10,15 @@ export interface BackgroundSyncOptions {
   onProgress?: () => void;
 }
 
+export interface BackgroundSyncRunOptions {
+  maxRuntimeMs?: number;
+}
+
+export class SyncTimeoutError extends Error {
+  override readonly name = 'SyncTimeoutError';
+  constructor() { super('Background synchronization time limit exceeded.'); }
+}
+
 const STDOUT_LIMIT = 1024 * 1024;
 const STDERR_LIMIT = 256 * 1024;
 const RUN_LIMIT_MS = 30 * 60 * 1000;
@@ -17,7 +26,7 @@ const TERM_GRACE_MS = 1000;
 const CLOSE_GRACE_MS = 1000;
 const PROGRESS_INTERVAL_MS = 2000;
 
-interface Job { promise: Promise<SyncReport>; stop: (reason: Error) => void; ownerId: string; child?: ChildProcess }
+interface Job { promise: Promise<SyncReport>; stop: (reason: Error) => boolean; ownerId: string; child?: ChildProcess }
 
 function timestamp(value: unknown): value is string {
   return typeof value === 'string' && value.length <= 64
@@ -70,9 +79,14 @@ export class BackgroundSync {
       ? [{ pid: child.pid, ownerId: this.job!.ownerId, kind: 'sync', processGroup: false }] : [];
   }
 
-  run(): Promise<SyncReport> {
+  run(options: BackgroundSyncRunOptions = {}): Promise<SyncReport> {
     if (this.stopping) return Promise.reject(new Error('Synchronization is stopping.'));
     if (this.job) return this.job.promise;
+    const requestedRuntime = options.maxRuntimeMs ?? RUN_LIMIT_MS;
+    if (!Number.isFinite(requestedRuntime) || requestedRuntime <= 0) {
+      return Promise.reject(new RangeError('Synchronization runtime limit must be a positive finite number.'));
+    }
+    const maxRuntimeMs = Math.max(1, Math.min(RUN_LIMIT_MS, Math.floor(requestedRuntime)));
     let resolveRun!: (report: SyncReport) => void;
     let rejectRun!: (error: Error) => void;
     const promise = new Promise<SyncReport>((resolve, reject) => { resolveRun = resolve; rejectRun = reject; });
@@ -121,14 +135,13 @@ export class BackgroundSync {
       }
     };
     const stop = (reason: Error) => {
-      if (settled) return;
+      if (settled || stoppingChild) return false;
       failure ??= reason;
-      if (stoppingChild) return;
       stoppingChild = true;
       clearTimeout(runtime);
       clearInterval(progress);
       closeStreams();
-      if (!child?.pid) { finish(); return; }
+      if (!child?.pid) { finish(); return true; }
       signal('SIGTERM');
       escalate = setTimeout(() => {
         signal('SIGKILL');
@@ -137,6 +150,7 @@ export class BackgroundSync {
         killedCleanup.unref?.();
       }, TERM_GRACE_MS);
       escalate.unref?.();
+      return true;
     };
 
     try {
@@ -189,7 +203,7 @@ export class BackgroundSync {
         }
         finish(report);
       });
-      runtime = setTimeout(() => stop(new Error('Background synchronization time limit exceeded.')), RUN_LIMIT_MS);
+      runtime = setTimeout(() => stop(new SyncTimeoutError()), maxRuntimeMs);
       runtime.unref?.();
       if (this.options.onProgress) {
         progress = setInterval(() => {
@@ -203,11 +217,15 @@ export class BackgroundSync {
     return promise;
   }
 
-  cancel(): void {
-    this.stopping = true;
+  stopCurrent(): boolean {
     const error = new Error('Synchronization cancelled.');
     error.name = 'AbortError';
-    this.job?.stop(error);
+    return this.job?.stop(error) ?? false;
+  }
+
+  cancel(): void {
+    this.stopping = true;
+    this.stopCurrent();
   }
 
   async wait(): Promise<void> {

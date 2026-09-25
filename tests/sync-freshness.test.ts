@@ -129,8 +129,8 @@ describe('persisted cross-source synchronization freshness', () => {
       const refreshed = f.rowCheckpoints();
       expect(refreshed.size).toBe(2);
       expect([...refreshed].filter(([key, value]) => value !== checkpoints.get(key))).toHaveLength(1);
-      expect(f.store.getFingerprint(older.path)?.startsWith('format-v3:')).toBe(true);
-      expect([...refreshed.values()].every(value => JSON.parse(value).format === 'format-v3')).toBe(true);
+      expect(f.store.getFingerprint(older.path)?.startsWith('format-v4-kiro-credits:')).toBe(true);
+      expect([...refreshed.values()].every(value => JSON.parse(value).format === 'format-v4-kiro-credits')).toBe(true);
       older.touch();
       expect(await f.run()).toMatchObject({ imported: 0, warnings: [] });
       expect(f.store.getSession(id)).toEqual(kept);
@@ -232,13 +232,13 @@ describe('persisted cross-source synchronization freshness', () => {
     expect((await f.run()).imported).toBe(0);
   });
 
-  it('reparses an unchanged same-source file when upgrading old checkpoints to format-v3', async () => {
+  it('reparses an unchanged same-source file when upgrading old Kiro checkpoints', async () => {
     const f = await fixture();
     const source = f.source('same-source', olderAt, ['Native request']);
     f.select([source.path]);
     await f.run();
     f.storedTimestamp(newerAt);
-    f.store.setFingerprint(source.path, f.store.getFingerprint(source.path)!.replace(/^format-v3:/, 'format-v2:'));
+    f.store.setFingerprint(source.path, f.store.getFingerprint(source.path)!.replace(/^[^:]+:/, 'format-v2:'));
     for (const [key, value] of f.rowCheckpoints()) {
       f.store.setFingerprint(key, JSON.stringify({ ...JSON.parse(value), format: 'format-v2' }));
     }
@@ -246,8 +246,8 @@ describe('persisted cross-source synchronization freshness', () => {
 
     expect((await f.run()).imported).toBe(1);
     expect(f.store.getSession(id)).toMatchObject({ sourcePath: source.path, updatedAt: olderAt, messageCount: 1 });
-    expect(f.store.getFingerprint(source.path)?.startsWith('format-v3:')).toBe(true);
-    expect([...f.rowCheckpoints().values()].every(value => JSON.parse(value).format === 'format-v3')).toBe(true);
+    expect(f.store.getFingerprint(source.path)?.startsWith('format-v4-kiro-credits:')).toBe(true);
+    expect([...f.rowCheckpoints().values()].every(value => JSON.parse(value).format === 'format-v4-kiro-credits')).toBe(true);
     expect((await f.run()).imported).toBe(0);
   });
 });

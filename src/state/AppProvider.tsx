@@ -7,6 +7,7 @@ import { apiUrl } from '../lib/urls';
 import { errorMessage } from '../lib/format';
 import { useNavigation } from '../lib/navigation';
 import { createRefreshQueue } from './refreshQueue';
+import { applySyncState, readSyncState } from './syncState';
 
 export type NewRunDraft = Partial<RunRequest>;
 export type AppModal =
@@ -33,6 +34,7 @@ function useAppState() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [localSyncing, setLocalSyncing] = useState(false);
+  const [stoppingSync, setStoppingSync] = useState(false);
   const [themeSaving, setThemeSaving] = useState(false);
   const [archiveRevision, setArchiveRevision] = useState(0);
   const [connection, setConnection] = useState<Connection>('connecting');
@@ -43,7 +45,7 @@ function useAppState() {
   const refreshQueue = useRef<ReturnType<typeof createRefreshQueue> | null>(null);
   const mounted = useRef(true);
   const theme = data?.settings.theme ?? 'light';
-  const syncing = localSyncing || Boolean(data?.syncing);
+  const syncing = localSyncing || (data?.syncStatus ? data.syncStatus.activity !== 'idle' : Boolean(data?.syncing));
 
   const notify = useCallback((message: string, tone: Toast['tone'] = 'success') => {
     setToasts(items => [...items.slice(-3), { id: Date.now() + Math.random(), message, tone }]);
@@ -98,6 +100,11 @@ function useAppState() {
     source.onmessage = message => {
       try {
         const event = JSON.parse(message.data) as AppEvent;
+        const syncState = readSyncState(event);
+        if (syncState) {
+          setData(previous => applySyncState(previous, syncState));
+          return;
+        }
         if (event.type !== 'refresh' && event.type !== 'run-event') return;
         if (event.type === 'refresh') setArchiveRevision(value => value + 1);
         for (const listener of listeners.current) listener(event);
@@ -151,11 +158,25 @@ function useAppState() {
     setLocalSyncing(true);
     try {
       await api.startSync();
-      notify('동기화를 시작했습니다. 진행 상태는 자동으로 갱신됩니다.', 'info');
-      await refresh(true);
+      const status = await api.syncStatus();
+      setData(previous => applySyncState(previous, status));
+      if (data?.demo) {
+        notify('데모 데이터를 새로고침했습니다.', 'info');
+        await refresh(true);
+      } else notify('동기화를 시작했습니다. 진행 상태는 자동으로 갱신됩니다.', 'info');
     } catch (cause) { notify(errorMessage(cause), 'error'); }
     finally { setLocalSyncing(false); }
-  }, [syncing, notify, refresh]);
+  }, [syncing, notify, refresh, data?.demo]);
+  const cancelSync = useCallback(async () => {
+    if (!syncing || stoppingSync || data?.demo) return;
+    setStoppingSync(true);
+    try {
+      const result = await api.cancelSync();
+      setData(previous => applySyncState(previous, result.status));
+      notify(result.stopping ? '현재 동기화 중단을 요청했습니다.' : '진행 중인 동기화가 없습니다.', 'info');
+    } catch (cause) { notify(errorMessage(cause), 'error'); }
+    finally { setStoppingSync(false); }
+  }, [syncing, stoppingSync, data?.demo, notify]);
   const setTheme = useCallback(async (next: Settings['theme']) => {
     if (themeSaving) return;
     setThemeSaving(true);
@@ -172,7 +193,7 @@ function useAppState() {
 
   return {
     ...navigation, data, error, loading, refreshing, refresh, archiveRevision, connection,
-    syncing, sync, themeSaving, setTheme, modal, closeModal, openSession, openRun,
+    syncing, sync, stoppingSync, cancelSync, themeSaving, setTheme, modal, closeModal, openSession, openRun,
     openNewRun, openCompare, paletteOpen, setPaletteOpen, subscribe, notify, toasts, dismissToast,
   };
 }

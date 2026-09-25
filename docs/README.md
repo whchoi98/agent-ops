@@ -1,6 +1,6 @@
 # Documentation
 
-<a href="#english">English</a> · <a href="#korean">한국어</a>
+[![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 <a id="english"></a>
 ## English
@@ -12,6 +12,7 @@
 - [API](api.md): routes and request/response contracts.
 - [Verification](verification.md): recorded checks and their limits.
 - [Resources](reference/resources.md): CPU/memory/disk scope, overhead and bounded history.
+- [Recorded usage, import controls and updates](reference/usage-and-sync.md#english): Kiro credits and coverage, import modes/budgets, cancellation and workbench update instructions.
 - [MCP](reference/mcp.md): configuration/client provenance and explicit metadata checks.
 - [macOS desktop apps](reference/desktop-apps.md): local bundle metadata and client distinctions.
 - [Changelog](../CHANGELOG.md): user-visible changes.
@@ -31,6 +32,7 @@
 - [API](api.md): 경로와 요청·응답 계약.
 - [검증 기록](verification.md): 수행한 검사와 검증 범위.
 - [자원](reference/resources.md): CPU·메모리·디스크 범위, 수집 비용과 보관 상한.
+- [기록된 사용량, 수집 제어와 업데이트](reference/usage-and-sync.md#한국어): Kiro credit과 기록 범위, 수집 방식과 시간 제한, 중단과 앱 업데이트 안내.
 - [MCP](reference/mcp.md): 설정·클라이언트 출처와 명시적 메타데이터 점검.
 - [macOS 데스크톱 앱](reference/desktop-apps.md): 로컬 번들 메타데이터와 클라이언트 구분.
 - [변경 기록](../CHANGELOG.md): 사용자에게 영향을 주는 변경.

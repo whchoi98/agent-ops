@@ -7,9 +7,12 @@ import { ProjectDialog } from '../features/projects/ProjectDialog';
 import { api } from '../lib/api';
 import { errorMessage, number, projectColor } from '../lib/format';
 import { useApp, useData } from '../state/AppProvider';
+import { AggregateCreditValue } from '../features/usage/CreditValue';
+import { useCreditI18n } from '../features/usage/i18n';
 
 function ProjectCard({ project, onEdit }: { project: Project; onEdit: () => void }) {
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const data = useData();
   const { navigate, openNewRun, refresh, notify } = useApp();
   const [busy, setBusy] = useState(false);
@@ -33,6 +36,7 @@ function ProjectCard({ project, onEdit }: { project: Project; onEdit: () => void
         sessions={analytics?.sessions ?? 0} showCoverage={false} /><Trans message={"토큰"} /></span>
       <span className="project-agents" title={t("최근 세션에 기록된 에이전트")}>{agents.map(agent => <ProviderMark agent={agent} size="small" key={agent} />)}</span></div>
     {!!analytics && analytics.knownTokenSessions > 0 && analytics.knownTokenSessions < analytics.sessions && <p className="project-usage-coverage"><Trans message={"토큰은 {0}/{1}개 세션의 부분 기록입니다."} values={{ "0": analytics.knownTokenSessions, "1": analytics.sessions }} /></p>}
+    <div className="project-credit-summary"><span>{creditT('기록된 Kiro 크레딧')}</span><AggregateCreditValue totals={analytics ?? {}} /></div>
     <div className={`project-execution ${project.executionEnabled ? 'enabled' : ''}`}><div><ShieldCheck size={15} aria-hidden />
       <span><strong><Trans message={"에이전트 실행 {0}"} values={{ "0": project.executionEnabled ? t("허용") : t("비허용") }} /></strong><small>{project.executionEnabled ? t("이 디렉터리에서 CLI를 시작할 수 있습니다.") : t("켜면 이 디렉터리에서 CLI를 실행할 수 있습니다.")}</small></span></div>
       <Switch checked={project.executionEnabled} label={t("{0} 에이전트 실행 허용", { "0": project.name })} disabled={busy} onChange={() => void toggle()} /></div>

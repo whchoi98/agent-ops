@@ -7,6 +7,8 @@ import { Button, CopyButton, Field, InlineNotice, TokenValue } from '../../compo
 import { api } from '../../lib/api';
 import { errorMessage, number, parseTags, recordedDuration } from '../../lib/format';
 import { useApp } from '../../state/AppProvider';
+import { CreditValue } from '../usage/CreditValue';
+import { useCreditI18n } from '../usage/i18n';
 
 export function SessionMetadata({ session, onSaved }: { session: SessionDetail; onSaved: (session: SessionDetail) => void }) {
   const { t } = useI18n();
@@ -50,11 +52,13 @@ export function SessionMetadata({ session, onSaved }: { session: SessionDetail; 
 export function SessionInfo({ session }: { session: SessionDetail }) {
   const { money, dateTime, duration } = useFormat();
   const { t } = useI18n();
+  const { t: creditT } = useCreditI18n();
   const { openSession } = useApp();
   const metric = (value: number | null) => value === null ? t('미기록') : number(value);
   return <div className="session-info">
     <div className="form-section-intro"><h3><Trans message={"기록된 사용량"} /></h3><p><Trans message={"CLI 기록에 포함된 값입니다. 미기록은 0을 의미하지 않습니다."} /></p></div>
     <dl className="info-metrics">
+      {session.agent === 'kiro' && <div><dt>{creditT('기록된 Kiro 크레딧')}</dt><dd><CreditValue usage={session.usage} compact={false} /></dd></div>}
       <div><dt><Trans message={"입력 토큰"} /></dt><dd>{metric(session.usage.inputTokens)}</dd></div>
       <div><dt><Trans message={"출력 토큰"} /></dt><dd>{metric(session.usage.outputTokens)}</dd></div>
       <div><dt><Trans message={"총 토큰"} /></dt><dd><TokenValue usage={session.usage} compact={false} /></dd></div>
