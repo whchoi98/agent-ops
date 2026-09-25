@@ -6,7 +6,7 @@
 flowchart TB
     UI["React UI"] <-->|HTTP / SSE| API["Fastify API"]
     Sources["Native session files"] --> Import["Read-only collectors"]
-    API --> Sync["Owned Agent Ops sync process"]
+    API --> Sync["Owned agent-ops sync process"]
     Sync --> Import
     Import --> Store["SQLite + FTS5"]
     API --> Store
@@ -15,6 +15,9 @@ flowchart TB
     Queue --> Store
     Extensions["Skill / plugin files"] --> Catalog["Read-only extension catalog"]
     API --> Catalog
+    API --> Versions["CLI version comparison"]
+    Versions --> Releases["Fixed public release metadata"]
+    Versions -->|Local version probe| CLI
 ```
 
 <a id="english"></a>
@@ -54,7 +57,12 @@ skill/plugin definitions on demand, separately from session import. It provides
 bounded, redacted previews and static content analysis. Optional CLI analysis
 uses the existing explicit run preview; catalog reads never launch a process.
 
-See [operations](operations.md), [API contracts](api.md) and [design](design.md).
+Version comparison (`server/versions.ts`, `shared/versions.ts`) combines local
+CLI detection with fixed public release metadata. It reports unknown/failure
+states without upgrading a CLI or sending local history to release endpoints.
+
+See [operations](operations.md), [API contracts](api.md), [design](design.md),
+[decisions](decisions/README.md) and [implementation references](reference/INDEX.md).
 
 <a id="korean"></a>
 ## 한국어
@@ -93,4 +101,9 @@ Kiro 행별 지문은 재시작 후에도 유지하며, 같은 메시지·검색
 분석을 제공하며, 선택형 CLI 분석은 기존 실행 미리보기를 거칩니다.
 목록을 조회하는 동작은 프로세스를 시작하지 않습니다.
 
-[운영](operations.md), [API 계약](api.md), [설계](design.md)를 함께 참고하세요.
+버전 비교(`server/versions.ts`, `shared/versions.ts`)는 로컬 CLI 확인 결과와
+고정된 공개 배포 메타데이터를 함께 표시합니다. 미확인·실패 상태를 구분하고
+CLI 업그레이드나 배포 서버로의 로컬 이력 전송은 수행하지 않습니다.
+
+[운영](operations.md), [API 계약](api.md), [설계](design.md),
+[결정 기록](decisions/README.md), [구현 참조](reference/INDEX.md)를 함께 참고하세요.

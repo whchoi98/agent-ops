@@ -30,7 +30,7 @@ export function Brand() {
       <rect x="13.5" y="10" width="5" height="17" rx="2" fill="white" />
       <rect x="23" y="5" width="5" height="22" rx="2" fill="#aebdff" />
       <path d="M9 16H13.5M18.5 16H23" stroke="white" strokeWidth="2" />
-    </svg></span><span className="brand-text">Agent Ops<span>LOCAL WORKSPACE</span></span>
+    </svg></span><span className="brand-text">my-agent-ops<span>LOCAL WORKSPACE</span></span>
   </div>;
 }
 
@@ -65,7 +65,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <span className="sidebar-connection"><i className={connection === 'connected' ? 'connection-on' : ''} />
           {connection === 'connected' ? t("실시간 갱신 중") : connection === 'connecting' ? t("서버 확인 중") : t("갱신 재연결 중")}</span>
       </div>
-      <div className="sidebar-version"><span>Agent Ops</span>{data && <span>v{data.version}</span>}</div>
+      <div className="sidebar-version"><span>my-agent-ops</span>{data && <span>v{data.version}</span>}</div>
     </div>
   </>;
 }
@@ -78,7 +78,7 @@ export function Shell({ children }: { children: ReactNode }) {
     setMobileMenu(false);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [page]);
-  useEffect(() => { document.title = `${t(PAGE_NAMES[page])} · Agent Ops`; }, [page, language, t]);
+  useEffect(() => { document.title = `${t(PAGE_NAMES[page])} · my-agent-ops`; }, [page, language, t]);
   const dark = document.documentElement.dataset.theme === 'dark';
   return <div className="app-shell">
     <a className="skip-link" href="#main-content" onClick={event => {
@@ -117,7 +117,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Button size="small" icon={RefreshCw} busy={refreshing} onClick={() => void refresh()}><Trans message={"다시 연결"} /></Button>
         </div></InlineNotice>}
         <div className="page-content" key={page}>{children}</div>
-        {data && <footer className="workspace-footer"><span>Agent Ops <span>·</span><Trans message={" 로컬 워크스페이스"} /></span><span>Codex / Claude Code / Kiro CLI</span></footer>}
+        {data && <footer className="workspace-footer"><span>my-agent-ops <span>·</span><Trans message={" 로컬 워크스페이스"} /></span><span>Codex / Claude Code / Kiro CLI</span></footer>}
       </main>
     </div>
   </div>;

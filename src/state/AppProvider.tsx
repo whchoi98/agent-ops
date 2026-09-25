@@ -186,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useApp() {
   const context = useContext(AppContext);
-  if (!context) throw new Error('Agent Ops context is unavailable.');
+  if (!context) throw new Error('my-agent-ops context is unavailable.');
   return context;
 }
 

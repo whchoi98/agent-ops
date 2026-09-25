@@ -13,6 +13,10 @@
 - [Verification](verification.md): recorded checks and their limits.
 - [Changelog](../CHANGELOG.md): user-visible changes.
 - [Contributor guidance](../AGENTS.md): development commands and invariants.
+- [Contributing](../CONTRIBUTING.md): change preparation, verification and Git workflow.
+- [Implementation reference](reference/INDEX.md): code pointers and layer references.
+- [Architecture decisions](decisions/README.md): implemented choices and tradeoffs.
+- [Runbooks](runbooks/README.md): start, diagnose, update and maintain an installation.
 
 <a id="korean"></a>
 ## 한국어
@@ -25,3 +29,7 @@
 - [검증 기록](verification.md): 수행한 검사와 검증 범위.
 - [변경 기록](../CHANGELOG.md): 사용자에게 영향을 주는 변경.
 - [개발 지침](../AGENTS.md): 개발 명령과 유지할 규칙.
+- [기여 가이드](../CONTRIBUTING.md): 변경 준비, 검증과 Git 작업.
+- [구현 참조](reference/INDEX.md): 코드 위치와 계층별 참조.
+- [설계 결정](decisions/README.md): 구현된 선택과 제약.
+- [런북](runbooks/README.md): 설치의 시작·진단·업데이트·유지보수.

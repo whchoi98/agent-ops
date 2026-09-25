@@ -64,7 +64,7 @@ try {
   }
   assert.equal(health?.demo, true, diagnostics);
   const html = await (await request('/')).text();
-  assert.match(html, /Agent Ops/);
+  assert.match(html, /<title>my-agent-ops<\/title>/);
   const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
     .map((match) => new URL(match[1], `${base}/`).pathname)
     .filter((path) => /^\/(?:assets\/|theme-init\.js$|favicon\.svg$)/.test(path));

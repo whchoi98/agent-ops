@@ -92,7 +92,7 @@ export function Overview() {
       <Panel title={t("날짜별 활동")} description={t("최근 30일 · 기록된 세션 수")} actions={<button className="text-button" onClick={() => navigate('analytics')}><Trans message={"분석 보기"} /><ArrowUpRight size={14} aria-hidden /></button>} className="daily-panel">
         <ActivityChart daily={analytics.daily} days={30} />
       </Panel>
-      <Panel title={t("실행 중인 작업")} description={t("Agent Ops에서 시작한 작업")} actions={<span className="count-badge">{active.length}</span>} className="active-runs-panel">
+      <Panel title={t("실행 중인 작업")} description={t("my-agent-ops에서 시작한 작업")} actions={<span className="count-badge">{active.length}</span>} className="active-runs-panel">
         {active.length > 0 ? <div className="active-run-list">{active.slice(0, 4).map(run => <button key={run.id} className="active-run-row" onClick={() => openRun(run.id)}>
           <ProviderMark agent={run.agent} /><div><strong>{run.title}</strong><span>{run.projectName}</span></div>
           <StatusBadge status={run.status} />

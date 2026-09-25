@@ -42,8 +42,8 @@ external resource references.
 viewport. This retains the existing responsive icon sizes and the adjacent
 assistant name supplies the accessible label. The `icons/...` references are
 relative to the application's trusted document base, including proxy mounts.
-No remote brand assets are fetched while using Agent Ops.
+No remote brand assets are fetched while using my-agent-ops.
 
 Kiro, Codex, their artwork and their trademarks remain the property of their
-respective owners. Agent Ops does not claim ownership or vendor endorsement.
+respective owners. my-agent-ops does not claim ownership or vendor endorsement.
 The repository's MIT license does not relicense these third-party brand assets.

@@ -26,7 +26,7 @@ async function response(path: string, init: RequestInit = {}): Promise<Response>
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
-    throw new ApiError('서버에 연결할 수 없습니다. Agent Ops가 실행 중인지 확인하고 다시 시도하세요.', 0);
+    throw new ApiError('서버에 연결할 수 없습니다. my-agent-ops가 실행 중인지 확인하고 다시 시도하세요.', 0);
   }
   if (!result.ok) {
     const payload = await result.json().catch(() => null) as { error?: string } | null;

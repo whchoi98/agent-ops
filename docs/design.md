@@ -1,4 +1,4 @@
-# Agent Ops
+# my-agent-ops
 
 ## Product
 
@@ -36,11 +36,13 @@ The application is original implementation, with no telemetry or hosted service.
    cache share, run outcomes, and a session comparison.
 7. Export selected conversations as redacted JSON, Markdown, or standalone HTML.
    Notes and handoff/export content are redacted for common credential patterns.
-   Rendering never executes transcript HTML. No transcript content leaves the
-   machine unless the user explicitly launches a CLI or downloads an export.
+   Rendering never executes transcript HTML. The UI/API serves selected history
+   to the connecting browser. Explicit CLI execution and exports are additional
+   sharing paths; the app has no telemetry or cloud account synchronization.
 8. Provide keyboard search (Ctrl/Cmd+K), accessible dialogs, reduced motion,
    mobile layouts, light/dark themes, clear loading/error/empty states, and a
-   Korean interface with familiar CLI/product names.
+   Korean/English interface with a browser-persisted language choice and familiar
+   CLI/product names. Keep user text, skill instructions and unsaved input intact.
 9. Ship deterministic sample data behind an explicit demo mode. Demo data is
    isolated from real history, visibly labeled, and cannot execute agents.
 10. Bind to loopback only, validate Host and Origin, and protect mutations with
@@ -49,6 +51,16 @@ The application is original implementation, with no telemetry or hosted service.
 11. Deliver install/start/dev/demo commands, a distributable npm archive, operating
     and architecture documentation, meaningful unit/integration tests, browser
     workflow tests, and inspected desktop/mobile screenshots.
+12. Inspect assistant-specific skills, plugins and Kiro Powers with bounded,
+    redacted previews. Configuration evidence is not proof of invocation.
+    Optional analysis produces an editable run draft before execution.
+13. Compare installed and latest public CLI versions through fixed vendor sources.
+    Keep missing, unknown, failed and other-channel results distinct; no updater
+    or billing lookup is part of this feature.
+14. Keep native import in an owned subprocess. Persist file/row checkpoints and
+    avoid rewriting unchanged messages. New caches use compressed search bodies;
+    existing caches convert through explicit offline maintenance with a verified
+    backup, atomic schema/version updates and stable session-ID search links.
 
 ## Architecture
 
@@ -62,6 +74,11 @@ execution events. CLI credentials remain owned by the installed CLIs.
 `shared/types.ts` is the API contract. Server files have no browser dependencies.
 Provider parsing and execution policies are separate modules: parsing imported
 history must never accidentally execute it.
+
+Additional public contracts are in `shared/extensions.ts` and `shared/versions.ts`.
+The browser's `src/i18n/` dictionaries localize application copy without changing
+source content. Decisions are recorded in [the ADR index](decisions/README.md);
+[implementation references](reference/INDEX.md) point to the relevant modules.
 
 ## Visual direction
 
@@ -90,6 +107,9 @@ tokens. Navigation remains usable on mobile without horizontal document overflow
 - Imported incomplete sessions are labeled recorded/unknown, not running.
 - Source format or permission problems are visible and do not erase history.
 - Default policies request no interactive approvals; denied tools remain denied.
+- UI language defaults to Korean and persists per browser.
+- No automatic history retention/deletion is enabled. Optimization backups remain
+  separate from the active cache and require their own disk space.
 
 ## Out of scope
 

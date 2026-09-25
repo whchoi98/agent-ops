@@ -76,7 +76,7 @@ export function Analytics() {
                 {agent.knownCostSessions > 0 && <small className="table-secondary"><Trans message={"{0}개 세션 기록"} values={{ "0": agent.knownCostSessions }} /></small>}</td></tr>)}
           </tbody></table></div> : <EmptyState compact title={t("에이전트 기록이 없습니다")} description={t("세션을 가져와 사용량을 확인하세요.")} />}
       </Panel>
-      <Panel title={t("실행 결과")} description={t("전체 기간 · Agent Ops 실행 {0}개", { "0": number(totalRuns) })} className="outcomes-panel">
+      <Panel title={t("실행 결과")} description={t("전체 기간 · my-agent-ops 실행 {0}개", { "0": number(totalRuns) })} className="outcomes-panel">
         {totalRuns > 0 ? <div className="run-outcomes">
           <div className="outcomes-bar" role="img" aria-label={t("총 {0}개 실행의 상태 분포", { "0": totalRuns })}>
             {OUTCOMES.map(({ status, color }) => <span key={status} style={{ width: `${(analytics.runOutcomes[status] ?? 0) / totalRuns * 100}%`, background: color }} />)}

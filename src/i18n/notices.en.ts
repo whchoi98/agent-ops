@@ -87,7 +87,7 @@ export const NOTICE_EN_MESSAGES: Record<string, string> = {
   "본문 파일을 읽지 못했습니다. 설치 위치와 접근 권한을 확인하세요.": "Could not read the body file. Check its installation path and permissions.",
   "부모 플러그인의 구성요소입니다. 실제 호출 여부는 확인하지 않습니다.": "Component of the parent plugin. Actual invocation is not checked.",
   "서버 응답을 읽지 못했습니다. 새로고침 후 다시 시도하세요.": "Could not read the server response. Refresh and try again.",
-  "서버에 연결할 수 없습니다. Agent Ops가 실행 중인지 확인하고 다시 시도하세요.": "Could not connect to the server. Check that Agent Ops is running and try again.",
+  "서버에 연결할 수 없습니다. my-agent-ops가 실행 중인지 확인하고 다시 시도하세요.": "Could not connect to the server. Check that my-agent-ops is running and try again.",
   "선언된 도구·권한": "Declared tools and permissions",
   "선언된 명령 경로가 없거나 안전하게 접근할 수 없습니다.": "A declared command path is missing or cannot be accessed safely.",
   "선언된 스킬 경로가 없거나 안전하게 접근할 수 없습니다.": "A declared skill path is missing or cannot be accessed safely.",

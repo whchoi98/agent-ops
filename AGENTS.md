@@ -1,7 +1,8 @@
-# Agent Ops contributor guidance
+# my-agent-ops contributor guidance
 
-Agent Ops is a local TypeScript workbench for Codex, Claude Code and Kiro CLI.
+my-agent-ops is a local TypeScript workbench for Codex, Claude Code and Kiro CLI.
 Use the existing npm scripts and preserve both Korean and English interfaces.
+The npm package is `agent-ops-local`; the CLI and existing data paths use `agent-ops`.
 
 ## Code map
 
@@ -10,12 +11,14 @@ Use the existing npm scripts and preserve both Korean and English interfaces.
 - `server/store.ts`: SQLite persistence, migrations and FTS search.
 - `server/search-index.ts`, `server/maintenance.ts`: compressed search documents
   and explicit offline backup/compaction.
-- `server/background-sync.ts`: bounded, owned Agent Ops sync subprocess.
+- `server/background-sync.ts`: bounded, owned `agent-ops sync` subprocess.
 - `server/providers/`, `server/sync.ts`: bounded, read-only native history import.
 - `server/commands.ts`, `server/runner.ts`: CLI arguments and owned process queue.
 - `server/extensions/`: bounded skill/plugin discovery, local analysis and previews;
   `shared/extensions.ts`: public extension contracts.
 - `src/`: React UI; `shared/types.ts`: API and persistence contracts.
+- `src/i18n/`, `src/state/refreshQueue.ts`: explicit UI translations and
+  coalesced refresh with one trailing update.
 - `deploy/agent-ops.service`: example systemd service; customize paths locally.
 
 ## Development and validation
@@ -47,5 +50,10 @@ Record actual verification results in `docs/verification.md`.
   artifacts out of Git. Do not publish real conversation screenshots.
 - Update relevant README, API and operating docs when behavior changes. Add
   user-visible changes under Unreleased in `CHANGELOG.md`; do not invent releases.
+- Follow `.editorconfig` for touched files; avoid unrelated formatting changes.
+- Preserve existing document languages and historical verification. New bilingual
+  docs must agree across languages; update indexes and the package's `files`
+  manifest when adding linked public documents.
 
-See [the documentation index](docs/README.md) for architecture and operation.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the change workflow and
+[the documentation index](docs/README.md) for architecture and operation.

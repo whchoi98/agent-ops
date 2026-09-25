@@ -9,6 +9,9 @@ test('switches beside the theme control, preserves pending settings and persists
     if (['POST', 'PATCH'].includes(request.method()) && /\/api\/settings$/.test(new URL(request.url()).pathname)) writes.push(request.url());
   });
   await page.goto('/#/settings');
+  await expect(page).toHaveTitle('설정 · my-agent-ops');
+  await expect(page.locator('aside.sidebar .brand-text')).toContainText('my-agent-ops');
+  expect(await page.locator('aside.sidebar .brand').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
   await page.getByRole('spinbutton', { name: '최대 동시 실행', exact: true }).fill('4');
   const pending = page.getByRole('spinbutton').first();
@@ -17,6 +20,7 @@ test('switches beside the theme control, preserves pending settings and persists
   expect(await toggle.evaluate(element => element.previousElementSibling?.classList.contains('topbar-theme-button'))).toBe(true);
   await toggle.click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page).toHaveTitle('Settings · my-agent-ops');
   await expect(page.getByRole('button', { name: 'Switch to Korean', exact: true })).toBeVisible();
   await expect(pending).toHaveValue('4');
   await expect(page.getByRole('button', { name: 'Save settings', exact: true })).toBeEnabled();
@@ -33,6 +37,7 @@ test('switches beside the theme control, preserves pending settings and persists
     await link.click();
     await expect(page.locator('main h1')).toBeVisible();
     await expect(page.locator('main h1')).not.toContainText(/[가-힣]/);
+    await expect(page).toHaveTitle(/ · my-agent-ops$/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
   await mkdir('artifacts', { recursive: true });
@@ -76,6 +81,7 @@ test('keeps the language control and English navigation usable on a phone', asyn
   await expect(page.getByRole('button', { name: 'Switch to Korean', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Open menu', exact: true }).click();
+  await expect(page.getByRole('dialog').locator('.brand-text')).toContainText('my-agent-ops');
   await page.getByRole('dialog').getByRole('link', { name: 'Settings', exact: true }).click();
   await expect(page.locator('main h1')).not.toContainText(/[가-힣]/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

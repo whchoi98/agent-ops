@@ -1,8 +1,11 @@
-# Agent Ops
+# my-agent-ops
 
 Codex, Claude Code, Kiro CLI의 대화 이력과 실행 작업을 한곳에서 관리하는
 로컬 운영 도구입니다. 브라우저에서 세션을 찾고, 작업을 실행하고, 다음
 에이전트에 맥락을 인계할 수 있습니다.
+
+앱 표시 제목은 **my-agent-ops**이며 설치 패키지명은 `agent-ops-local`,
+터미널 실행 명령은 `agent-ops`입니다.
 
 대화 데이터는 로컬 SQLite에 저장합니다. 별도 계정, 호스팅 서버, 텔레메트리는
 없습니다. 실제 에이전트 실행에는 사용자가 설치한 CLI와 해당 CLI의 인증을
@@ -10,9 +13,11 @@ Codex, Claude Code, Kiro CLI의 대화 이력과 실행 작업을 한곳에서 �
 
 ## 시작하기
 
-Node.js **20.19 이상**과 npm이 필요합니다.
+소스 설치에는 Git, Node.js **20.19 이상**, npm이 필요합니다.
 
 ```bash
+git clone https://github.com/whchoi98/agent-ops.git
+cd agent-ops
 npm ci
 npm run build
 npm start
@@ -21,6 +26,10 @@ npm start
 브라우저에서 `http://127.0.0.1:4317`을 엽니다. 기본 데이터 디렉터리는
 `~/.local/share/agent-ops`이며 `XDG_DATA_HOME` 또는 `AGENT_OPS_DATA_DIR`로
 변경할 수 있습니다.
+
+macOS 설치와 기록 경로는 [온보딩](docs/onboarding.md#macos-korean)에,
+시작·진단·업데이트·최적화 절차는 [운영 런북](docs/runbooks/local-operations.md)에
+정리했습니다. Mac에서 실행한 앱은 해당 Mac의 기록을 수집합니다.
 
 CloudFront → ALB → EC2의 **인증된 code-server 포트 프록시**로 접속한다면
 외부 URL을 지정합니다. 도메인은 실제 사용하는 주소로 바꾸세요.
@@ -110,6 +119,33 @@ CLI 설치 확인은 인증 확인이 아닙니다. 모델 이름을 비워 두�
 기본 모델을 사용합니다. CLI 버전이나 인증 방식에 따른 실패는 실행 로그에서
 확인할 수 있습니다.
 
+## 구성 개요
+
+```mermaid
+flowchart LR
+    Sources["Native history"] --> Sync["agent-ops sync"]
+    Sync --> Store["SQLite + compressed FTS5 content"]
+    Store <--> API["Loopback API"]
+    Browser["Browser UI"] <-->|HTTP / SSE| API
+    API --> Runner["Owned CLI runner"]
+```
+
+세션 수집과 CLI 실행은 분리되어 있습니다. 전체 구성은
+[아키텍처](docs/architecture.md), 선택한 방식과 제약은
+[설계 결정](docs/decisions/README.md)을 참고하세요.
+
+| 환경 변수 | 기본값·역할 |
+|---|---|
+| `AGENT_OPS_DATA_DIR` | 앱 데이터 경로. 미설정 시 `XDG_DATA_HOME/agent-ops` 또는 `~/.local/share/agent-ops` |
+| `AGENT_OPS_PORT` | 루프백 포트, 기본 `4317` |
+| `AGENT_OPS_PUBLIC_URL` | 인증된 로컬 프록시의 외부 HTTPS URL, 기본 미설정 |
+| `XDG_DATA_HOME` | 앱·Kiro CLI 데이터의 기본 기준 경로 |
+| `CODEX_HOME` | Codex 기준 경로, 기본 `~/.codex` |
+| `CLAUDE_CONFIG_DIR` | Claude Code 기준 경로, 기본 `~/.claude` |
+
+CLI의 `--data-dir`, `--port`, `--public-url`을 지정하면 해당 환경 변수보다
+우선합니다. 데모는 선택한 데이터 기준 경로의 `demo/` 하위 디렉터리를 사용합니다.
+
 ## 명령줄
 
 ```bash
@@ -171,6 +207,8 @@ npx playwright install chromium
 빌드 산출물에는 의존성의 라이선스 원문인 `THIRD_PARTY_NOTICES.txt`가 포함됩니다.
 전체 문서는 [문서 목록](docs/README.md), 변경 사항은 [변경 기록](CHANGELOG.md)에서
 확인할 수 있습니다.
+기여 절차는 [CONTRIBUTING.md](CONTRIBUTING.md), 코드 탐색은
+[구현 참조 색인](docs/reference/INDEX.md)을 참고하세요.
 
 ## 지원 범위
 
@@ -178,7 +216,7 @@ npx playwright install chromium
 `--public-url` 설정 또는 SSH 포트 포워딩으로 접속합니다. CLI 실행은 해당
 CLI가 설치·인증된 서버 머신에서 일어납니다.
 
-Agent Ops가 시작한 프로세스만 취소할 수 있습니다. 외부 터미널에서 시작한
+my-agent-ops가 시작한 프로세스만 취소할 수 있습니다. 외부 터미널에서 시작한
 프로세스를 이력 파일만 보고 실행 중이라고 표시하거나 종료하지 않습니다.
 서버를 재시작하면 미완료 작업은 중단됨으로 표시하며 자동 재실행하지 않습니다.
 

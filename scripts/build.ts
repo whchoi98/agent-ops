@@ -29,6 +29,6 @@ const notices = await Promise.all(Object.keys(lock.packages).filter((path) => pa
   } catch { return ''; }
 }));
 await writeFile('dist/client/THIRD_PARTY_NOTICES.txt',
-  'Agent Ops dependency notices\nIncludes installed runtime and build dependencies; not all are bundled.\n'
+  'my-agent-ops dependency notices\nIncludes installed runtime and build dependencies; not all are bundled.\n'
   + notices.filter(Boolean).join(''));
 console.log(`Third-party notices: ${notices.filter(Boolean).length} installed packages.`);

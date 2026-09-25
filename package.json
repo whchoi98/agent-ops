@@ -13,6 +13,7 @@
   "files": [
     "dist",
     "AGENTS.md",
+    "CONTRIBUTING.md",
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
@@ -23,6 +24,9 @@
     "docs/api.md",
     "docs/design.md",
     "docs/verification.md",
+    "docs/decisions",
+    "docs/runbooks",
+    "docs/reference",
     "deploy/agent-ops.service",
     "public/icons/README.md"
   ],

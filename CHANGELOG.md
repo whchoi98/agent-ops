@@ -9,6 +9,9 @@
 
 #### Added
 
+- Application title `my-agent-ops` in the sidebar, browser tabs and interface copy.
+- Contributor/editor guidance, macOS onboarding, architecture decision records,
+  operations runbooks and an implementation reference index, included in packages.
 - Korean/English switch beside the theme control, browser language persistence
   and translated workspaces/dialogs with original content preserved.
 - Explicit offline `optimize` command with a verified compressed backup,
@@ -46,6 +49,8 @@
 
 #### 추가
 
+- 사이드바·브라우저 탭과 화면 문구에 앱 제목 `my-agent-ops` 적용.
+- 기여·편집 지침, macOS 온보딩, 설계 결정 기록, 운영 런북과 구현 참조 색인 및 패키지 포함.
 - 테마 버튼 옆 한/영 전환, 브라우저 언어 저장과 원문을 보존하는 화면·대화창 번역.
 - 검증한 압축 백업, 검색 본문 압축과 빈 페이지 회수를 제공하는 오프라인 `optimize` 명령.
 - 어시스턴트별 스킬·플러그인·Power 조회, 상태 근거, 프로젝트 필터,
