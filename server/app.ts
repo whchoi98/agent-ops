@@ -19,6 +19,9 @@ import { enforceAccess, parsePublicUrl, stripProxyPrefix } from './access.js';
 import { ExtensionService, type ExtensionServiceOptions } from './extensions/service.js';
 import { registerExtensionRoutes } from './extensions/routes.js';
 import { VersionService, type VersionServiceOptions } from './versions.js';
+import { ResourceMonitor, type ResourceMonitorOptions } from './resources/monitor.js';
+import { McpService, registerMcpRoutes, type McpServiceOptions } from './mcp/index.js';
+import { DesktopAppService, registerDesktopAppRoutes, type DesktopAppServiceOptions } from './desktop-apps.js';
 
 const agentSchema = z.enum(AGENTS);
 const policySchema = z.enum(['read-only', 'workspace-write']);
@@ -61,7 +64,10 @@ function error(statusCode: number, message: string): Error & { statusCode: numbe
 }
 const idParam = (params: unknown) => z.object({ id: shortText }).parse(params).id;
 type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent };
-export interface AppContext { app: FastifyInstance; store: Store; runner: Runner; sync: SyncController }
+export interface AppContext {
+  app: FastifyInstance; store: Store; runner: Runner; sync: SyncController;
+  resources: ResourceMonitor; mcp: McpService; desktopApps: DesktopAppService;
+}
 export interface AppOptions {
   dataDir: string;
   demo?: boolean;
@@ -70,6 +76,9 @@ export interface AppOptions {
   publicUrl?: string;
   extensionOptions?: Omit<ExtensionServiceOptions, 'demo'>;
   versionOptions?: Omit<VersionServiceOptions, 'demo'>;
+  resourceOptions?: Omit<ResourceMonitorOptions, 'dataDir' | 'roots'>;
+  mcpOptions?: Omit<McpServiceOptions, 'demo'>;
+  desktopAppOptions?: Omit<DesktopAppServiceOptions, 'demo'>;
   connectorProbe?: (settings: Settings) => Promise<ConnectorStatus[]>;
 }
 
@@ -120,6 +129,12 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
       onComplete: refreshNotice,
       onProgress: refreshNotice,
     });
+  const mcp = new McpService({ ...options.mcpOptions, demo }, () => store.listProjects());
+  const desktopApps = new DesktopAppService({ ...options.desktopAppOptions, demo });
+  const resources = new ResourceMonitor({
+    ...options.resourceOptions, dataDir: options.dataDir,
+    roots: () => [...runner.resourceRoots, ...(sync instanceof BackgroundSync ? sync.resourceRoots : []), ...mcp.resourceRoots],
+  });
   let interval: NodeJS.Timeout | null = null;
   let requestedSync: Promise<void> | null = null;
   function startBackgroundSync() {
@@ -158,6 +173,12 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     return reply.code(code).send({ error: message });
   });
   app.get('/api/health', async () => ({ ok: true, version: VERSION, demo }));
+  app.get('/api/resources', async request => {
+    z.object({}).strict().parse(request.query);
+    return resources.snapshot();
+  });
+  registerMcpRoutes(app, mcp);
+  registerDesktopAppRoutes(app, desktopApps);
   registerExtensionRoutes(app, new ExtensionService({ ...options.extensionOptions, demo }, () => store.listProjects()));
   const versions = new VersionService({ ...options.versionOptions, demo }, () => probe(store.getSettings()));
   app.get('/api/connector-versions', async request => {
@@ -367,10 +388,12 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   }
   app.addHook('preClose', async () => {
     closing = true;
+    resources.stop();
     if (interval) clearInterval(interval);
     sync.cancel();
     for (const reply of clients) reply.raw.end();
     clients.clear();
+    await mcp.close();
     await runner.close();
   });
   app.addHook('onClose', async () => {
@@ -382,5 +405,6 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     startBackgroundSync();
   }
   await app.ready();
-  return { app, store, runner, sync };
+  resources.start();
+  return { app, store, runner, sync, resources, mcp, desktopApps };
 }

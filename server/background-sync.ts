@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { resolve } from 'node:path';
 import type { SyncReport } from '../shared/types.js';
+import type { OwnedProcessRoot } from './resources/processes.js';
 
 export interface BackgroundSyncOptions {
   dataDir: string;
@@ -16,7 +17,7 @@ const TERM_GRACE_MS = 1000;
 const CLOSE_GRACE_MS = 1000;
 const PROGRESS_INTERVAL_MS = 2000;
 
-interface Job { promise: Promise<SyncReport>; stop: (reason: Error) => void }
+interface Job { promise: Promise<SyncReport>; stop: (reason: Error) => void; ownerId: string; child?: ChildProcess }
 
 function timestamp(value: unknown): value is string {
   return typeof value === 'string' && value.length <= 64
@@ -55,12 +56,19 @@ export class BackgroundSync {
   private readonly options: BackgroundSyncOptions;
   private job: Job | null = null;
   private stopping = false;
+  private generation = 0;
 
   constructor(options: BackgroundSyncOptions) {
     this.options = { ...options, dataDir: resolve(options.dataDir), entry: resolve(options.entry) };
   }
 
   get active(): boolean { return this.job !== null; }
+
+  get resourceRoots(): OwnedProcessRoot[] {
+    const child = this.job?.child;
+    return child?.pid && child.exitCode === null && child.signalCode === null
+      ? [{ pid: child.pid, ownerId: this.job!.ownerId, kind: 'sync', processGroup: false }] : [];
+  }
 
   run(): Promise<SyncReport> {
     if (this.stopping) return Promise.reject(new Error('Synchronization is stopping.'));
@@ -82,7 +90,7 @@ export class BackgroundSync {
     let killedCleanup: ReturnType<typeof setTimeout> | undefined;
     let drain: ReturnType<typeof setTimeout> | undefined;
     let progress: ReturnType<typeof setInterval> | undefined;
-    const job: Job = { promise, stop: reason => stop(reason) };
+    const job: Job = { promise, stop: reason => stop(reason), ownerId: `sync:${++this.generation}` };
     this.job = job;
 
     const closeStreams = () => {
@@ -139,6 +147,7 @@ export class BackgroundSync {
       child = spawn(process.execPath, args, {
         shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
       });
+      job.child = child;
       child.stdout!.on('data', (chunk: Buffer) => {
         if (failure || settled) return;
         stdoutBytes += chunk.byteLength;

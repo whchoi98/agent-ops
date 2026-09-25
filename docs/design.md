@@ -60,7 +60,18 @@ The application is original implementation, with no telemetry or hosted service.
 14. Keep native import in an owned subprocess. Persist file/row checkpoints and
     avoid rewriting unchanged messages. New caches use compressed search bodies;
     existing caches convert through explicit offline maintenance with a verified
-    backup, atomic schema/version updates and stable session-ID search links.
+   backup, atomic schema/version updates and stable session-ID search links.
+15. Monitor server and owned worker/job/probe CPU and RSS with bounded in-memory
+   history, metadata-only disk categories and filesystem availability. Keep
+   monitoring reads independent of SQL/import and global refresh, surface unknown
+   values, and pause hidden browser polling.
+16. Provide a separate MCP menu with assistant/client-specific configuration
+   provenance, redacted analysis, explicit preview and bounded metadata-only
+   connectivity checks. Do not infer native live connections from declarations,
+   invoke tools, modify configuration, or start probes automatically.
+17. Inspect fixed macOS desktop app bundles on the server host for Codex App,
+   Claude Desktop and Kiro IDE. Separate app/container/IDE versions from CLI
+   versions and preserve unsupported-host/unverified results.
 
 ## Architecture
 

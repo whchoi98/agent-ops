@@ -6,6 +6,7 @@ import { toQueryString } from './query';
 import { apiUrl } from './urls';
 import type { ExtensionAnalysisDraft, ExtensionCatalog, ExtensionContent, ExtensionDetail, ExtensionQuery } from '../../shared/extensions';
 import type { VersionReport } from '../../shared/versions';
+import type { ResourceReport } from '../../shared/resources';
 
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
@@ -35,7 +36,7 @@ async function response(path: string, init: RequestInit = {}): Promise<Response>
   return result;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const result = await response(path, init);
   try { return await result.json() as T; }
   catch { throw new ApiError('서버 응답을 읽지 못했습니다. 새로고침 후 다시 시도하세요.', result.status); }
@@ -48,6 +49,7 @@ type ProjectFields = Pick<Project, 'name' | 'path'> & Partial<Pick<Project, 'col
 
 export const api = {
   bootstrap: (signal?: AbortSignal) => request<Bootstrap>('/bootstrap', { signal }),
+  resources: (signal?: AbortSignal) => request<ResourceReport>('/resources', { signal }),
   versions: (signal?: AbortSignal) => request<VersionReport>('/connector-versions', { signal }),
   checkVersions: () => request<VersionReport>('/connector-versions/check', json('POST', {})),
   extensions: (query: ExtensionQuery = {}, signal?: AbortSignal) =>

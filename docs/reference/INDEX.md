@@ -19,6 +19,9 @@ Code paths refer to the source checkout; npm archives provide compiled code in
 | Maintenance | `server/maintenance.ts`, `server/database-file.ts`, `server/write-retry.ts` | [Runbook](../runbooks/local-operations.md) |
 | Execution/sharing | `server/commands.ts`, `server/runner.ts`, `server/privacy.ts` | [API](../api.md), [local-workbench decision](../decisions/0001-local-workbench.md) |
 | Extensions/versions | `server/extensions/`, `server/versions.ts`, `shared/extensions.ts`, `shared/versions.ts` | [Operations](../operations.md), [API](../api.md) |
+| Resource monitoring | `server/resources/`, `shared/resources.ts`, `src/pages/Resources.tsx` | [Resources](resources.md) |
+| MCP configuration/checks | `server/mcp/`, `shared/mcp.ts`, `src/features/mcp/` | [MCP](mcp.md), [API](../api.md) |
+| macOS desktop apps | `server/desktop-apps/`, `shared/desktop-apps.ts`, `src/features/versions/DesktopApps.tsx` | [Desktop apps](desktop-apps.md) |
 | UI/language | `src/App.tsx`, `src/state/`, `src/i18n/`, `src/features/`, `src/pages/` | [Architecture](../architecture.md), [design](../design.md) |
 | Build/tests/distribution | `scripts/build.ts`, `scripts/package-smoke.mjs`, `tests/`, `src/**/*.test.*` | [Contributing](../../CONTRIBUTING.md), [verification](../verification.md) |
 
@@ -46,6 +49,9 @@ import concurrency, stable search identity and offline conversion.
 | 유지보수 | `server/maintenance.ts`, `server/database-file.ts`, `server/write-retry.ts` | [런북](../runbooks/local-operations.md) |
 | 실행·공유 | `server/commands.ts`, `server/runner.ts`, `server/privacy.ts` | [API](../api.md), [로컬 워크벤치 결정](../decisions/0001-local-workbench.md) |
 | 확장·버전 | `server/extensions/`, `server/versions.ts`, `shared/extensions.ts`, `shared/versions.ts` | [운영](../operations.md), [API](../api.md) |
+| 자원 모니터링 | `server/resources/`, `shared/resources.ts`, `src/pages/Resources.tsx` | [자원](resources.md) |
+| MCP 설정·점검 | `server/mcp/`, `shared/mcp.ts`, `src/features/mcp/` | [MCP](mcp.md), [API](../api.md) |
+| macOS 데스크톱 앱 | `server/desktop-apps/`, `shared/desktop-apps.ts`, `src/features/versions/DesktopApps.tsx` | [앱 정보](desktop-apps.md) |
 | UI·언어 | `src/App.tsx`, `src/state/`, `src/i18n/`, `src/features/`, `src/pages/` | [아키텍처](../architecture.md), [설계](../design.md) |
 | 빌드·테스트·배포 파일 | `scripts/build.ts`, `scripts/package-smoke.mjs`, `tests/`, `src/**/*.test.*` | [기여](../../CONTRIBUTING.md), [검증](../verification.md) |
 

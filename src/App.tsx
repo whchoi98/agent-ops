@@ -12,13 +12,15 @@ import { Projects } from './pages/Projects';
 import { Analytics } from './pages/Analytics';
 import { Templates } from './pages/Templates';
 import { Extensions } from './pages/Extensions';
-import { Settings } from './pages/Settings';
 import { I18nProvider, useI18n, Trans } from './i18n/I18nProvider';
 
 const SessionDetailDialog = lazy(() => import('./features/sessions/SessionDetail').then(module => ({ default: module.SessionDetailDialog })));
 const CompareDialog = lazy(() => import('./features/sessions/CompareDialog').then(module => ({ default: module.CompareDialog })));
 const NewRunDialog = lazy(() => import('./features/runs/NewRunDialog').then(module => ({ default: module.NewRunDialog })));
 const RunDetailDialog = lazy(() => import('./features/runs/RunDetailDialog').then(module => ({ default: module.RunDetailDialog })));
+const Resources = lazy(() => import('./pages/Resources').then(module => ({ default: module.Resources })));
+const Mcp = lazy(() => import('./pages/Mcp').then(module => ({ default: module.Mcp })));
+const Settings = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
 
 function WorkspaceContent() {
   const { t, notice } = useI18n();
@@ -34,9 +36,11 @@ function WorkspaceContent() {
     case 'runs': return <Runs />;
     case 'projects': return <Projects />;
     case 'analytics': return <Analytics />;
+    case 'resources': return <Suspense fallback={<Skeleton rows={6} />}><Resources /></Suspense>;
+    case 'mcp': return <Suspense fallback={<Skeleton rows={6} />}><Mcp /></Suspense>;
     case 'templates': return <Templates />;
     case 'extensions': return <Extensions />;
-    case 'settings': return <Settings />;
+    case 'settings': return <Suspense fallback={<Skeleton rows={6} />}><Settings /></Suspense>;
     default: return <Overview />;
   }
 }

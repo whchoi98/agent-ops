@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toQueryString } from './query';
 
-export const PAGES = ['overview', 'sessions', 'runs', 'projects', 'analytics', 'templates', 'extensions', 'settings'] as const;
+export const PAGES = ['overview', 'sessions', 'runs', 'projects', 'analytics', 'resources', 'templates', 'extensions', 'mcp', 'settings'] as const;
 export type Page = (typeof PAGES)[number];
 export const PAGE_NAMES: Record<Page, string> = {
   overview: '개요', sessions: '세션', runs: '실행', projects: '프로젝트',
-  analytics: '분석', templates: '템플릿', extensions: '스킬·플러그인', settings: '설정',
+  analytics: '분석', resources: '자원', templates: '템플릿', extensions: '스킬·플러그인', mcp: 'MCP', settings: '설정',
 };
 
 function readLocation() {

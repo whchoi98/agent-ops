@@ -5,9 +5,14 @@ import { EN_MESSAGES } from './en';
 import { UI_EN_MESSAGES } from './ui.en';
 import { NOTICE_EN_MESSAGES } from './notices.en';
 import { NOTICE_KO_MESSAGES } from './notices.ko';
+import { RESOURCE_EN_MESSAGES } from './resources.en';
+import { DESKTOP_EN_MESSAGES } from './desktop.en';
 import { createNoticeTranslator, LANGUAGE_STORAGE_KEY, messageTemplate, readLanguage, translate, type Language, type MessageValues } from './core';
 
-export const MESSAGES = { ...EN_MESSAGES, ...UI_EN_MESSAGES, ...NOTICE_EN_MESSAGES };
+export const MESSAGES = {
+  ...EN_MESSAGES, ...UI_EN_MESSAGES, ...NOTICE_EN_MESSAGES,
+  ...RESOURCE_EN_MESSAGES, ...DESKTOP_EN_MESSAGES,
+};
 
 export function createI18n(language: Language) {
   return {

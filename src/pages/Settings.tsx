@@ -8,6 +8,7 @@ import { AGENTS, type Agent, type Settings as SettingsContract } from '../../sha
 import { Button, Field, InlineNotice, PageHeading, Panel, ProviderMark } from '../components/ui';
 import { VersionComparison } from '../features/versions/VersionComparison';
 import { VersionSection } from '../features/versions/VersionSection';
+import { DesktopApps } from '../features/versions/DesktopApps';
 import { useVersions } from '../features/versions/useVersions';
 import { api } from '../lib/api';
 import { AGENT_META, errorMessage, number } from '../lib/format';
@@ -87,6 +88,7 @@ export function Settings() {
         })}</div>
         </VersionSection>
         <p className="page-footnote"><Trans message={"CLI 설치 상태와 기록 경로를 확인합니다. 로그인이 필요한 경우 실행 로그에 안내됩니다."} /></p>
+        <DesktopApps demo={data.demo} />
       </section>
       <Panel title={t("실행 및 동기화")} description={t("새 작업과 자동 기록 수집에 적용됩니다.")} className="execution-settings">
         <div className="settings-numeric-grid">

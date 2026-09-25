@@ -11,6 +11,9 @@
 - [Operations](operations.md): data, permissions, proxy service and troubleshooting.
 - [API](api.md): routes and request/response contracts.
 - [Verification](verification.md): recorded checks and their limits.
+- [Resources](reference/resources.md): CPU/memory/disk scope, overhead and bounded history.
+- [MCP](reference/mcp.md): configuration/client provenance and explicit metadata checks.
+- [macOS desktop apps](reference/desktop-apps.md): local bundle metadata and client distinctions.
 - [Changelog](../CHANGELOG.md): user-visible changes.
 - [Contributor guidance](../AGENTS.md): development commands and invariants.
 - [Contributing](../CONTRIBUTING.md): change preparation, verification and Git workflow.
@@ -27,6 +30,9 @@
 - [운영](operations.md): 데이터, 권한, 프록시 서비스와 문제 해결.
 - [API](api.md): 경로와 요청·응답 계약.
 - [검증 기록](verification.md): 수행한 검사와 검증 범위.
+- [자원](reference/resources.md): CPU·메모리·디스크 범위, 수집 비용과 보관 상한.
+- [MCP](reference/mcp.md): 설정·클라이언트 출처와 명시적 메타데이터 점검.
+- [macOS 데스크톱 앱](reference/desktop-apps.md): 로컬 번들 메타데이터와 클라이언트 구분.
 - [변경 기록](../CHANGELOG.md): 사용자에게 영향을 주는 변경.
 - [개발 지침](../AGENTS.md): 개발 명령과 유지할 규칙.
 - [기여 가이드](../CONTRIBUTING.md): 변경 준비, 검증과 Git 작업.

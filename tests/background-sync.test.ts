@@ -50,6 +50,20 @@ afterEach(async () => {
 }, 10_000);
 
 describe('BackgroundSync command and report boundary', () => {
+  it('exposes only its live owned process for resource monitoring', async () => {
+    const dataDir = await directory({ delayMs: 150 });
+    const sync = worker(dataDir);
+    expect(sync.resourceRoots).toEqual([]);
+    const running = sync.run();
+    const info = await ready(dataDir);
+    const roots = sync.resourceRoots;
+    expect(roots).toEqual([{ pid: info.pid, ownerId: expect.any(String), kind: 'sync', processGroup: false }]);
+    roots[0].pid = 1;
+    expect(sync.resourceRoots[0].pid).toBe(info.pid);
+    await running;
+    expect(sync.resourceRoots).toEqual([]);
+  });
+
   it('coalesces a single owned Node sync command and makes its lifecycle observable', async () => {
     const dataDir = await directory({ delayMs: 75 });
     const completed: SyncReport[] = [];

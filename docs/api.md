@@ -42,6 +42,16 @@ See [operations](operations.md) for the proxy configuration.
 | POST | `/extensions/:id/analyze` | `{projectId?}` | `ExtensionAnalysisDraft`; does not execute a CLI |
 | GET | `/connector-versions` | none | `VersionReport` with installed/latest versions and source status |
 | POST | `/connector-versions/check` | `{}` | `VersionReport` after a bounded explicit refresh |
+| GET | `/resources` | none | cached `ResourceReport` with CPU/RSS history and disk coverage |
+| GET | `/mcp` | `agent?,scope?,status?,transport?,projectId?,q?,offset?,limit?` | `McpCatalog` |
+| POST | `/mcp/refresh` | `{projectId?}` | `{ok:true}`; invalidates declarations without connecting |
+| GET | `/mcp/:id` | `projectId?` | redacted `McpDetail` |
+| POST | `/mcp/:id/preview` | `{projectId?}` | expiring `McpCheckPreview`; no connection |
+| POST | `/mcp/:id/check` | `{projectId?,previewId}` | `202 McpCheck`; explicit initialization and metadata-only probe |
+| GET | `/mcp/checks/:checkId` | none | `McpCheck` with progress/result |
+| POST | `/mcp/checks/:checkId/cancel` | `{}` | cancellation of an owned probe |
+| GET | `/desktop-apps` | none | cached server-host `DesktopAppReport` |
+| POST | `/desktop-apps/refresh` | `{}` or no body | refreshed `DesktopAppReport` |
 
 `Bootstrap.sessions` is the most recent 60 sessions. Use `/sessions` for full search
 and pagination. `Bootstrap.analytics` is computed from the entire local archive.
@@ -71,3 +81,26 @@ version and normalized version remain available when latest metadata fails.
 with `status: "not-installed"` represents a confirmed missing CLI.
 Version checks do not upgrade a CLI or launch model inference. Demo reports use
 clearly marked, deterministic sample versions without host or network probes.
+
+Resource contracts are in `shared/resources.ts`. CPU and memory are sampled every
+5 seconds; at most 180 samples remain in memory. Disk metadata refreshes every
+60 seconds. The resource endpoint takes no path/PID inputs and starts no scan,
+SQL query, process probe, or SSE refresh. Unknown counters are null, not zero.
+CPU 100% means one logical core, RSS sums include per-process shared pages,
+and incomplete disk scans are partial observations. Demo resource readings are
+real measurements of the isolated demo server. See [resources](reference/resources.md).
+
+MCP contracts are in `shared/mcp.ts`. Discovery reads bounded local configuration
+and client provenance; it does not establish another app's current connection.
+An explicit preview/check uses the selected, unchanged declaration and only MCP
+initialization plus tools/resources/prompts listing. It never invokes MCP tools.
+Configured authentication may be sent to that selected server; conversations
+are not sent. Probes are bounded, separately timestamped and cancellable; demo
+probes are disabled. No route edits native configuration or accepts a replacement
+command/URL. Inaccessible native OAuth/helper state remains unverified/unsupported.
+
+Desktop contracts are in `shared/desktop-apps.ts`. Only fixed macOS bundle
+candidates on the server host are inspected. Other hosts report `unsupported-host`
+with unknown installation state. App/container/IDE versions and builds come from
+Info.plist and are not compared to CLI release versions. Authentication and full
+private/cloud histories remain unverified. See [desktop apps](reference/desktop-apps.md).

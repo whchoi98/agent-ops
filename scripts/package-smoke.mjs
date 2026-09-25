@@ -83,6 +83,25 @@ try {
   assert.equal(data.demo, true);
   assert.equal(data.connectors.every((connector) => !connector.installed), true);
   assert.ok(data.sessionTotal > 80);
+  const resources = await (await request('/api/resources')).json();
+  assert.equal(resources.sampleIntervalSeconds, 5);
+  assert.equal(resources.diskIntervalSeconds, 60);
+  assert.equal(resources.retentionSeconds, 900);
+  assert.ok(resources.current.scopes.server.rssBytes > 0);
+  assert.ok(resources.history.length <= 180);
+  const mcp = await (await request('/api/mcp')).json();
+  assert.equal(mcp.demo, true);
+  assert.ok(mcp.items.length > 0);
+  const mcpPreview = await (await request(`/api/mcp/${mcp.items[0].id}/preview`, {})).json();
+  assert.equal(mcpPreview.canCheck, false);
+  assert.equal((await request(`/api/mcp/${mcp.items[0].id}/check`, { previewId: mcpPreview.previewId })).status, 403);
+  const desktopApps = await (await request('/api/desktop-apps')).json();
+  assert.equal(desktopApps.status, 'demo');
+  assert.equal(desktopApps.items.every(item => item.installed === null && item.candidates.length === 0), true);
+  for (const document of ['resources.md', 'mcp.md', 'desktop-apps.md']) {
+    const body = await readFile(join(directory, 'node_modules/agent-ops-local/docs/reference', document), 'utf8');
+    assert.ok(body.includes('## 한국어'));
+  }
   const extensions = await (await request('/api/extensions?agent=codex')).json();
   assert.equal(extensions.demo, true);
   const reviewSkill = extensions.items.find((item) => item.name === '코드 리뷰');

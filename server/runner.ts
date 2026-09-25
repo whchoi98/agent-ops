@@ -12,6 +12,7 @@ import {
 import { buildCommand, validateRunRequest, redactCliText as redact } from './commands.js';
 import { connectorForResume, detectConnectors } from './connectors.js';
 import { newId, type Store } from './store.js';
+import type { OwnedProcessRoot } from './resources/processes.js';
 
 type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent };
 type Options = {
@@ -188,6 +189,15 @@ export class Runner {
   private pumpAgain = false;
   private closingPromise?: Promise<void>;
   constructor(private readonly store: Store, private readonly options: Options = {}) {}
+
+  /** Metadata only; callers cannot obtain or signal the owned ChildProcess. */
+  get resourceRoots(): OwnedProcessRoot[] {
+    return [...this.owned.values()].flatMap(state => {
+      const pid = state.child.pid;
+      if (!pid || state.groupGone || process.platform === 'win32' && state.exited) return [];
+      return [{ pid, ownerId: state.run.id, kind: 'agents' as const, processGroup: process.platform !== 'win32' }];
+    });
+  }
 
   getRun(id: string): Run | null {
     this.scheduleReconciliation();

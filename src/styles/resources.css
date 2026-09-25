@@ -1,0 +1,55 @@
+.resource-status { display: flex; flex-wrap: wrap; gap: 8px 24px; color: var(--muted); font-size: 12px; margin: -8px 0 18px; }
+.resource-status > span { display: inline-flex; align-items: center; gap: 7px; }
+.resource-state-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.resource-state-live { background: var(--teal); }
+.resource-stats { margin-top: 20px; }
+.resource-stats .stat-value { font-size: clamp(19px, 2vw, 28px); overflow-wrap: anywhere; }
+.resource-loading { padding: 28px; }
+.resource-notice { margin-bottom: 18px; }
+.resource-warning-list { margin: 0; padding-left: 18px; }
+.resource-section-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 25px 0 12px; }
+.resource-section-toolbar h2 { font-size: 16px; margin: 0; }
+.resource-chart-grid, .resource-bottom-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-bottom: 20px; }
+.resource-bottom-grid { margin-top: 20px; }
+.resource-trend { padding: 12px 16px 18px; }
+.resource-plot { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.resource-trend svg { display: block; width: 100%; height: 160px; overflow: visible; }
+.resource-y-axis { display: flex; flex-direction: column; justify-content: space-between; text-align: right; color: var(--muted); font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
+.resource-time-axis { margin: 8px 0 10px 72px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.resource-grid-line { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 4; }
+.resource-line { fill: none; stroke: currentColor; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.resource-server { color: #3564e8; }
+.resource-sync { color: #0e9f8f; }
+.resource-agents { color: #8b5cf6; }
+.resource-mcp { color: #bf8a28; }
+.resource-cursor { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; opacity: .6; }
+.resource-sample-picker { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 11px; padding: 0 6px; }
+.resource-sample-picker > span { display: flex; justify-content: space-between; gap: 8px; }
+.resource-sample-picker strong { font-weight: 500; font-variant-numeric: tabular-nums; }
+.resource-sample-picker input { width: 100%; accent-color: var(--primary); }
+.resource-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin: 15px 6px 0; font-size: 11px; }
+.resource-legend > div { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.resource-legend strong { margin-left: auto; white-space: nowrap; font-weight: 600; }
+.resource-dot { display: inline-block; flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.resource-scope-name { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.resource-table th:first-child, .resource-table td:first-child { min-width: 104px; }
+.resource-table th:not(:first-child), .resource-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+.resource-table tfoot { border-top: 1px solid var(--border); background: var(--surface-secondary); }
+.resource-table tfoot td, .resource-table tfoot th { padding: 12px 16px; }
+.resource-explanation { margin: 14px 20px; color: var(--muted); line-height: 1.65; font-size: 12px; }
+.resource-data-path { margin: 0 20px 15px; overflow-wrap: anywhere; font-size: 11px; }
+.resource-facts { margin: 0 20px; }
+.resource-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.resource-facts dt { color: var(--muted); }
+.resource-facts dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.resource-chart-empty { min-height: 200px; display: grid; place-items: center; color: var(--muted); font-size: 13px; padding: 20px; }
+@media (max-width: 1100px) {
+  .resource-chart-grid, .resource-bottom-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .resource-status { margin-top: 0; gap: 8px; flex-direction: column; }
+  .resource-trend { padding: 0 8px 14px; }
+  .resource-legend { gap: 10px; }
+  .resource-facts { margin: 0 14px; }
+  .resource-facts > div { gap: 10px; font-size: 11px; }
+}

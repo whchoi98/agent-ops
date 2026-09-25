@@ -1,5 +1,5 @@
 import {
-  ArrowUpRight, BarChart3, BookOpen, ChevronRight, Command, FlaskConical, FolderKanban,
+  Activity, ArrowUpRight, BarChart3, BookOpen, Cable, ChevronRight, Command, FlaskConical, FolderKanban,
   LayoutDashboard, Menu, MessageSquare, Moon, Play, Plus, Puzzle, RefreshCw, Search, Settings2,
   ShieldCheck, Sun, type LucideIcon,
 } from 'lucide-react';
@@ -17,8 +17,10 @@ export const NAV_ITEMS: Array<{ page: Page; label: string; english: string; icon
   { page: 'runs', label: '실행', english: 'Runs', icon: Play },
   { page: 'projects', label: '프로젝트', english: 'Projects', icon: FolderKanban },
   { page: 'analytics', label: '분석', english: 'Analytics', icon: BarChart3 },
+  { page: 'resources', label: '자원', english: 'Resources', icon: Activity },
   { page: 'templates', label: '템플릿', english: 'Templates', icon: BookOpen },
   { page: 'extensions', label: '스킬·플러그인', english: 'Extensions', icon: Puzzle },
+  { page: 'mcp', label: 'MCP', english: 'MCP', icon: Cable },
   { page: 'settings', label: '설정', english: 'Settings', icon: Settings2 },
 ];
 const SEARCH_SHORTCUT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
@@ -117,7 +119,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Button size="small" icon={RefreshCw} busy={refreshing} onClick={() => void refresh()}><Trans message={"다시 연결"} /></Button>
         </div></InlineNotice>}
         <div className="page-content" key={page}>{children}</div>
-        {data && <footer className="workspace-footer"><span>my-agent-ops <span>·</span><Trans message={" 로컬 워크스페이스"} /></span><span>Codex / Claude Code / Kiro CLI</span></footer>}
+        {data && <footer className="workspace-footer"><span>my-agent-ops <span>·</span><Trans message={" 로컬 워크스페이스"} /></span><span>Codex / Claude / Kiro</span></footer>}
       </main>
     </div>
   </div>;
