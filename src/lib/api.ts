@@ -4,6 +4,8 @@ import type {
 } from '../../shared/types';
 import { toQueryString } from './query';
 import { apiUrl } from './urls';
+import type { ExtensionAnalysisDraft, ExtensionCatalog, ExtensionContent, ExtensionDetail, ExtensionQuery } from '../../shared/extensions';
+import type { VersionReport } from '../../shared/versions';
 
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
@@ -46,6 +48,18 @@ type ProjectFields = Pick<Project, 'name' | 'path'> & Partial<Pick<Project, 'col
 
 export const api = {
   bootstrap: (signal?: AbortSignal) => request<Bootstrap>('/bootstrap', { signal }),
+  versions: (signal?: AbortSignal) => request<VersionReport>('/connector-versions', { signal }),
+  checkVersions: () => request<VersionReport>('/connector-versions/check', json('POST', {})),
+  extensions: (query: ExtensionQuery = {}, signal?: AbortSignal) =>
+    request<ExtensionCatalog>(`/extensions?${toQueryString(query)}`, { signal }),
+  extension: (extensionId: string, projectId?: string, signal?: AbortSignal) =>
+    request<ExtensionDetail>(`/extensions/${id(extensionId)}?${toQueryString({ projectId })}`, { signal }),
+  extensionFile: (extensionId: string, fileId: string, projectId?: string, signal?: AbortSignal) =>
+    request<ExtensionContent>(`/extensions/${id(extensionId)}/files/${id(fileId)}?${toQueryString({ projectId })}`, { signal }),
+  refreshExtensions: (projectId?: string) =>
+    request<{ ok: true }>('/extensions/refresh', json('POST', { projectId })),
+  analyzeExtension: (extensionId: string, projectId?: string) =>
+    request<ExtensionAnalysisDraft>(`/extensions/${id(extensionId)}/analyze`, json('POST', { projectId })),
   sessions: (query: SessionQuery, signal?: AbortSignal) => request<SessionPage>(`/sessions?${toQueryString(query)}`, { signal }),
   session: (sessionId: string, signal?: AbortSignal) =>
     request<SessionDetail>(`/sessions/${id(sessionId)}?includeMessages=false`, { signal }),

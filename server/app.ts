@@ -14,6 +14,9 @@ import { SyncService } from './sync.js';
 import { Runner } from './runner.js';
 import { detectConnectors, invalidateConnectorCache } from './connectors.js';
 import { enforceAccess, parsePublicUrl, stripProxyPrefix } from './access.js';
+import { ExtensionService, type ExtensionServiceOptions } from './extensions/service.js';
+import { registerExtensionRoutes } from './extensions/routes.js';
+import { VersionService, type VersionServiceOptions } from './versions.js';
 
 const agentSchema = z.enum(AGENTS);
 const policySchema = z.enum(['read-only', 'workspace-write']);
@@ -63,6 +66,8 @@ export interface AppOptions {
   autoSync?: boolean;
   staticDir?: string;
   publicUrl?: string;
+  extensionOptions?: Omit<ExtensionServiceOptions, 'demo'>;
+  versionOptions?: Omit<VersionServiceOptions, 'demo'>;
   connectorProbe?: (settings: Settings) => Promise<ConnectorStatus[]>;
 }
 
@@ -134,6 +139,16 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     return reply.code(code).send({ error: message });
   });
   app.get('/api/health', async () => ({ ok: true, version: VERSION, demo }));
+  registerExtensionRoutes(app, new ExtensionService({ ...options.extensionOptions, demo }, () => store.listProjects()));
+  const versions = new VersionService({ ...options.versionOptions, demo }, () => probe(store.getSettings()));
+  app.get('/api/connector-versions', async request => {
+    z.object({}).strict().parse(request.query);
+    return versions.report();
+  });
+  app.post('/api/connector-versions/check', async request => {
+    z.object({}).strict().parse(request.body ?? {});
+    return versions.report(true);
+  });
   app.get('/api/bootstrap', async (): Promise<Bootstrap> => {
     const settings = store.getSettings();
     const sessions = store.allSessions();

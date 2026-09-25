@@ -1,0 +1,40 @@
+.cli-version-section { min-width: 0; }
+.extensions-workspace > .cli-version-section { margin-bottom: 22px; }
+.cli-version-section > .extension-counts { margin-bottom: 0; }
+.cli-version-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
+.cli-version-heading > div { min-width: 0; }
+.cli-version-heading h3 { font-size: 13px; }
+.cli-version-heading p { font-size: 11px; color: var(--muted); margin-top: 5px; }
+.cli-version-section > .inline-notice { margin-bottom: 15px; }
+.cli-version-demo-notice, .cli-version-report-notice { font-size: 11px; line-height: 1.8; margin: 0 0 14px; color: var(--muted); }
+.cli-version-demo-notice { color: var(--warning); }
+.cli-version-comparison { min-width: 0; margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--border); }
+.connector-card .cli-version-comparison { margin-top: 0; padding-top: 0; border-top: 0; }
+.cli-version-values { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.cli-version-values > div { min-width: 0; }
+.cli-version-values dt { color: var(--muted); font-size: 11px; margin-bottom: 7px; }
+.cli-version-values dd { font-size: 12px; line-height: 1.7; color: var(--text-strong); overflow-wrap: anywhere; }
+.cli-version-values code { font-size: 13px; font-weight: 600; }
+.cli-version-values small { display: block; font-size: 10px; color: var(--warning); margin-top: 2px; }
+.cli-version-status-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.cli-version-current { color: var(--success); background: var(--success-soft); }
+.cli-version-update-available, .cli-version-check-failed { color: var(--warning); background: var(--warning-soft); }
+.cli-version-ahead, .cli-version-checking { color: var(--link); background: var(--primary-soft); }
+.cli-version-not-installed, .cli-version-unknown { color: var(--muted); background: var(--surface-tertiary); }
+.cli-version-sample { color: var(--warning); font-size: 10px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 4px; }
+.cli-version-note, .cli-version-error { font-size: 11px; line-height: 1.75; margin-top: 9px; color: var(--muted); }
+.cli-version-error { color: var(--warning); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cli-version-meta { display: flex; flex-direction: column; gap: 4px; margin-top: 11px; color: var(--muted); font-size: 10px; line-height: 1.75; overflow-wrap: anywhere; }
+.cli-version-meta strong { font-weight: 400; color: var(--text); }
+.cli-version-sources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 7px; font-size: 10px; line-height: 1.75; color: var(--muted); margin-top: 5px; overflow-wrap: anywhere; }
+.cli-version-sources > a { min-width: 0; }
+.cli-version-sources > a:hover { text-decoration: underline; }
+.cli-version-raw { font-size: 11px; color: var(--muted); margin-top: 9px; }
+.cli-version-raw summary { cursor: pointer; }
+.cli-version-raw code { display: block; font-size: 10px; line-height: 1.75; margin-top: 7px; padding: 8px 10px; border-radius: 6px; background: var(--surface-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 540px) {
+  .cli-version-heading { flex-wrap: wrap; gap: 10px; }
+  .cli-version-heading > .button { margin-left: auto; }
+  .cli-version-sources, .cli-version-meta { font-size: 11px; }
+}

@@ -11,6 +11,8 @@ flowchart TB
     API --> Queue["Owned process queue"]
     Queue --> CLI["Codex / Claude Code / Kiro CLI"]
     Queue --> Store
+    Extensions["Skill / plugin files"] --> Catalog["Read-only extension catalog"]
+    API --> Catalog
 ```
 
 <a id="english"></a>
@@ -35,6 +37,11 @@ subpath. Access checks (`server/access.ts`) validate local peers, Host and Origi
 UI URL resolution (`src/lib/urls.ts`) keeps API and SSE requests in that subpath.
 The server continues to bind to `127.0.0.1`.
 
+The extension catalog (`server/extensions/`) reads assistant configuration and
+skill/plugin definitions on demand, separately from session import. It provides
+bounded, redacted previews and static content analysis. Optional CLI analysis
+uses the existing explicit run preview; catalog reads never launch a process.
+
 See [operations](operations.md), [API contracts](api.md) and [design](design.md).
 
 <a id="korean"></a>
@@ -58,5 +65,10 @@ React 화면과 API를 같은 출처에서 제공하며, SSE로 동기화와 실
 접근 검사(`server/access.ts`)는 로컬 연결·Host·Origin을 검증하고,
 화면 URL 처리(`src/lib/urls.ts`)는 API와 SSE를 해당 경로 안에서 연결합니다.
 서버는 계속 `127.0.0.1`에 바인딩합니다.
+
+확장 목록(`server/extensions/`)은 세션 수집과 별도로 요청 시 어시스턴트 설정과
+스킬·플러그인 정의를 읽습니다. 크기를 제한한 마스킹 미리보기와 로컬 내용
+분석을 제공하며, 선택형 CLI 분석은 기존 실행 미리보기를 거칩니다.
+목록을 조회하는 동작은 프로세스를 시작하지 않습니다.
 
 [운영](operations.md), [API 계약](api.md), [설계](design.md)를 함께 참고하세요.

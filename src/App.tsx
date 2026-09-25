@@ -11,6 +11,7 @@ import { Runs } from './pages/Runs';
 import { Projects } from './pages/Projects';
 import { Analytics } from './pages/Analytics';
 import { Templates } from './pages/Templates';
+import { Extensions } from './pages/Extensions';
 import { Settings } from './pages/Settings';
 
 const SessionDetailDialog = lazy(() => import('./features/sessions/SessionDetail').then(module => ({ default: module.SessionDetailDialog })));
@@ -32,6 +33,7 @@ function WorkspaceContent() {
     case 'projects': return <Projects />;
     case 'analytics': return <Analytics />;
     case 'templates': return <Templates />;
+    case 'extensions': return <Extensions />;
     case 'settings': return <Settings />;
     default: return <Overview />;
   }

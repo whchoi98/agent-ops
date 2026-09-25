@@ -4,6 +4,9 @@ import {
 } from 'lucide-react';
 import { AGENTS, type Agent, type Settings as SettingsContract } from '../../shared/types';
 import { Button, Field, InlineNotice, PageHeading, Panel, ProviderMark } from '../components/ui';
+import { VersionComparison } from '../features/versions/VersionComparison';
+import { VersionSection } from '../features/versions/VersionSection';
+import { useVersions } from '../features/versions/useVersions';
 import { api } from '../lib/api';
 import { AGENT_META, dateTime, errorMessage, number, relativeTime } from '../lib/format';
 import { useApp, useData } from '../state/AppProvider';
@@ -16,6 +19,7 @@ const normalizeRoots = (text: string) => [...new Set(text.split(/\r?\n/).map(pat
 export function Settings() {
   const data = useData();
   const { refresh, notify, sync, syncing, setTheme, themeSaving } = useApp();
+  const versions = useVersions();
   const [roots, setRoots] = useState(() => rootText(data.settings.sourceRoots));
   const [concurrency, setConcurrency] = useState(String(data.settings.concurrency));
   const [timeout, setTimeout] = useState(String(data.settings.timeoutMinutes));
@@ -52,13 +56,15 @@ export function Settings() {
       actions={<Button icon={RefreshCw} busy={syncing} onClick={() => void sync()}>지금 동기화</Button>} />
     <form onSubmit={save} className="settings-form">
       <section aria-labelledby="connectors-heading"><div className="section-title"><div><h2 id="connectors-heading">에이전트 커넥터</h2><span>CLI 설치 상태와 세션을 가져올 경로</span></div></div>
+        <VersionSection state={versions} demo={data.demo}>
         <div className="connector-grid">{AGENTS.map(agent => {
           const connector = data.connectors.find(item => item.agent === agent);
+          const installed = versions.report?.items.find(item => item.agent === agent)?.installed ?? connector?.installed;
           const changed = roots[agent] !== data.settings.sourceRoots[agent].join('\n');
           return <article key={agent} className={`connector-card provider-${agent}`}>
             <div className="connector-heading"><ProviderMark agent={agent} size="large" /><div><h3>{AGENT_META[agent].name}</h3>
-              <span className={`installed-badge ${connector?.installed ? 'is-installed' : ''}`}><Terminal size={11} aria-hidden />{connector?.installed ? 'CLI 설치됨' : '미설치'}</span></div></div>
-            <div className="connector-version"><span>버전</span><code>{connector?.version || (connector?.installed ? '확인 불가' : '—')}</code></div>
+              <span className={`installed-badge ${installed ? 'is-installed' : ''}`}><Terminal size={11} aria-hidden />{installed ? 'CLI 설치됨' : '미설치'}</span></div></div>
+            <VersionComparison agent={agent} state={versions} connector={connector} demo={data.demo} />
             <div className="connector-count"><strong className="numeric">{number(connector?.sessionCount ?? 0)}</strong><span>개 세션 기록</span></div>
             <div className="connector-capabilities"><span className={connector?.supportsResume ? 'available' : ''}><Check size={12} aria-hidden />이어가기 {connector?.supportsResume ? '지원' : '미지원'}</span>
               <span className={connector?.supportsStreaming ? 'available' : ''}><Check size={12} aria-hidden />구조화된 출력 {connector?.supportsStreaming ? '지원' : '미지원'}</span></div>
@@ -75,7 +81,8 @@ export function Settings() {
             </details>}
           </article>;
         })}</div>
-        <p className="page-footnote">CLI 설치 상태만 확인합니다. 로그인이 필요한 경우 실행 로그에 안내됩니다.</p>
+        </VersionSection>
+        <p className="page-footnote">CLI 설치 상태와 기록 경로를 확인합니다. 로그인이 필요한 경우 실행 로그에 안내됩니다.</p>
       </section>
       <Panel title="실행 및 동기화" description="새 작업과 자동 기록 수집에 적용됩니다." className="execution-settings">
         <div className="settings-numeric-grid">

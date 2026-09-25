@@ -1,6 +1,6 @@
 import {
-  Asterisk, Check, CheckCircle2, CircleAlert, Code2, Copy, Inbox, Info,
-  LoaderCircle, Orbit, RefreshCw, X, type LucideIcon,
+  Asterisk, Check, CheckCircle2, CircleAlert, Copy, Inbox, Info,
+  LoaderCircle, RefreshCw, X, type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -34,9 +34,13 @@ export function IconButton({
 }
 
 export function ProviderMark({ agent, size = 'normal' }: { agent: Agent; size?: 'small' | 'normal' | 'large' }) {
-  const Icon = agent === 'codex' ? Code2 : agent === 'claude' ? Asterisk : Orbit;
+  const pixels = size === 'small' ? 14 : size === 'large' ? 24 : 20;
   return <span className={`provider-mark provider-${agent} provider-mark-${size}`} aria-hidden>
-    <Icon size={size === 'small' ? 14 : size === 'large' ? 24 : 20} strokeWidth={agent === 'claude' ? 2.3 : 1.9} />
+    {agent === 'claude' ? <Asterisk size={pixels} strokeWidth={2.3} />
+      : <svg width={pixels} height={pixels} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <image href={`icons/${agent === 'codex' ? 'codex.png' : 'kiro.svg'}`}
+          width="24" height="24" preserveAspectRatio="xMidYMid meet" />
+      </svg>}
   </span>;
 }
 

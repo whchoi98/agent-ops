@@ -41,6 +41,13 @@ test('UI, mutations, fonts and live events work behind a prefix-stripping proxy'
     await expect(page.locator('.session-table tbody tr')).toHaveCount(1);
     await page.locator('.session-table tbody .session-open').click();
     await expect(page.locator('article.conversation-message')).toHaveCount(50);
+    await page.getByRole('dialog').getByRole('button', { name: '닫기', exact: true }).first().click();
+    await page.locator('aside.sidebar a[href="#/extensions"]').click();
+    await page.getByRole('button', { name: '코드 리뷰 내용 보기', exact: true }).click();
+    await expect(page.getByRole('dialog')).toContainText('Read');
+    expect(paths).toContain('/proxy/4327/api/extensions');
+    expect(paths.some((path) => path.startsWith('/proxy/4327/api/extensions/ext-'))).toBe(true);
+    await expect.poll(() => paths.includes('/proxy/4327/api/connector-versions')).toBe(true);
     expect(paths).toContain('/proxy/4327/api/bootstrap');
     expect(paths).toContain('/proxy/4327/api/settings');
     expect(paths).toContain('/proxy/4327/api/events');

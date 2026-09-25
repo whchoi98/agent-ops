@@ -1,6 +1,6 @@
 {
   "name": "agent-ops-local",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A local operations workbench for Codex, Claude Code, and Kiro",
   "type": "module",
   "license": "MIT",
@@ -23,7 +23,8 @@
     "docs/api.md",
     "docs/design.md",
     "docs/verification.md",
-    "deploy/agent-ops.service"
+    "deploy/agent-ops.service",
+    "public/icons/README.md"
   ],
   "scripts": {
     "dev": "node --import tsx scripts/dev.ts",
@@ -42,6 +43,10 @@
     "@fastify/static": "9.2.0",
     "better-sqlite3": "^12.0.0",
     "fastify": "^5.6.0",
+    "minimatch": "10.2.6",
+    "semver": "7.8.5",
+    "smol-toml": "1.9.0",
+    "yaml": "2.9.1",
     "zod": "^3.25.0"
   },
   "devDependencies": {
@@ -50,13 +55,14 @@
     "@types/node": "^20.19.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@types/semver": "7.8.0",
     "@vitejs/plugin-react": "^4.7.0",
+    "esbuild": "^0.25.10",
     "lucide-react": "^0.468.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "esbuild": "^0.25.10",
     "tsx": "^4.20.0",
     "typescript": "^5.9.2",
     "vite": "^6.4.3",

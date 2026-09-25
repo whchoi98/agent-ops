@@ -69,10 +69,34 @@ try {
   assert.match(notices, /react 19/);
   assert.equal((await request('/fonts/NanumSquareR.woff')).status, 200);
   assert.equal((await request('/fonts/NanumSquareB.woff')).status, 200);
+  for (const path of ['/icons/codex.png', '/icons/kiro.svg']) {
+    const icon = await request(path);
+    assert.equal(icon.status, 200);
+    assert.match(icon.headers.get('content-type') || '', /^image\//);
+  }
   const data = await (await request('/api/bootstrap')).json();
   assert.equal(data.demo, true);
   assert.equal(data.connectors.every((connector) => !connector.installed), true);
   assert.ok(data.sessionTotal > 80);
+  const extensions = await (await request('/api/extensions?agent=codex')).json();
+  assert.equal(extensions.demo, true);
+  const reviewSkill = extensions.items.find((item) => item.name === '코드 리뷰');
+  assert.ok(reviewSkill);
+  const extension = await (await request(`/api/extensions/${reviewSkill.id}`)).json();
+  assert.ok(extension.analysis.tools.includes('Read'));
+  assert.match(extension.entry.content, /회귀 테스트/);
+  const reference = extension.files.find((file) => file.path.endsWith('checklist.md'));
+  assert.ok(reference);
+  const referenceContent = await (await request(`/api/extensions/${reviewSkill.id}/files/${reference.id}`)).json();
+  assert.match(referenceContent.content, /변경 범위/);
+  const analysis = await (await request(`/api/extensions/${reviewSkill.id}/analyze`, {})).json();
+  assert.equal(analysis.draft.policy, 'read-only');
+  assert.match(analysis.draft.prompt, /코드 리뷰/);
+  const versions = await (await request('/api/connector-versions')).json();
+  assert.equal(versions.demo, true);
+  assert.equal(versions.items.length, 3);
+  assert.equal(versions.items.find((item) => item.agent === 'codex').currentVersion, '1.0.0');
+  assert.equal(versions.items.find((item) => item.agent === 'codex').latestVersion, '1.1.0');
   const search = await (await request('/api/sessions?q=' + encodeURIComponent('후반부 점검 결과'))).json();
   assert.equal(search.total, 1);
   const messages = await (await request('/api/sessions/demo-kiro-long/messages?offset=150')).json();
@@ -101,6 +125,8 @@ try {
     archive: archive.split('/').at(-1), node: process.version, platform: process.platform, arch: process.arch,
     productionInstall: true, cliHelp: true, cliDoctor: true, cliSearch: true, cliExport: true,
     staticAssets: assets.length, dependencyNotices: true, localKoreanFonts: true,
+    extensionCatalog: true, extensionAnalysis: true, extensionFilePreview: true, analysisDraftOnly: true,
+    officialBrandIcons: true, cliVersionComparison: true,
     demoSessions: data.sessionTotal, cliAbsent: true, allThreePreviews: true,
     executionBlocked: true, fullExport: true, pagedHistory: true, gracefulShutdown: true,
   };

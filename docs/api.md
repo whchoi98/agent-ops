@@ -34,6 +34,13 @@ See [operations](operations.md) for the proxy configuration.
 | PATCH | `/settings` | partial `Settings` | `Settings` |
 | GET | `/events` | SSE | default message `{type:"refresh"}` or `{type:"run-event",runId,event}` |
 | GET | `/health` | | `{ok:true,version,demo}` |
+| GET | `/extensions` | `agent?,kind?,status?,scope?,projectId?,q?,offset?,limit?` | `ExtensionCatalog` |
+| POST | `/extensions/refresh` | `{projectId?}` | `{ok:true}` |
+| GET | `/extensions/:id` | `projectId?` | `ExtensionDetail` |
+| GET | `/extensions/:id/files/:fileId` | `projectId?` | redacted `ExtensionContent` |
+| POST | `/extensions/:id/analyze` | `{projectId?}` | `ExtensionAnalysisDraft`; does not execute a CLI |
+| GET | `/connector-versions` | none | `VersionReport` with installed/latest versions and source status |
+| POST | `/connector-versions/check` | `{}` | `VersionReport` after a bounded explicit refresh |
 
 `Bootstrap.sessions` is the most recent 60 sessions. Use `/sessions` for full search
 and pagination. `Bootstrap.analytics` is computed from the entire local archive.
@@ -45,3 +52,21 @@ Demo rejects run creation/retry; preview and all local organization actions work
 No endpoint executes a handoff, export, prompt template, or imported session on read.
 Project creation verifies an existing directory except in demo mode. Projects
 discovered through session import default to execution disabled.
+
+Extension contracts are in `shared/extensions.ts`. `kind` is `skill`, `plugin` or
+`power`; `status` is `enabled`, `disabled`, `available`, `unknown` or `cached`.
+These statuses describe local configuration evidence, not observed invocation.
+`scope` is `user`, `project` or `system`; a project ID must already be registered.
+Extension IDs are scoped to the selected project inventory, and file IDs are
+opaque references to that inventory's bounded file list. Arbitrary paths are
+not accepted. Lists default to 50 items, accept 1–100 items and are cached for
+up to 60 seconds. Refresh invalidates the cached inventories.
+
+Version contracts are in `shared/versions.ts`. Only fixed public vendor release
+metadata endpoints are queried; the API accepts no caller-supplied source URL.
+Lookup failures remain distinct from an up-to-date result. The installed raw
+version and normalized version remain available when latest metadata fails.
+`installed: null` means local detection was inconclusive; only `false` together
+with `status: "not-installed"` represents a confirmed missing CLI.
+Version checks do not upgrade a CLI or launch model inference. Demo reports use
+clearly marked, deterministic sample versions without host or network probes.

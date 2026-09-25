@@ -9,6 +9,13 @@
 
 #### Added
 
+- Assistant-specific skill/plugin/Power discovery, configured-state evidence,
+  project filters, redacted source previews and local content analysis.
+- Optional editable CLI analysis drafts through the existing explicit run flow.
+- Official Kiro and Codex vendor icons bundled for local and proxy deployments.
+- Installed/latest CLI version comparison with official sources, check times,
+  update/channel states and explicit lookup failures.
+
 - Local session import, full-text search, metadata and exports for Codex,
   Claude Code and Kiro CLI.
 - Controlled CLI execution, queueing, live logs, cancellation and editable handoff.
@@ -28,6 +35,12 @@
 ### Unreleased
 
 #### 추가
+
+- 어시스턴트별 스킬·플러그인·Power 조회, 상태 근거, 프로젝트 필터,
+  마스킹된 원문·참조 파일과 로컬 내용 분석.
+- 기존 실행 절차로 연결하는 편집 가능한 CLI 분석 프롬프트.
+- 로컬·프록시 환경에서 사용하는 공식 Kiro·Codex 아이콘.
+- 공식 출처·확인 시각·업데이트/채널 상태·조회 실패를 표시하는 현재/최신 CLI 버전 비교.
 
 - Codex, Claude Code, Kiro CLI의 로컬 이력 수집, 본문 검색, 메타데이터와 내보내기.
 - CLI 실행 제어, 대기열, 실시간 로그, 취소와 편집 가능한 작업 인계.

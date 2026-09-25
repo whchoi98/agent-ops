@@ -10,6 +10,8 @@ Use the existing npm scripts and preserve the Korean interface.
 - `server/store.ts`: SQLite persistence, migrations and FTS search.
 - `server/providers/`, `server/sync.ts`: bounded, read-only native history import.
 - `server/commands.ts`, `server/runner.ts`: CLI arguments and owned process queue.
+- `server/extensions/`: bounded skill/plugin discovery, local analysis and previews;
+  `shared/extensions.ts`: public extension contracts.
 - `src/`: React UI; `shared/types.ts`: API and persistence contracts.
 - `deploy/agent-ops.service`: example systemd service; customize paths locally.
 
@@ -33,6 +35,8 @@ Record actual verification results in `docs/verification.md`.
 - Parse history independently of execution. Spawn only supported CLIs with
   argument arrays; cancel only processes owned by this application.
 - Keep demo state separate and prevent demo agent execution.
+- Extension status describes configuration evidence, not invocation. Preserve
+  opaque file IDs, owner-root checks, redaction and explicit analysis-run preview.
 - Keep application data, credentials, exports, dependencies and generated
   artifacts out of Git. Do not publish real conversation screenshots.
 - Update relevant README, API and operating docs when behavior changes. Add

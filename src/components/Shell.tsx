@@ -1,6 +1,6 @@
 import {
   ArrowUpRight, BarChart3, BookOpen, ChevronRight, Command, FlaskConical, FolderKanban,
-  LayoutDashboard, Menu, MessageSquare, Moon, Play, Plus, RefreshCw, Search, Settings2,
+  LayoutDashboard, Menu, MessageSquare, Moon, Play, Plus, Puzzle, RefreshCw, Search, Settings2,
   ShieldCheck, Sun, type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -17,6 +17,7 @@ export const NAV_ITEMS: Array<{ page: Page; label: string; english: string; icon
   { page: 'projects', label: '프로젝트', english: 'Projects', icon: FolderKanban },
   { page: 'analytics', label: '분석', english: 'Analytics', icon: BarChart3 },
   { page: 'templates', label: '템플릿', english: 'Templates', icon: BookOpen },
+  { page: 'extensions', label: '스킬·플러그인', english: 'Extensions', icon: Puzzle },
   { page: 'settings', label: '설정', english: 'Settings', icon: Settings2 },
 ];
 const SEARCH_SHORTCUT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
