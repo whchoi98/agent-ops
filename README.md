@@ -1,6 +1,6 @@
 # my-agent-ops
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.1.1](https://img.shields.io/badge/version-1.1.1-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.2.0](https://img.shields.io/badge/version-1.2.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, Claude Code, Kiro CLI의 대화와 실행 작업을 관리하는 로컬 운영 도구입니다.
 
@@ -62,8 +62,8 @@ The UI labels sample sessions and runs; assistant execution, retries and MCP con
 
 ### Local npm archive
 
-After installing dependencies in a source checkout, create an archive with `npm pack`, or use a supplied archive.
-The current [source manifest](package.json) declares `1.1.1`; [CHANGELOG.md](CHANGELOG.md) records its unreleased changes.
+After installing dependencies in a source checkout, create an archive with `npm pack`, or download the [v1.2.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz).
+Use version `1.2.0` from the [source manifest](package.json) and [GitHub release](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0); read [CHANGELOG.md](CHANGELOG.md) for release changes and upcoming work.
 These commands install a local file and do not depend on a public npm release.
 
 ```bash
@@ -71,7 +71,7 @@ These commands install a local file and do not depend on a public npm release.
 npm pack
 
 # Install the archive and start the app.
-npm install -g ./agent-ops-local-1.1.1.tgz
+npm install -g ./agent-ops-local-1.2.0.tgz
 agent-ops
 ```
 
@@ -79,7 +79,7 @@ To run the archive without a global installation:
 
 ```bash
 # Start the archive in demo mode.
-npm exec --package=./agent-ops-local-1.1.1.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.2.0.tgz -- agent-ops demo --port 4318
 ```
 
 The archive includes the built application and public documentation.
@@ -462,8 +462,8 @@ npm run demo -- --port 4318
 
 ### 로컬 npm 압축 파일
 
-소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 제공받은 파일을 사용하세요.
-현재 [소스 매니페스트](package.json)의 버전은 `1.1.1`이며 미출시 변경 사항은 [CHANGELOG.md](CHANGELOG.md)에 기록합니다.
+소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 [v1.2.0 설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz)을 내려받습니다.
+[소스 매니페스트](package.json)와 [GitHub 릴리스](https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0)의 버전은 `1.2.0`이며 릴리스 변경 사항과 다음 버전의 작업은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
 아래 명령은 로컬 파일을 설치하므로 npm에 공개된 릴리스가 없어도 사용할 수 있습니다.
 
 ```bash
@@ -471,7 +471,7 @@ npm run demo -- --port 4318
 npm pack
 
 # 압축 파일을 설치하고 앱을 시작합니다.
-npm install -g ./agent-ops-local-1.1.1.tgz
+npm install -g ./agent-ops-local-1.2.0.tgz
 agent-ops
 ```
 
@@ -479,7 +479,7 @@ agent-ops
 
 ```bash
 # 압축 파일을 데모 모드로 실행합니다.
-npm exec --package=./agent-ops-local-1.1.1.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.2.0.tgz -- agent-ops demo --port 4318
 ```
 
 압축 파일에는 빌드된 앱과 공개 문서가 포함됩니다.

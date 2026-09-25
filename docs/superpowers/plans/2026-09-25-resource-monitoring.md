@@ -42,7 +42,7 @@ currently owned roots. `ResourceMonitor` provides `start()`, `sample()`,
 `ResourceReport` with current/history scope counters, cached disk data, timestamps,
 collection durations, and explicit warning codes.
 
-- [ ] Write failing tests for the cumulative CPU-time parser, owned descendants
+- [x] Write failing tests for the cumulative CPU-time parser, owned descendants
   and process groups, PID-start identity, and unrelated process exclusion.
 
 ```ts
@@ -51,17 +51,17 @@ expect(parseCpuTime('2-01:02:03.50')).toBe(176523.5);
 expect(parseCpuTime('not-a-time')).toBeNull();
 ```
 
-- [ ] Implement process sampling with fixed `/bin/ps` arguments and no shell.
+- [x] Implement process sampling with fixed `/bin/ps` arguments and no shell.
   Keep server CPU from Node's microsecond counters; retain child baselines by
   PID/start identity. Unknown or reset counters remain null.
-- [ ] Write temporary-directory disk tests for actual metadata categories,
+- [x] Write temporary-directory disk tests for actual metadata categories,
   symlinks outside the data root, hardlinks, empty/sparse files, and scan bounds.
   Implement an async metadata-only scanner with safe root checks and one scan
   in flight; return coverage rather than pretending limited scans are totals.
-- [ ] Write monitor tests using injected clock/counter/scan functions. Cover
+- [x] Write monitor tests using injected clock/counter/scan functions. Cover
   exact CPU deltas, 180-sample rollover, no process probe when idle, overlapping
   ticks, slow disk collection, failed probes, and shutdown without further work.
-- [ ] Run the affected tests:
+- [x] Run the affected tests:
 
 ```bash
 npm test -- tests/resources-processes.test.ts tests/resources-disk.test.ts tests/resources-monitor.test.ts --maxWorkers=2
@@ -81,16 +81,16 @@ monitor's cached `ResourceReport`. `api.resources(signal)` uses the existing
 same-origin API wrapper. `useResources()` owns one request/timer and exposes
 data, error, paused state, refresh, and pause/resume controls.
 
-- [ ] Write route tests with injected monitoring dependencies to prove read-only
+- [x] Write route tests with injected monitoring dependencies to prove read-only
   cache responses, no scan per request, strict query/access guards, and teardown.
-- [ ] Register/start/stop the monitor with the app lifecycle; use the owned
+- [x] Register/start/stop the monitor with the app lifecycle; use the owned
   roots already tracked by Runner and BackgroundSync.
-- [ ] Add `resources` navigation and a lazy page. Reuse existing panels/buttons,
+- [x] Add `resources` navigation and a lazy page. Reuse existing panels/buttons,
   provide explicit units and unknown states, show the server/import/agent split,
   storage categories, available space, recent trends, and collection cost.
-- [ ] Implement browser polling with an AbortController and one trailing request.
+- [x] Implement browser polling with an AbortController and one trailing request.
   Hide/unmount/pause clears timers and cancels requests; resume refreshes once.
-- [ ] Add translations and responsive styles. Add browser checks for both
+- [x] Add translations and responsive styles. Add browser checks for both
   languages, mobile overflow, valid zero versus unknown, pause/resume, failure
   recovery, and the new navigation/command-palette entry.
 
@@ -106,19 +106,19 @@ npm run test:e2e -- tests/e2e/resources.spec.ts
 `src/pages/Mcp.tsx`, `src/features/mcp/`, `src/styles/mcp.css`,
 `tests/e2e/mcp.spec.ts`; update the existing app/navigation/API/translation entrypoints.
 
-- [ ] Discover Codex, Claude Code, and Kiro user/selected-project MCP declarations
+- [x] Discover Codex, Claude Code, and Kiro user/selected-project MCP declarations
   with bounded reads and cached results; distinguish disabled, configured, and
   check-result states. Return opaque server IDs and redacted configuration only.
-- [ ] Add explicit connection previews and bounded metadata-only probes with
+- [x] Add explicit connection previews and bounded metadata-only probes with
   one probe at a time, deadline/output limits, changed-config detection, owned
   process cleanup, and no MCP tool invocation. Demo probes remain disabled.
-- [ ] Provide `/api/mcp` routes and an MCP menu under Analytics and management.
+- [x] Provide `/api/mcp` routes and an MCP menu under Analytics and management.
   Show server scope/transport/source, configuration analysis, tools/resources/
   prompts returned by an actual check, warnings, and last checked timestamps.
-- [ ] Test with temporary configurations and local fake MCP servers. Verify
+- [x] Test with temporary configurations and local fake MCP servers. Verify
   secrets do not appear in responses, configuration files stay unchanged, cached
   discovery does not execute anything, and probes terminate within their limits.
-- [ ] Include the probe's owned processes in the resource monitor and test the
+- [x] Include the probe's owned processes in the resource monitor and test the
   browser's discovery/filter/detail/check/error flow in both languages.
 
 ## Task 4: Measurement, documentation, delivery
@@ -138,17 +138,17 @@ Claude Desktop Chat precedence merely because their provider matches.
 create `docs/reference/resources.md` and an isolated resource benchmark script
 under `scripts/`.
 
-- [ ] Measure sampling duration, cached API latency, bounded history memory,
+- [x] Measure sampling duration, cached API latency, bounded history memory,
   metadata-only disk scanning, and behavior under synthetic owned CPU work.
   Include an idle/no-owned-child case and a large-file case whose contents
   must not be read. Record actual environment and results.
-- [ ] Document units, supported platforms, sampling/retention limits, allocation
+- [x] Document units, supported platforms, sampling/retention limits, allocation
   versus logical size, unknown/partial data, and the additional-feature assessment.
   Update both languages and Unreleased without inventing a release.
-- [ ] Integrate macOS app inventory and client-specific MCP provenance. Verify
+- [x] Integrate macOS app inventory and client-specific MCP provenance. Verify
   fixture-based path/parser/unsupported-host behavior and disclose that this EC2
   host cannot inspect another computer or establish native macOS runtime results.
-- [ ] Run required validation with bounded parallelism:
+- [x] Run required validation with bounded parallelism:
 
 ```bash
 npm run typecheck
@@ -161,11 +161,11 @@ git diff --check
 The first three commands are the complete `npm run check` sequence, with bounded
 test parallelism. Run the unchanged aggregate script when resources permit.
 
-- [ ] Build and smoke-test an npm archive in an isolated data directory.
+- [x] Build and smoke-test an npm archive in an isolated data directory.
   Review the complete diff and verification results. Integrate the verified
   change without losing unrelated work; inspect runtime state before any
   authorized service update.
-- [ ] Audit every design acceptance item against source, tests, browser output,
+- [x] Audit every design acceptance item against source, tests, browser output,
   benchmark evidence, packaged files, and runtime observations before declaring
   the goal complete.
 

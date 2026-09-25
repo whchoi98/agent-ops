@@ -12,9 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-The current [source manifest](package.json) declares `1.1.1`; the changes below remain unreleased.
-No GitHub release or local tag baseline was found on 2026-09-25, so [Unreleased] links to the repository's comparison landing page.
-After a tagged release exists, replace that link with a comparison from the actual release tag to `HEAD`.
+## [1.2.0] - 2026-09-25
 
 ### Added
 
@@ -51,9 +49,12 @@ After a tagged release exists, replace that link with a comparison from the actu
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and cross-origin request guards.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0
 
 ---
+
+<a id="korean"></a>
 
 # 한국어
 
@@ -63,11 +64,7 @@ After a tagged release exists, replace that link with a comparison from the actu
 
 ## [Unreleased]
 
-<a id="korean"></a>
-
-현재 [소스 매니페스트](package.json)의 버전은 `1.1.1`이며 아래 변경 사항은 미출시 상태입니다.
-2026-09-25 확인 결과 GitHub 릴리스나 기준으로 삼을 로컬 태그가 없어 [Unreleased]는 저장소의 비교 시작 페이지에 연결합니다.
-태그가 있는 릴리스를 만든 뒤 실제 릴리스 태그에서 `HEAD`까지 비교하는 링크로 바꿉니다.
+## [1.2.0] - 2026-09-25
 
 ### Added
 
@@ -108,4 +105,5 @@ After a tagged release exists, replace that link with a comparison from the actu
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산하도록 수정.
 - 로컬 연결·교차 출처 요청 보호를 유지하며 설정한 프록시 출처를 허용하도록 수정.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0
