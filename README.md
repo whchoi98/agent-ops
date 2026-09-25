@@ -32,9 +32,9 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 
 | Your situation | Follow this guide |
 |---|---|
-| First installation on a Mac | [macOS quick start](#macos-quick-start) |
-| Already installed with `npm install -g` | [macOS upgrade (npm)](#macos-upgrade-npm) |
-| Already installed with `git clone` | [Upgrade a source checkout](#upgrade-a-source-checkout) |
+| First Mac installation | [macOS quick start](#macos-quick-start) |
+| `npm install -g` installation | [macOS upgrade (npm)](#macos-upgrade-npm) |
+| `git clone` installation | [Upgrade a source checkout](#upgrade-a-source-checkout) |
 
 ### macOS quick start
 
@@ -511,9 +511,9 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 
 | 현재 상황 | 따라 할 안내 |
 |---|---|
-| Mac에 처음 설치합니다 | [macOS 처음 설치](#macos-처음-설치) |
-| `npm install -g`로 설치했습니다 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
-| `git clone`으로 설치했습니다 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
+| Mac에 처음 설치 | [macOS 처음 설치](#macos-처음-설치) |
+| `npm install -g`로 설치 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
+| `git clone`으로 설치 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
 
 ### macOS 처음 설치
 
