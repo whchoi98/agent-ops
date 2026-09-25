@@ -205,8 +205,8 @@ npm run test:e2e
   replace stale follow-up labels and record actual verification.
 - [x] Build and smoke-test an installation archive using production dependencies
   and temporary data. Verify version and released/runtime bytes.
-- [ ] Commit and push the verified release, create its new version tag and GitHub
+- [x] Commit and push the verified release, create its new version tag and GitHub
   release through the standing delivery authorization. Update the live service
   only while owned runs, imports and MCP checks are idle, with a runtime backup.
-- [ ] Audit every spec requirement against source, tests, rendered UI, archive,
+- [x] Audit every spec requirement against source, tests, rendered UI, archive,
   remote metadata and runtime before completing the active goal.
