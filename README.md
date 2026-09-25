@@ -16,11 +16,11 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 
 ## Features
 
-- **Search and organize** — Import native history, search full conversations, filter sessions, add notes and tags, compare sessions and export results.
-- **Control execution** — Preview CLI commands, queue jobs, follow live logs, cancel owned work and prepare editable handoffs.
-- **Inspect assistant configuration** — Browse skills, plugins, Powers and MCP declarations with source evidence, redacted previews and explicit analysis or connection checks.
-- **Monitor resources and versions** — View app CPU/RSS and storage, compare installed/latest CLI versions and inspect supported macOS app metadata on the server host.
-- **Use either language** — Switch between Korean and English, keep original content, choose light/dark themes and explore an isolated demo on desktop or mobile.
+- **Search and organize** - Import native history, search full conversations, filter sessions, add notes and tags, compare sessions and export results.
+- **Control execution** - Preview CLI commands, queue jobs, follow live logs, cancel owned work and prepare editable handoffs.
+- **Inspect assistant configuration** - Browse skills, plugins, Powers and MCP declarations with source evidence, redacted previews and explicit analysis or connection checks.
+- **Monitor resources and versions** - View app CPU/RSS and storage, compare installed/latest CLI versions and inspect supported macOS app metadata on the server host.
+- **Use either language** - Switch between Korean and English, keep original content, choose light/dark themes and explore an isolated demo on desktop or mobile.
 
 ## Prerequisites
 
@@ -29,6 +29,61 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 - Install and authenticate the relevant `codex`, `claude` or `kiro-cli` on the server host before running assistant jobs. History import and demo browsing do not require model execution.
 
 ## Installation
+
+| Your situation | Follow this guide |
+|---|---|
+| First installation on a Mac | [macOS quick start](#macos-quick-start) |
+| Already installed with `npm install -g` | [macOS upgrade (npm)](#macos-upgrade-npm) |
+| Already installed with `git clone` | [Upgrade a source checkout](#upgrade-a-source-checkout) |
+
+### macOS quick start
+
+Use a supported [Node.js LTS release](https://nodejs.org/en/download) that meets the prerequisites above.
+If Node.js and npm are already installed, use that installation; otherwise follow the [official installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+Open **Terminal** on the Mac and run:
+
+```bash
+# Check that Node.js and npm are available.
+node --version
+npm --version
+
+# Install my-agent-ops 1.2.0 from the GitHub release.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+
+# Confirm the installed version.
+agent-ops --version
+# 1.2.0
+
+# Start the app.
+agent-ops
+```
+
+Open **`http://127.0.0.1:4317`** in a browser. Keep the terminal open while using the app and press `Ctrl+C` to stop it.
+The Mac installation reads that Mac's history and app metadata.
+If npm reports `EACCES`, follow the [official npm permissions guide](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally).
+
+### macOS upgrade (npm)
+
+Use this method if you previously installed an archive with `npm install -g`.
+Wait for active jobs and synchronization to finish, then press **`Ctrl+C` in the terminal running the app**.
+Run:
+
+```bash
+# Install version 1.2.0 over the existing npm installation.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+
+# Confirm the new version.
+agent-ops --version
+# 1.2.0
+
+# Restart the app.
+agent-ops
+```
+
+Reload the browser after the server starts.
+Reuse the data-directory environment variables and startup options you used before, including a custom `--data-dir`, `--port` or `--public-url`.
+The app continues to use your existing conversations and settings in the same data directory; the default is `~/.local/share/agent-ops`.
+Use the archive URL for the desired version from [GitHub Releases](https://github.com/whchoi98/agent-ops/releases) for future upgrades.
 
 ### Source checkout
 
@@ -49,6 +104,29 @@ Open `http://127.0.0.1:4317`. Keep the terminal open; stop the server with `Ctrl
 Data defaults to `~/.local/share/agent-ops`; see [Configuration](#configuration) for overrides.
 For installation on a Mac, read [onboarding](docs/onboarding.md); that server reads the Mac's own history and uses its installed CLIs.
 Use the [local operations runbook](docs/runbooks/local-operations.md) for startup, diagnostics, updates and recovery.
+
+### Upgrade a source checkout
+
+Use this method if you installed with `git clone`.
+Wait for active jobs and synchronization to finish, then stop the app with `Ctrl+C`.
+Open a terminal in your existing `agent-ops` repository and run:
+
+```bash
+# Download the latest source from the tracked branch.
+git pull --ff-only
+
+# Install locked dependencies and rebuild the app.
+npm ci
+npm run build
+
+# Confirm the version of this source checkout.
+node dist/server/index.js --version
+
+# Restart the server.
+npm start
+```
+
+Reuse your previous data-directory settings and startup options, then reload the browser.
 
 ### Isolated demo
 
@@ -173,7 +251,7 @@ Add other roots in Settings. Native files and SQLite databases are read-only.
 Malformed files and unsupported records appear in sync diagnostics while other imports continue.
 
 Usage totals include **recorded values only**. Input tokens are normalized to include cache-read and cache-write input.
-Missing tokens and costs remain unknown; a missing cost is `—`, not an assumed 0.
+Missing token and cost records remain marked as unknown.
 Cost totals are partial sums of sessions with cost records, not invoices.
 Tool duration and session timestamps do not measure CPU usage; use Resources for OS measurements.
 
@@ -263,12 +341,12 @@ Open `http://127.0.0.1:4317` locally. CLI execution and project paths still belo
 |---|---|---|
 | `AGENT_OPS_DATA_DIR` | Base directory for app state | `${XDG_DATA_HOME:-$HOME/.local/share}/agent-ops` |
 | `AGENT_OPS_PORT` | Loopback HTTP port | `4317` |
-| `AGENT_OPS_PUBLIC_URL` | External HTTPS URL behind an authenticated local proxy | `—` |
+| `AGENT_OPS_PUBLIC_URL` | External HTTPS URL behind an authenticated local proxy | `-` |
 | `XDG_DATA_HOME` | Default base for app and Kiro CLI data | `~/.local/share` |
 | `CODEX_HOME` | Codex configuration/history base | `~/.codex` |
 | `CLAUDE_CONFIG_DIR` | Claude Code configuration/history base | `~/.claude` |
 
-`—` means unset. CLI flags `--data-dir`, `--port` and `--public-url` override the matching environment variables.
+`-` means unset. CLI flags `--data-dir`, `--port` and `--public-url` override the matching environment variables.
 Demo adds `demo/` to the selected base. Development uses `.data`, or `.data/demo` with `--demo`.
 Settings also controls history roots, the **2**-job concurrency default, the **30-minute** timeout and the **60-second** history scan interval.
 
@@ -414,11 +492,11 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 
 ## 주요 기능
 
-- **검색과 정리** — 원본 이력을 가져와 전체 대화를 검색하고 세션 필터, 메모·태그, 세션 비교와 내보내기를 사용합니다.
-- **실행 제어** — CLI 명령을 미리 보고 작업을 대기열에 넣으며 실시간 로그 확인, 소유 작업 취소와 편집 가능한 작업 인계를 지원합니다.
-- **어시스턴트 설정 확인** — 출처 근거와 마스킹된 미리보기로 스킬·플러그인·Power·MCP 선언을 살펴보고 분석이나 연결 점검을 직접 선택합니다.
-- **자원과 버전 확인** — 앱의 CPU·RSS와 저장 공간, CLI 현재·최신 버전, 서버 호스트의 지원 대상 macOS 앱 정보를 확인합니다.
-- **한국어와 영어 사용** — 원문을 보존하며 언어와 밝은·어두운 테마를 바꾸고 데스크톱이나 모바일에서 격리된 데모를 살펴봅니다.
+- **검색과 정리** - 원본 이력을 가져와 전체 대화를 검색하고 세션 필터, 메모, 태그, 세션 비교와 내보내기를 사용합니다.
+- **실행 제어** - CLI 명령을 미리 보고 작업을 대기열에 넣으며 실시간 로그 확인, 소유 작업 취소와 편집 가능한 작업 인계를 지원합니다.
+- **어시스턴트 설정 확인** - 출처 근거와 마스킹된 미리보기로 스킬, 플러그인, Power, MCP 선언을 살펴보고 분석이나 연결 점검을 직접 선택합니다.
+- **자원과 버전 확인** - 앱의 CPU, RSS와 저장 공간, CLI 현재, 최신 버전, 서버 호스트의 지원 대상 macOS 앱 정보를 확인합니다.
+- **한국어와 영어 사용** - 원문을 보존하며 언어와 밝은 테마, 어두운 테마를 바꾸고 데스크톱이나 모바일에서 격리된 데모를 살펴봅니다.
 
 ## 사전 요구 사항
 
@@ -429,6 +507,61 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 <a id="시작하기"></a>
 
 ## 설치 방법
+
+| 현재 상황 | 따라 할 안내 |
+|---|---|
+| Mac에 처음 설치합니다 | [macOS 처음 설치](#macos-처음-설치) |
+| `npm install -g`로 설치했습니다 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
+| `git clone`으로 설치했습니다 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
+
+### macOS 처음 설치
+
+위 사전 요구 사항에 맞는 [Node.js LTS 버전](https://nodejs.org/en/download)을 사용합니다.
+Node.js와 npm이 이미 설치되어 있으면 그대로 사용하고 없다면 [공식 설치 안내](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)에 따라 설치합니다.
+Mac의 **터미널**을 열고 다음 명령을 실행합니다.
+
+```bash
+# Node.js와 npm이 설치되어 있는지 확인합니다.
+node --version
+npm --version
+
+# GitHub 릴리스에서 my-agent-ops 1.2.0을 설치합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+
+# 설치한 버전을 확인합니다.
+agent-ops --version
+# 1.2.0
+
+# 앱을 시작합니다.
+agent-ops
+```
+
+브라우저에서 **`http://127.0.0.1:4317`**에 접속합니다. 앱을 사용하는 동안 터미널을 열어 두고 종료할 때는 `Ctrl+C`를 누릅니다.
+Mac에서 실행한 앱은 해당 Mac의 이력과 앱 정보를 읽습니다.
+npm에서 `EACCES` 오류가 발생하면 [공식 npm 권한 설정 안내](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally)에 따라 해결합니다.
+
+### macOS 업그레이드 (npm)
+
+이전에 `npm install -g`로 압축 파일을 설치했다면 이 방법을 사용합니다.
+실행 중인 작업과 동기화가 끝나면 **앱을 실행 중인 터미널에서 `Ctrl+C`를 눌러 종료**합니다.
+다음 명령으로 업데이트합니다.
+
+```bash
+# 기존 npm 설치본을 1.2.0으로 업데이트합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.2.0/agent-ops-local-1.2.0.tgz
+
+# 새 버전을 확인합니다.
+agent-ops --version
+# 1.2.0
+
+# 앱을 다시 시작합니다.
+agent-ops
+```
+
+서버가 시작되면 브라우저를 새로고침합니다.
+데이터 경로를 지정하는 환경 변수와 `--data-dir`, `--port`, `--public-url` 등 기존 실행 옵션을 동일하게 사용합니다.
+기존 대화와 설정은 같은 데이터 디렉터리에서 계속 사용하며 기본 경로는 `~/.local/share/agent-ops`입니다.
+다음 버전으로 업데이트할 때는 [GitHub Releases](https://github.com/whchoi98/agent-ops/releases)에서 원하는 버전의 압축 파일 URL을 사용합니다.
 
 ### 소스 체크아웃
 
@@ -448,7 +581,30 @@ npm start
 `http://127.0.0.1:4317`을 여세요. 터미널을 열어 두고 종료할 때는 `Ctrl+C`를 누릅니다.
 기본 데이터 경로는 `~/.local/share/agent-ops`이며 변경 방법은 [환경 설정](#환경-설정)에 있습니다.
 Mac 설치는 [온보딩](docs/onboarding.md)을 참고하세요. 해당 서버는 Mac의 이력과 설치된 CLI를 사용합니다.
-시작·진단·업데이트·복구 절차는 [로컬 운영 런북](docs/runbooks/local-operations.md)을 확인하세요.
+시작, 진단, 업데이트, 복구 절차는 [로컬 운영 런북](docs/runbooks/local-operations.md)을 확인하세요.
+
+### 소스 체크아웃 업그레이드
+
+`git clone`으로 설치했다면 이 방법을 사용합니다.
+실행 중인 작업과 동기화가 끝나면 `Ctrl+C`로 앱을 종료합니다.
+터미널에서 기존 `agent-ops` 저장소 폴더로 이동한 뒤 다음 명령을 실행합니다.
+
+```bash
+# 현재 추적 중인 브랜치의 최신 소스를 가져옵니다.
+git pull --ff-only
+
+# 잠금 파일에 맞춰 의존성을 설치하고 다시 빌드합니다.
+npm ci
+npm run build
+
+# 현재 소스의 버전을 확인합니다.
+node dist/server/index.js --version
+
+# 서버를 다시 시작합니다.
+npm start
+```
+
+기존 데이터 경로 설정과 실행 옵션을 동일하게 사용하고 브라우저를 새로고침합니다.
 
 ### 격리된 데모
 
@@ -458,7 +614,7 @@ npm run demo -- --port 4318
 ```
 
 `http://127.0.0.1:4318`을 여세요. 데모 데이터는 선택한 데이터 디렉터리 아래 `demo/`에 저장합니다.
-샘플 세션과 실행 기록임을 화면에 표시하며 에이전트 실행·재실행과 MCP 연결 점검은 차단합니다.
+샘플 세션과 실행 기록임을 화면에 표시하며 에이전트 실행, 재실행과 MCP 연결 점검은 차단합니다.
 
 ### 로컬 npm 압축 파일
 
@@ -493,21 +649,21 @@ npm exec --package=./agent-ops-local-1.2.0.tgz -- agent-ops demo --port 4318
 | 화면 | 용도 |
 |---|---|
 | 개요 | 에이전트 이력, 최근 작업, 실행 상태와 30일 활동 확인 |
-| 세션 | 대화 본문 검색, 에이전트·프로젝트·날짜·태그·북마크 필터와 페이지 탐색 |
-| 대화 상세 | Markdown·도구 출력 확인, 역할 필터, 메모·태그 편집과 세션 비교 |
-| 실행 | 작업 생성, 명령 미리보기, 대기열·실시간 로그 확인, 취소와 재실행 |
+| 세션 | 대화 본문 검색, 에이전트, 프로젝트, 날짜, 태그, 북마크 필터와 페이지 탐색 |
+| 대화 상세 | Markdown, 도구 출력 확인, 역할 필터, 메모, 태그 편집과 세션 비교 |
+| 실행 | 작업 생성, 명령 미리보기, 대기열, 실시간 로그 확인, 취소와 재실행 |
 | 작업 인계 | 세션의 맥락과 메모를 다른 에이전트용 프롬프트로 준비 |
 | 프로젝트 | 작업 경로 등록, 프로젝트별 실행 허용과 관련 이력 탐색 |
-| 분석 | 기록된 토큰·비용, 모델·프로젝트·도구별 분포, 캐시 사용량과 실행 결과 확인 |
-| 템플릿 | 검토·구현·디버깅·문서화 프롬프트 사용과 사용자 템플릿 저장 |
-| 스킬·플러그인 | 정의·캐시·활성화 근거, 적용 범위, 원문·참조 파일과 선언된 도구·MCP·훅 확인 |
-| 자원 | 서버와 소유 작업의 CPU·RSS, 최근 추이, 데이터 파일과 파일시스템 여유 공간 확인 |
+| 분석 | 기록된 토큰, 비용, 모델, 프로젝트, 도구별 분포, 캐시 사용량과 실행 결과 확인 |
+| 템플릿 | 검토, 구현, 디버깅, 문서화 프롬프트 사용과 사용자 템플릿 저장 |
+| 스킬, 플러그인 | 정의, 캐시, 활성화 근거, 적용 범위, 원문, 참조 파일과 선언된 도구, MCP, 훅 확인 |
+| 자원 | 서버와 소유 작업의 CPU, RSS, 최근 추이, 데이터 파일과 파일시스템 여유 공간 확인 |
 | MCP | 클라이언트별 선언 확인과 미리보기 후 메타데이터 점검 |
-| 설정 | CLI 버전·macOS 앱 정보 확인, 이력 경로·동시 실행 수·시간 제한·테마 설정 |
+| 설정 | CLI 버전, macOS 앱 정보 확인, 이력 경로, 동시 실행 수, 시간 제한, 테마 설정 |
 
-`Ctrl/Cmd + K`로 명령 팔레트를 여세요. 밝은·어두운 테마를 지원하며 좁은 화면에서는 모바일 탐색 메뉴를 사용합니다.
+`Ctrl/Cmd + K`로 명령 팔레트를 여세요. 밝은 테마, 어두운 테마를 지원하며 좁은 화면에서는 모바일 탐색 메뉴를 사용합니다.
 테마 버튼 옆의 **한/EN**으로 언어를 전환하면 선택한 언어를 브라우저에 저장합니다.
-대화·메모·스킬 원문·사용자 입력은 바꾸지 않습니다. 언어를 전환해도 필터와 작성 중인 설정을 보존합니다.
+대화, 메모, 스킬 원문, 사용자 입력은 바꾸지 않습니다. 언어를 전환해도 필터와 작성 중인 설정을 보존합니다.
 
 <a id="실제-프로젝트-실행"></a>
 
@@ -521,11 +677,11 @@ npm exec --package=./agent-ops-local-1.2.0.tgz -- agent-ops demo --port 4318
 
 가져온 프로젝트는 기본적으로 실행이 꺼져 있습니다. 실제 경로가 같은 프로젝트의 작업은 순서대로 실행합니다.
 기본 동시 실행 수는 **2**개이며 작업 시간 제한은 **30분**입니다.
-읽기 전용·워크스페이스 쓰기 권한은 각 CLI의 기능을 따르므로 운영체제 격리 수준이 모두 같지는 않습니다.
+읽기 전용, 워크스페이스 쓰기 권한은 각 CLI의 기능을 따르므로 운영체제 격리 수준이 모두 같지는 않습니다.
 Claude/Kiro의 워크스페이스 쓰기 작업에서 **터미널 명령 허용**은 별도 옵션이며 기본값은 꺼짐입니다. 미리보기에서 적용할 권한을 확인하세요.
 
 CLI 설치 확인은 인증 확인이 아닙니다. 모델을 비워 두면 CLI에 설정된 기본 모델을 사용합니다.
-실행에는 서버 호스트의 CLI와 인증을 사용하며 버전·인증 오류는 실행 로그에서 확인합니다.
+실행에는 서버 호스트의 CLI와 인증을 사용하며 버전, 인증 오류는 실행 로그에서 확인합니다.
 **재개**는 같은 에이전트의 원본 세션을 사용합니다. **작업 인계**는 다른 에이전트용 프롬프트를 편집하도록 준비하고 사용자가 실행할 때까지 기다립니다.
 
 my-agent-ops가 시작하고 소유한 프로세스만 취소할 수 있습니다.
@@ -559,11 +715,11 @@ agent-ops export "$agent_ops_session_id" --format md --out session.md
 최적화 전에는 같은 저장소를 사용하는 서버와 별도 동기화를 종료하세요.
 
 ```bash
-# 캐시를 백업·검증하고 검색 본문을 압축한 뒤 빈 페이지를 회수합니다.
+# 캐시를 백업, 검증하고 검색 본문을 압축한 뒤 빈 페이지를 회수합니다.
 agent-ops optimize
 ```
 
-최적화는 대화·메모·태그·북마크를 보존하며 원본 이력을 변경하지 않습니다.
+최적화는 대화, 메모, 태그, 북마크를 보존하며 원본 이력을 변경하지 않습니다.
 변경 전에 압축 백업을 검증합니다. 기존 대규모 검색 색인은 HTTP 시작 시점이 아닌 이 오프라인 명령으로 변환합니다.
 백업과 복원 절차는 [운영 가이드](docs/operations.md)를 참고하세요.
 
@@ -580,43 +736,43 @@ agent-ops optimize
 다른 경로는 설정에서 추가하세요. 원본 파일과 SQLite 데이터베이스는 읽기 전용으로 접근합니다.
 잘못된 파일과 지원하지 않는 기록은 동기화 진단에 표시하고 나머지 수집을 계속합니다.
 
-사용량은 **기록된 값만** 집계합니다. 입력 토큰은 캐시 읽기·쓰기 입력을 포함하는 기준으로 정규화합니다.
-토큰·비용이 없으면 미확인으로 남기며 누락된 비용은 0으로 추정하지 않고 `—`로 표시합니다.
+사용량은 **기록된 값만** 집계합니다. 입력 토큰은 캐시 읽기, 쓰기 입력을 포함하는 기준으로 정규화합니다.
+토큰과 비용 기록이 없으면 미확인 상태로 표시합니다.
 비용 합계는 비용 기록이 있는 세션의 부분 합계이며 청구서가 아닙니다.
 도구 실행 시간과 세션 기록 시각은 CPU 사용량이 아닙니다. 운영체제 측정값은 자원 화면에서 확인하세요.
 
-### 스킬·플러그인·Power
+### 스킬, 플러그인, Power
 
-**스킬·플러그인**에서 에이전트와 등록된 프로젝트를 선택해 해당 범위를 확인하세요.
-상세 화면에서 목적, 호출 조건, 선언된 도구·MCP·훅, 참조 에이전트와 파일을 확인합니다. 원문은 마스킹된 미리보기로 읽고 로컬 내용 분석도 살펴보세요.
-활성 상태는 설정 근거를 나타내며 캐시 파일만으로 활성화·호출·사용 횟수를 입증하지 않습니다.
+**스킬, 플러그인**에서 에이전트와 등록된 프로젝트를 선택해 해당 범위를 확인하세요.
+상세 화면에서 목적, 호출 조건, 선언된 도구, MCP, 훅, 참조 에이전트와 파일을 확인합니다. 원문은 마스킹된 미리보기로 읽고 로컬 내용 분석도 살펴보세요.
+활성 상태는 설정 근거를 나타내며 캐시 파일만으로 활성화, 호출, 사용 횟수를 입증하지 않습니다.
 
 **CLI 분석 작업 준비**는 원문을 포함한 편집 가능한 프롬프트를 기존 새 작업 화면에 넣습니다.
-내용을 검토하고 명시적으로 명령 미리보기·실행 시작을 선택해야 CLI를 호출합니다. 기본 권한은 읽기 전용입니다.
+내용을 검토하고 명시적으로 명령 미리보기, 실행 시작을 선택해야 CLI를 호출합니다. 기본 권한은 읽기 전용입니다.
 
 ### 자원
 
-**분석 및 관리 → 자원**에서 서버와 소유 동기화·실행·MCP 프로세스의 CPU·RSS를 확인하세요.
-CPU·메모리는 **5초**마다 수집하고 최대 **180개**, 약 **15분**의 표본을 RAM에 보관하며 재시작하면 사라집니다.
+**분석 및 관리 → 자원**에서 서버와 소유 동기화, 실행, MCP 프로세스의 CPU, RSS를 확인하세요.
+CPU, 메모리는 **5초**마다 수집하고 최대 **180개**, 약 **15분**의 표본을 RAM에 보관하며 재시작하면 사라집니다.
 HTTP MCP 점검은 서버 프로세스에 포함됩니다.
 
 디스크 메타데이터는 **60초**마다 갱신합니다. DB, WAL/SHM, 백업과 기타 앱 데이터 파일을 파일시스템 여유 공간과 구분합니다.
 앱 데이터 합계에는 설치 의존성과 원본 에이전트 이력을 포함하지 않습니다.
 운영체제 카운터와 파일 메타데이터로 수집하며 SQLite에 쿼리하거나 대화 본문을 읽지 않습니다.
-`GET /api/resources`는 캐시 보고서를 반환하며 스캔·프로세스 조회·SQL 쿼리·이력/SSE 갱신을 시작하지 않습니다.
+`GET /api/resources`는 캐시 보고서를 반환하며 스캔, 프로세스 조회, SQL 쿼리, 이력/SSE 갱신을 시작하지 않습니다.
 화면이 숨겨지거나 닫히거나 일시정지하면 브라우저 조회를 멈춥니다.
 
-CPU **100%**는 논리 코어 하나를 뜻하며 그보다 높을 수 있습니다. 미확인·오래된 값·부분 집계 상태를 구분해 표시합니다.
+CPU **100%**는 논리 코어 하나를 뜻하며 그보다 높을 수 있습니다. 미확인, 오래된 값, 부분 집계 상태를 구분해 표시합니다.
 RSS 합산 방식, 탐색 한도와 수집 비용은 [자원 모니터링](docs/reference/resources.md)을 참고하세요.
 
 ### MCP
 
 **분석 및 관리 → MCP**에서 에이전트와 등록된 프로젝트를 선택하고 클라이언트별 선언, 마스킹된 설정과 진단을 확인하세요.
-출처와 적용 클라이언트 정보는 Claude Code CLI, Desktop Code, Desktop Chat과 Codex·Kiro 클라이언트를 구분합니다.
+출처와 적용 클라이언트 정보는 Claude Code CLI, Desktop Code, Desktop Chat과 Codex, Kiro 클라이언트를 구분합니다.
 선언과 시각을 남긴 점검 결과만으로 다른 클라이언트의 현재 연결 상태를 판단하지 마세요.
 
 미리보기를 요청해 프로그램이나 주소를 확인한 뒤 점검을 직접 시작하세요.
-점검은 초기화와 `tools/list`, `resources/list`, `prompts/list` 같은 메타데이터 메서드를 사용하며 도구 호출·리소스 본문 읽기·프롬프트 실행·모델 추론은 요청하지 않습니다.
+점검은 초기화와 `tools/list`, `resources/list`, `prompts/list` 같은 메타데이터 메서드를 사용하며 도구 호출, 리소스 본문 읽기, 프롬프트 실행, 모델 추론은 요청하지 않습니다.
 자동 점검이나 원본 설정 파일 수정은 수행하지 않습니다.
 
 stdio 점검은 설정된 프로그램을 시작하므로 시작 과정에서 부수 효과가 생길 수 있으며 HTTP 점검은 선택한 주소에 설정된 인증 정보를 보낼 수 있습니다.
@@ -627,17 +783,17 @@ stdio 점검은 설정된 프로그램을 시작하므로 시작 과정에서 �
 ### CLI와 데스크톱 버전
 
 **설정**에서 설치된 CLI 버전과 공식 공개 메타데이터의 최신 버전을 비교하세요.
-화면은 업데이트 가능·동일 버전·공개 채널보다 높은 버전·미설치·조회 실패를 구분하고 확인 시각과 출처를 표시합니다.
-최신 버전 요청에 로컬 버전 문자열·설정·대화를 보내지 않으며 버전 확인으로 CLI를 업데이트하지 않습니다.
+화면은 업데이트 가능, 동일 버전, 공개 채널보다 높은 버전, 미설치, 조회 실패를 구분하고 확인 시각과 출처를 표시합니다.
+최신 버전 요청에 로컬 버전 문자열, 설정, 대화를 보내지 않으며 버전 확인으로 CLI를 업데이트하지 않습니다.
 
-macOS의 **설정 → macOS 데스크톱 앱**에서는 `Info.plist`에서 Codex App, Claude Desktop, Kiro IDE의 버전·빌드·경로를 읽습니다.
+macOS의 **설정 → macOS 데스크톱 앱**에서는 `Info.plist`에서 Codex App, Claude Desktop, Kiro IDE의 버전, 빌드, 경로를 읽습니다.
 `/Applications`와 `~/Applications` 아래 `Codex.app`, `Claude.app`, `Kiro.app`을 확인하며 고정 후보 **6**곳의 결과를 최대 **10분** 동안 캐시합니다.
-Claude의 값은 Code 탭을 포함한 앱/컨테이너 버전이며 CLI·내부 Code 엔진 버전은 별개입니다.
+Claude의 값은 Code 탭을 포함한 앱/컨테이너 버전이며 CLI, 내부 Code 엔진 버전은 별개입니다.
 CLI 릴리스로 데스크톱 최신 버전을 추정하지 않습니다.
 
 이 목록은 **서버 호스트**의 정보입니다. EC2 서버는 브라우저 사용자의 Mac을 검사할 수 없습니다.
 다른 호스트에서는 `unsupported-host`와 `installed: null`을 반환하며 사용자 앱이 없다는 뜻은 아닙니다.
-CLI 대화 수집은 별도 기능이며 이 목록에서 전체 비공개·클라우드 데스크톱 이력을 가져오지 않습니다.
+CLI 대화 수집은 별도 기능이며 이 목록에서 전체 비공개, 클라우드 데스크톱 이력을 가져오지 않습니다.
 메타데이터 출처, 후보 경로의 범위와 Mac 검증 한계는 [데스크톱 앱 지원 범위](docs/reference/desktop-apps.md)를 참고하세요.
 
 <a id="지원-범위"></a>
@@ -653,8 +809,8 @@ npm start -- --port 4327 --public-url "$agent_ops_public_url"
 ```
 
 프록시의 기존 로그인을 유지하세요. 서버는 계속 `127.0.0.1`에만 바인딩합니다.
-지정한 URL은 화면·API·글꼴·SSE에 허용할 출처와 경로를 정하며 공개 인터넷용 인증을 추가하지 않습니다.
-Host·Origin·로컬 피어·변경 요청 헤더 검사는 그대로 유지합니다.
+지정한 URL은 화면, API, 글꼴, SSE에 허용할 출처와 경로를 정하며 공개 인터넷용 인증을 추가하지 않습니다.
+Host, Origin, 로컬 피어, 변경 요청 헤더 검사는 그대로 유지합니다.
 서비스로 계속 실행하려면 [systemd 예제](deploy/agent-ops.service)의 사용자와 경로를 수정하고 [운영 가이드](docs/operations.md)를 따르세요.
 
 SSH를 사용하려면 원격 호스트에서 서버를 시작한 뒤 로컬 터미널에서 포트를 전달하세요.
@@ -673,12 +829,12 @@ ssh -N -L 4317:127.0.0.1:4317 "$agent_ops_ssh_target"
 |---|---|---|
 | `AGENT_OPS_DATA_DIR` | 앱 상태를 저장할 기준 디렉터리 | `${XDG_DATA_HOME:-$HOME/.local/share}/agent-ops` |
 | `AGENT_OPS_PORT` | 루프백 HTTP 포트 | `4317` |
-| `AGENT_OPS_PUBLIC_URL` | 인증된 로컬 프록시의 외부 HTTPS URL | `—` |
+| `AGENT_OPS_PUBLIC_URL` | 인증된 로컬 프록시의 외부 HTTPS URL | `-` |
 | `XDG_DATA_HOME` | 앱과 Kiro CLI 데이터의 기본 기준 경로 | `~/.local/share` |
-| `CODEX_HOME` | Codex 설정·이력의 기준 경로 | `~/.codex` |
-| `CLAUDE_CONFIG_DIR` | Claude Code 설정·이력의 기준 경로 | `~/.claude` |
+| `CODEX_HOME` | Codex 설정, 이력의 기준 경로 | `~/.codex` |
+| `CLAUDE_CONFIG_DIR` | Claude Code 설정, 이력의 기준 경로 | `~/.claude` |
 
-`—`는 미설정입니다. CLI의 `--data-dir`, `--port`, `--public-url`은 해당 환경 변수보다 우선합니다.
+`-`는 미설정입니다. CLI의 `--data-dir`, `--port`, `--public-url`은 해당 환경 변수보다 우선합니다.
 데모는 선택한 기준 경로에 `demo/`를 추가합니다. 개발 모드에서는 `.data`, `--demo`를 함께 쓰면 `.data/demo`를 사용합니다.
 설정에서 이력 경로와 기본 동시 실행 **2**개, 시간 제한 **30분**, 이력 수집 주기 **60초**도 변경합니다.
 
@@ -704,20 +860,20 @@ agent-ops/
 │   ├── runner.ts          # 앱이 소유한 CLI 작업 대기열
 │   ├── maintenance.ts     # 오프라인 백업과 압축
 │   ├── providers/         # 읽기 전용 원본 이력 파서
-│   ├── extensions/        # 스킬·플러그인·Power
-│   ├── resources/         # CPU·RSS와 디스크 메타데이터
+│   ├── extensions/        # 스킬, 플러그인, Power
+│   ├── resources/         # CPU, RSS와 디스크 메타데이터
 │   ├── mcp/               # 선언과 명시적 점검
 │   ├── desktop-apps.ts    # 캐시된 데스크톱 정보 API
-│   └── desktop-apps/      # 범위를 제한한 번들·plist 읽기
+│   └── desktop-apps/      # 범위를 제한한 번들, plist 읽기
 ├── src/
 │   ├── features/          # 기능별 화면과 상태
 │   ├── pages/             # React 작업 화면
-│   └── i18n/              # 한국어·영어 화면 문구
+│   └── i18n/              # 한국어, 영어 화면 문구
 ├── shared/                # API와 저장 계약
-├── scripts/               # 개발·빌드 보조 스크립트
+├── scripts/               # 개발, 빌드 보조 스크립트
 ├── tests/
 │   └── e2e/               # Playwright 브라우저 동선
-├── docs/                  # 설치·아키텍처·운영 문서
+├── docs/                  # 설치, 아키텍처, 운영 문서
 ├── deploy/
 │   └── agent-ops.service  # systemd 서비스 예제
 ├── public/                # 로컬 글꼴과 공급사 아이콘
@@ -753,7 +909,7 @@ npm run dev
 앱을 변경할 때는 선언된 검사와 영향을 받는 브라우저 동선을 실행하세요.
 
 ```bash
-# 타입 검사, 단위·통합 테스트와 배포 빌드를 실행합니다.
+# 타입 검사, 단위, 통합 테스트와 배포 빌드를 실행합니다.
 npm run check
 
 # 필요하면 Chromium을 설치한 뒤 브라우저 테스트를 실행합니다.
@@ -777,7 +933,7 @@ CI 워크플로와 커버리지 보고서는 **미구성** 상태입니다. 커�
 
 ## API 문서
 
-경로, 요청·응답 타입, 페이지 탐색, SSE와 접근 규칙은 [API 계약](docs/api.md)을 참고하세요.
+경로, 요청, 응답 타입, 페이지 탐색, SSE와 접근 규칙은 [API 계약](docs/api.md)을 참고하세요.
 기준 경로는 같은 출처의 `/api`이며 프록시 접두 경로를 설정했다면 API 요청에도 적용합니다.
 JSON 변경 요청에는 `Content-Type: application/json`과 `X-Agent-Ops: 1`이 필요합니다.
 공유 계약은 `shared/`에 있습니다.
@@ -799,14 +955,14 @@ curl --fail --silent --show-error http://127.0.0.1:4317/api/resources
 5. **PR**: 원본 저장소에 PR을 열고 변경 사항, 수행한 검사와 남은 한계를 설명하세요.
 
 영문과 한글의 사실을 맞추고 기존 변경 이력을 보존하며 관련 안내서와 양쪽 Unreleased를 갱신하세요.
-앱 데이터·인증 정보·내보내기·의존성·생성 산출물은 Git에 넣지 않습니다.
+앱 데이터, 인증 정보, 내보내기, 의존성, 생성 산출물은 Git에 넣지 않습니다.
 스크린샷에는 데모 데이터만 사용하고 수행한 검사는 [검증 기록](docs/verification.md)에 남기세요.
 
 ## 라이선스
 
 앱 코드는 [MIT 라이선스](LICENSE)를 따릅니다.
 빌드한 배포 파일에는 의존성 라이선스 원문을 담은 `THIRD_PARTY_NOTICES.txt`가 포함되며 번들 한글 글꼴은 동봉한 OFL 라이선스를 따릅니다.
-Kiro·Codex 아이콘은 로컬에 포함한 공식 공급사 자산입니다. [아이콘 출처와 소유권](public/icons/README.md)을 참고하세요.
+Kiro, Codex 아이콘은 로컬에 포함한 공식 공급사 자산입니다. [아이콘 출처와 소유권](public/icons/README.md)을 참고하세요.
 
 ## 연락처
 
