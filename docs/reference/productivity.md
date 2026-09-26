@@ -27,6 +27,11 @@ or archive. The board shows the current page, not every matching work item.
 Status counts can exceed the visible cards. **Overview** shows up to five open
 items; `done` items are excluded from the open filter.
 
+Select a checkbox in **Overview** to mark that work item done. The item leaves
+the open list after it is saved. Select the title to open its details.
+If saving fails, the checkbox clears and an error appears. If another edit
+caused a conflict, choose **Reload work items** before trying again.
+
 Save changes before choosing **Prepare run**. Preparation copies the goal,
 description, next action and session references, compiles attached packs and
 opens an editable read-only draft. Select a project if the item has none.
@@ -264,6 +269,11 @@ CLI 설치와 인증은 서버 호스트를 기준으로 합니다.
 좁힙니다. 보드는 현재 페이지의 작업만 표시하므로 상태별 전체 건수가 화면의 카드
 수보다 클 수 있습니다. **개요**에는 진행할 작업을 최대 5개 표시하며 완료한
 `done` 작업은 열린 작업 필터에서 제외합니다.
+
+**개요**에서 작업 앞의 체크박스를 선택하면 완료로 저장하고 진행할 작업 목록에서
+제외합니다. 제목을 누르면 상세 화면을 엽니다. 저장에 실패하면 체크를 해제하고
+오류를 표시합니다. 다른 곳에서 수정한 내용과 충돌하면 **작업 새로고침**을 누른 뒤
+다시 시도합니다.
 
 변경 내용을 저장한 뒤 **실행 준비**를 선택합니다. 목표, 설명, 다음 할 일과 세션
 참조를 복사하고 연결한 묶음을 조합해 편집 가능한 읽기 전용 초안을 엽니다.

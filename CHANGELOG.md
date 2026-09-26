@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-09-26
+
+### Changed
+
+- Display open work items in Overview as a checklist, with version-checked completion and visible errors when saving fails.
+
+### Fixed
+
+- Add inner spacing to the Overview work-item panel and align checklist text on desktop and mobile.
+
 ## [1.4.0] - 2026-09-26
 
 ### Added
@@ -82,7 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and cross-origin request guards.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...v1.2.1
@@ -99,6 +110,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 따릅니다.
 
 ## [Unreleased]
+
+## [1.4.1] - 2026-09-26
+
+### Changed
+
+- 개요의 진행할 작업을 체크리스트로 표시하고 체크 시 버전을 확인해 완료 상태를 저장하며 저장 실패 시 오류 표시.
+
+### Fixed
+
+- 개요의 진행할 작업 박스에 안쪽 여백을 추가하고 데스크톱과 모바일에서 체크리스트 텍스트 정렬 개선.
 
 ## [1.4.0] - 2026-09-26
 
@@ -174,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산하도록 수정.
 - 로컬 연결, 교차 출처 요청 보호를 유지하며 설정한 프록시 출처를 허용하도록 수정.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...v1.2.1

@@ -112,7 +112,7 @@ test('load errors retain an explicit retry and loading prevents pagination throu
 test('the Overview widget shows five summaries and the open total without requiring detail bodies', () => {
   const items = Array.from({ length: 5 }, (_, index) => workSummary({ id: `work-${index}`, title: `Task ${index}` }));
   const html = render(<OpenWorkItemsView page={workPage({ items, total: 32, limit: 5 })} projects={[workProject]}
-    today="2026-09-26" loading={false} error={null} onReload={() => {}} />);
+    today="2026-09-26" loading={false} error={null} onReload={() => {}} pendingId={null} onComplete={() => {}} />);
   expect(html).toContain('Open work items');
   expect(html).toContain('Showing 5 of 32 open work items');
   expect(html).toContain('href="#/work-items?id=work-0"');
@@ -121,7 +121,7 @@ test('the Overview widget shows five summaries and the open total without requir
 
 test('the Overview widget distinguishes a missing project from an intentionally unassigned one', () => {
   const html = render(<OpenWorkItemsView page={workPage()} projects={[]} today="2026-09-26"
-    loading={false} error={null} onReload={() => {}} />);
+    loading={false} error={null} onReload={() => {}} pendingId={null} onComplete={() => {}} />);
   expect(html).toContain('Unavailable project');
 });
 

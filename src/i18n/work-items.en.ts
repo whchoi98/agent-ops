@@ -57,6 +57,8 @@ export const WORK_ITEMS_EN_MESSAGES: Readonly<Record<string, string>> = {
   '진행할 작업 {total}개 중 {visible}개 표시': 'Showing {visible} of {total} open work items',
   '모든 작업 보기': 'View all work items',
   '진행할 작업이 없습니다.': 'No open work items.',
+  '{title} 작업 완료': 'Complete work item: {title}',
+  '작업을 완료했습니다.': 'Work item completed.',
   '작업 제목': 'Work item title',
   '작업 설명': 'Description',
   '프로젝트': 'Project',

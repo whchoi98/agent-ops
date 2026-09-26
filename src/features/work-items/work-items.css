@@ -66,11 +66,18 @@
 .work-editor-error .button { justify-self: start; }
 .work-run-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-top: 20px; }
 .work-run-controls > .field { width: 200px; }
+.work-widget-body { padding: 0 22px 18px; }
 .work-widget-count { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
 .work-widget-list { list-style: none; margin: 0; padding: 0; }
-.work-widget-list li { padding: 12px 0; min-width: 0; }
+.work-widget-list li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: start; padding: 10px 0; min-width: 0; }
 .work-widget-list li + li { border-top: 1px solid var(--border); }
-.work-widget-list li > div:first-child { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.work-widget-check { display: flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; border-radius: 8px; cursor: pointer; }
+.work-widget-check:hover { background: var(--surface-secondary); }
+.work-widget-check input { width: 20px; height: 20px; flex-basis: 20px; }
+.work-widget-check:has(input:disabled), .work-widget-check input:disabled { cursor: wait; }
+.work-widget-item { min-width: 0; }
+.work-widget-item-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; min-height: 44px; }
+.work-widget-item-header a { flex: 1 1 180px; min-width: 0; }
 .work-widget-list a { color: var(--link); font-weight: 700; overflow-wrap: anywhere; }
 .work-widget-list p { margin: 8px 0; font-size: 12px; overflow-wrap: anywhere; }
 @media (max-width: 1000px) { .work-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -83,4 +90,7 @@
   .work-item-card { padding: 12px; }
   .work-editor-primary { width: 100%; justify-content: flex-end; }
   .work-editor-footer .button, .work-pagination .button { min-height: 40px; }
+}
+@media (max-width: 540px) {
+  .work-widget-body { padding: 0 17px 16px; }
 }
