@@ -85,5 +85,5 @@ opaque policy/preview IDs, not browser-provided filesystem paths.
 - [x] Add the bilingual guide and synchronize README, CHANGELOG and version.
 - [x] Run typecheck, full tests with two workers, build and relevant browser tests.
 - [x] Review the completed diff independently and resolve material findings.
-- [ ] Verify the installation archive, commit/push, publish the matching tag/release,
+- [x] Verify the installation archive, commit/push, publish the matching tag/release,
   deploy only after owned work is idle, and verify served assets and health.
