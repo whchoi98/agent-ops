@@ -218,8 +218,8 @@ npm run test:e2e
 
 - [x] Review independently, resolve real findings and update bilingual README,
   changelog, API/operating docs, a productivity reference and verification log.
-- [ ] Prepare the compatible minor release, production installation archive and
+- [x] Prepare the compatible minor release, production installation archive and
   smoke test; align package/lock/runtime/changelog/tag/release versions.
-- [ ] Publish through standing authorization, deploy with backup at an idle
+- [x] Publish through standing authorization, deploy with backup at an idle
   point and verify runtime/assets/public downloads. Audit every spec requirement
   before marking the active goal complete.
