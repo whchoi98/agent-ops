@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add Korean and English README screenshots of Overview, Sessions, Conversation details, Work items, Runs and Analytics captured from demo data.
+
 ## [1.4.1] - 2026-09-26
 
 ### Changed
@@ -110,6 +114,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 따릅니다.
 
 ## [Unreleased]
+
+### Added
+
+- README에 데모 데이터로 캡처한 개요, 세션, 대화 상세, 작업센터, 실행, 분석 화면을 한국어와 영어로 추가합니다.
 
 ## [1.4.1] - 2026-09-26
 

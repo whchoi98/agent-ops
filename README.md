@@ -28,6 +28,19 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 - **Monitor resources and versions** - View app CPU/RSS and storage, compare CLI versions, inspect supported macOS app metadata and explicitly check workbench updates.
 - **Use either language** - Switch between Korean and English, keep original content, choose light/dark themes and explore an isolated demo on desktop or mobile.
 
+## Screenshots
+
+The screenshots below use the isolated demo data from `agent-ops demo`, not real conversation history.
+Sample transcripts keep their original Korean text when the interface is in English.
+
+| Overview | Sessions |
+|---|---|
+| ![Workspace overview with session, token, cost and run totals](<docs/images/screenshots/overview-en.png>) | ![Session explorer with saved views, assistant filters and the session list](<docs/images/screenshots/sessions-en.png>) |
+| **Conversation details** | **Work items** |
+| ![Conversation details with role filters, messages and handoff actions](<docs/images/screenshots/session-detail-en.png>) | ![Work items list with status, priority, next action and due date](<docs/images/screenshots/work-items-en.png>) |
+| **Runs** | **Analytics** |
+| ![Run board grouped by queued, running, completed and needs-attention runs](<docs/images/screenshots/runs-en.png>) | ![Usage analytics with recorded tokens, cost, Kiro credits and daily activity](<docs/images/screenshots/analytics-en.png>) |
+
 ## Prerequisites
 
 - Install Node.js **20.19.0 or later** and npm. The project declares no separate minimum npm version.
@@ -566,6 +579,18 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무�
 - **어시스턴트 설정 확인** - 출처 근거와 마스킹된 미리보기로 스킬, 플러그인, Power, MCP 선언을 살펴보고 분석이나 연결 점검을 직접 선택합니다.
 - **자원과 버전 확인** - 앱의 CPU, RSS와 저장 공간, CLI 버전, 지원 대상 macOS 앱 정보를 확인하고 앱 자체의 업데이트를 직접 조회합니다.
 - **한국어와 영어 사용** - 원문을 보존하며 언어와 밝은 테마, 어두운 테마를 바꾸고 데스크톱이나 모바일에서 격리된 데모를 살펴봅니다.
+
+## 주요 화면
+
+아래 화면은 실제 대화 이력이 아닌 `agent-ops demo`의 격리된 샘플 데이터로 캡처했습니다.
+
+| 개요 | 세션 |
+|---|---|
+| ![세션, 토큰, 비용과 실행 현황을 보여 주는 워크스페이스 개요](<docs/images/screenshots/overview-ko.png>) | ![저장 검색, 어시스턴트 필터와 세션 목록이 있는 세션 탐색](<docs/images/screenshots/sessions-ko.png>) |
+| **대화 상세** | **작업센터** |
+| ![역할 필터, 메시지와 인계 동작이 있는 대화 상세](<docs/images/screenshots/session-detail-ko.png>) | ![상태, 우선순위, 다음 할 일과 기한을 보여 주는 작업 목록](<docs/images/screenshots/work-items-ko.png>) |
+| **실행** | **분석** |
+| ![대기, 실행 중, 완료, 확인 필요로 나뉜 실행 보드](<docs/images/screenshots/runs-ko.png>) | ![기록된 토큰, 비용, Kiro credit과 일별 활동을 보여 주는 사용량 분석](<docs/images/screenshots/analytics-ko.png>) |
 
 ## 사전 요구 사항
 

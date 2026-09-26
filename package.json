@@ -25,6 +25,7 @@
     "docs/design.md",
     "docs/verification.md",
     "docs/decisions",
+    "docs/images",
     "docs/runbooks",
     "docs/reference",
     "deploy/agent-ops.service",

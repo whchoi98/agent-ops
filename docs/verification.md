@@ -723,3 +723,15 @@ GitHub 릴리스로 게시됐습니다. 공개 설치 파일과 체크섬을 다
 agent-ops-local-1.4.1.tgz
 SHA-256: 1f923e77e31c70b3980fcd87fa9b796cc23ec88fa796618fbaa11490904ebbf0
 ```
+
+## README 주요 화면 캡처
+
+2026-09-26에 `npm run build` 후 임시 데이터 경로의 `agent-ops demo`를 띄우고
+Chromium 1440×900 밝은 테마로 개요, 세션, 대화 상세, 작업센터, 실행, 분석
+화면을 한국어와 영어로 각각 캡처했습니다. health 응답은 `demo: true`였으며
+실제 대화 이력, 모델 실행이나 운영 서버 상태는 사용하지 않았습니다.
+
+캡처 12개(약 1.4 MB)는 `docs/images/screenshots/`에 두고 README 영문·한국어
+절에서 각 언어의 화면을 연결했습니다. README의 이미지 링크 12개가 모두 존재하고
+`git diff --check`가 통과했습니다. 패키지 `files`에 `docs/images`를 추가했으며
+`npm pack --dry-run`에서 이미지 12개를 포함한 94개 파일, 2.5 MB를 확인했습니다.
