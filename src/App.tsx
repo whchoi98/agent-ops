@@ -18,6 +18,7 @@ const NewRunDialog = lazy(() => import('./features/runs/NewRunDialog').then(modu
 const RunDetailDialog = lazy(() => import('./features/runs/RunDetailDialog').then(module => ({ default: module.RunDetailDialog })));
 const Resources = lazy(() => import('./pages/Resources').then(module => ({ default: module.Resources })));
 const Mcp = lazy(() => import('./pages/Mcp').then(module => ({ default: module.Mcp })));
+const Harness = lazy(() => import('./pages/Harness').then(module => ({ default: module.Harness })));
 const Settings = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
 const Templates = lazy(() => import('./pages/Templates').then(module => ({ default: module.Templates })));
 const WorkItems = lazy(() => import('./pages/WorkItems').then(module => ({ default: module.WorkItems })));
@@ -42,6 +43,7 @@ function WorkspaceContent() {
     case 'analytics': return <Analytics />;
     case 'resources': return <Suspense fallback={<Skeleton rows={6} />}><Resources /></Suspense>;
     case 'mcp': return <Suspense fallback={<Skeleton rows={6} />}><Mcp /></Suspense>;
+    case 'harness': return <Suspense fallback={<Skeleton rows={6} />}><Harness /></Suspense>;
     case 'templates': return <Suspense fallback={<Skeleton rows={6} />}><Templates /></Suspense>;
     case 'extensions': return <Extensions />;
     case 'settings': return <Suspense fallback={<Skeleton rows={6} />}><Settings /></Suspense>;

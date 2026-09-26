@@ -50,7 +50,7 @@ export function ResourceTrend({ history, metric, label }: {
     </label>
     <div className="resource-legend">{RESOURCE_SCOPES.map(scope => <div key={scope}>
       <i className={`resource-dot resource-${scope}`} /><span>{t(SCOPE_NAMES[scope])}</span>
-      <strong className="numeric">{format(current?.scopes[scope][metric] ?? null)}</strong>
+      <strong className="numeric">{format(current?.scopes[scope]?.[metric] ?? null)}</strong>
     </div>)}</div>
   </div>;
 }

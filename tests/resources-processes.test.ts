@@ -71,6 +71,21 @@ describe('resource process counters', () => {
     expect(result.scopes.agents.processCount).toBe(0);
   });
 
+  it('attributes a harness engine and its children without folding them into agent runs', async () => {
+    let now = 1000;
+    let text = [line(10, 1, 10, '00:00:01'), line(20, 1, 20, '00:00:01'), line(21, 20, 20, '00:00:00')].join('\n');
+    const sampler = new OwnedProcessSampler({ read: async () => text, now: () => now });
+    const harness: OwnedProcessRoot = { pid: 20, ownerId: 'harness-check-1', kind: 'harness', processGroup: true };
+    expect((await sampler.sample([root, harness])).scopes.harness).toEqual({
+      cpuPercent: null, rssBytes: 200 * 1024, processCount: 2,
+    });
+    now += 5000;
+    text = [line(10, 1, 10, '00:00:01'), line(20, 1, 20, '00:00:03'), line(21, 20, 20, '00:00:01')].join('\n');
+    const current = await sampler.sample([root, harness]);
+    expect(current.scopes.harness.cpuPercent).toBe(60);
+    expect(current.scopes.agents).toEqual({ cpuPercent: 0, rssBytes: 100 * 1024, processCount: 1 });
+  });
+
   it('reports failed or over-limit owned samples as unknown, not zero', async () => {
     const failed = new OwnedProcessSampler({ read: async () => { throw new Error('private process diagnostic'); } });
     const result = await failed.sample([root]);

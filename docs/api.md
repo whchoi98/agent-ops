@@ -479,3 +479,55 @@ shutdown aborts owned checks.
 
 Read [usage, import controls and updates](reference/usage-and-sync.md#english)
 for user flows, source boundaries and upgrade instructions.
+
+## Harness management
+
+The optional AutoHarness engine is separate from the npm installation. These
+endpoints retain the same Host, Origin and mutation-header checks as other APIs.
+Paths below are relative to `/api`; request schemas reject unknown fields.
+
+| Method | Path | Input | Response |
+|---|---|---|---|
+| GET | `/harness` | `projectId?` | `HarnessCatalog` |
+| GET | `/harness/status` | none | `{busy,processCount,closing,demo}` |
+| POST | `/harness/refresh` | `{projectId?}` | `HarnessCatalog` |
+| PATCH | `/harness/settings` | `{revision,pythonPath,retentionDays,maxCacheRecords}` | `HarnessSettings` |
+| POST | `/harness/runtime/check` | `{}` | `HarnessRuntime` |
+| GET | `/harness/policies/:id` | `projectId?` | `HarnessPolicyDetail` |
+| POST | `/harness/policies/validate` | `{projectId?,content}` or `{projectId?,policyId,revision}` | `HarnessValidation` |
+| PUT | `/harness/policies/managed` | `{projectId?,content,expectedRevision}` | `HarnessPolicyDetail` |
+| POST | `/harness/evaluate` | `HarnessEvaluationRequest` | `HarnessDecision` |
+| POST | `/harness/hooks/preview` | `HarnessHookRequest` | `HarnessHookPreview` |
+| POST | `/harness/hooks/apply` | `{projectId,previewId}` | `HarnessBinding` |
+| GET | `/harness/audit` | `projectId?,client?,action?,sessionId?,q?,offset?,limit?` | `HarnessAuditPage` |
+
+Contracts are in `shared/harness.ts`. Clients are `codex`, `claude-code`,
+`kiro-ide`, and `kiro-cli`; audit records can additionally use `kiro` when the
+shared native hook cannot distinguish the client. Installation and removal of
+either Kiro entry affect the same project configuration.
+
+Engine checks use the saved absolute `pythonPath`, or bounded automatic
+discovery when it is `null`. Settings require the current integer revision.
+`retentionDays` accepts 1–90 and `maxCacheRecords` 100–10,000.
+
+A managed-policy creation uses `expectedRevision: null`; later saves use the
+current content revision. Policy content and tool input each have a 64 KiB byte
+limit, with additional structure and nesting bounds. Source policies are
+read-only. Evaluation requires the selected policy's current revision and
+returns `executed: false`; it never starts the supplied tool command.
+
+Hook previews are short-lived, one-use capabilities for server-selected files.
+Apply rechecks the project, policy and file evidence. Errors and conflicts never
+replay the change automatically. Native hook trust remains with the client.
+
+Audit `total` and decision counts refer to the retained source window, not the
+entire historical file. Reads and cache size are bounded; continuity checks may
+read retained byte ranges before accepting an append. `observed` is a per-response
+snapshot of app-hook evidence. External sources and synthetic decision tests do
+not establish native hook observation. Raw tool input and output are omitted.
+
+Demo mode permits synthetic policy browsing and structural validation, but
+engine checks, evaluations and native hook application return `403`.
+
+설치, 정책 선택, 훅 적용과 감사 기록의 범위는
+[하니스 가이드](reference/harness.md#한국어)를 참고하세요.

@@ -11,6 +11,7 @@
 - [Operations](operations.md): data, permissions, proxy service and troubleshooting.
 - [API](api.md): routes and request/response contracts.
 - [Productivity workspace](reference/productivity.md#english): work items, template inputs/history, context packs and saved views, with limits and explicit run preparation.
+- [Harness management](reference/harness.md#english): optional AutoHarness setup, policy checks, native hook previews and bounded audit records.
 - [Verification](verification.md): recorded checks and their limits.
 - [Resources](reference/resources.md): CPU/memory/disk scope, overhead and bounded history.
 - [Recorded usage, import controls and updates](reference/usage-and-sync.md#english): Kiro credits and coverage, import modes/budgets, cancellation and workbench update instructions.
@@ -32,6 +33,7 @@
 - [운영](operations.md): 데이터, 권한, 프록시 서비스와 문제 해결.
 - [API](api.md): 경로와 요청·응답 계약.
 - [생산성 작업 공간](reference/productivity.md#한국어): 작업센터, 템플릿 입력과 이력, 컨텍스트 묶음, 저장 검색의 한도와 명시적인 실행 준비.
+- [하니스 관리](reference/harness.md#한국어): 선택형 AutoHarness 설치, 정책 판정, 훅 미리보기와 감사 기록의 조회 범위.
 - [검증 기록](verification.md): 수행한 검사와 검증 범위.
 - [자원](reference/resources.md): CPU·메모리·디스크 범위, 수집 비용과 보관 상한.
 - [기록된 사용량, 수집 제어와 업데이트](reference/usage-and-sync.md#한국어): Kiro credit과 기록 범위, 수집 방식과 시간 제한, 중단과 앱 업데이트 안내.

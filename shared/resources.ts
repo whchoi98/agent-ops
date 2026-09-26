@@ -1,4 +1,4 @@
-export const RESOURCE_SCOPES = ['server', 'sync', 'agents', 'mcp'] as const;
+export const RESOURCE_SCOPES = ['server', 'sync', 'agents', 'mcp', 'harness'] as const;
 export type ResourceScope = (typeof RESOURCE_SCOPES)[number];
 export type OwnedResourceScope = Exclude<ResourceScope, 'server'>;
 export type ResourceWarning =

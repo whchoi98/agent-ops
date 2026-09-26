@@ -73,9 +73,9 @@ export function Resources() {
           <thead><tr><th>{t('측정 대상')}</th><th>{t('프로세스 수')}</th><th>{t('CPU 사용률')}</th><th>{t('상주 메모리')}</th></tr></thead>
           <tbody>{RESOURCE_SCOPES.map(scope => <tr key={scope}>
             <td><span className="resource-scope-name"><i className={`resource-dot resource-${scope}`} />{t(SCOPE_NAMES[scope])}</span></td>
-            <td className="numeric">{current?.scopes[scope].processCount ?? '—'}</td>
-            <td className="numeric">{cpu(current?.scopes[scope].cpuPercent)}</td>
-            <td className="numeric">{bytes(current?.scopes[scope].rssBytes)}</td>
+            <td className="numeric">{current?.scopes[scope]?.processCount ?? '—'}</td>
+            <td className="numeric">{cpu(current?.scopes[scope]?.cpuPercent)}</td>
+            <td className="numeric">{bytes(current?.scopes[scope]?.rssBytes)}</td>
           </tr>)}</tbody>
         </table></div>
         <p className="resource-explanation">{t('— 는 첫 표본이거나 측정하지 못한 값입니다. 작업이 없는 범위의 0과 구분합니다. 짧은 작업은 표본 사이에 종료될 수 있습니다.')}</p>

@@ -22,11 +22,11 @@ export interface OwnedProcessSnapshot {
 }
 const OUTPUT_LIMIT = 1024 * 1024;
 const PROCESS_LIMIT = 512;
-const ownedScopes: OwnedResourceScope[] = ['sync', 'agents', 'mcp'];
+const ownedScopes: OwnedResourceScope[] = ['sync', 'agents', 'mcp', 'harness'];
 const zero = (): ProcessResourceUsage => ({ cpuPercent: 0, rssBytes: 0, processCount: 0 });
 const unknown = (): ProcessResourceUsage => ({ cpuPercent: null, rssBytes: null, processCount: null });
 export const emptyOwnedSnapshot = (): OwnedProcessSnapshot => ({
-  scopes: { sync: zero(), agents: zero(), mcp: zero() }, warnings: [],
+  scopes: { sync: zero(), agents: zero(), mcp: zero(), harness: zero() }, warnings: [],
 });
 
 export function parseCpuTime(text: string): number | null {

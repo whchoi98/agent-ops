@@ -1,6 +1,6 @@
 # my-agent-ops
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.4.1](https://img.shields.io/badge/version-1.4.1-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.5.0](https://img.shields.io/badge/version-1.5.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, Claude Code, Kiro CLI의 대화와 실행 작업을 관리하는 로컬 운영 도구입니다.
 
@@ -25,6 +25,7 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 - **Track recorded Kiro credits** - Keep recorded zero, missing and partial usage distinct across summaries, analytics, comparisons, sorting and exports.
 - **Control history imports** - Choose interval, workbench-idle or manual imports, set a time budget and stop the current owned import.
 - **Inspect assistant configuration** - Browse skills, plugins, Powers and MCP declarations with source evidence, redacted previews and explicit analysis or connection checks.
+- **Manage AutoHarness** - Inspect and edit scoped policies, test decisions with an optional Python engine, preview native hook changes and explore bounded audit records.
 - **Monitor resources and versions** - View app CPU/RSS and storage, compare CLI versions, inspect supported macOS app metadata and explicitly check workbench updates.
 - **Use either language** - Switch between Korean and English, keep original content, choose light/dark themes and explore an isolated demo on desktop or mobile.
 
@@ -40,6 +41,8 @@ Sample transcripts keep their original Korean text when the interface is in Engl
 | ![Conversation details with role filters, messages and handoff actions](<docs/images/screenshots/session-detail-en.png>) | ![Work items list with status, priority, next action and due date](<docs/images/screenshots/work-items-en.png>) |
 | **Runs** | **Analytics** |
 | ![Run board grouped by queued, running, completed and needs-attention runs](<docs/images/screenshots/runs-en.png>) | ![Usage analytics with recorded tokens, cost, Kiro credits and daily activity](<docs/images/screenshots/analytics-en.png>) |
+| **Harness management** | **Harness audit** |
+| ![AutoHarness engine settings and task tabs](<docs/images/screenshots/harness-en.png>) | ![Filtered harness audit records with decisions and source provenance](<docs/images/screenshots/harness-audit-en.png>) |
 
 ## Prerequisites
 
@@ -55,7 +58,7 @@ Sample transcripts keep their original Korean text when the interface is in Engl
 | `npm install -g` installation | [macOS upgrade (npm)](#macos-upgrade-npm) |
 | `git clone` installation | [Upgrade a source checkout](#upgrade-a-source-checkout) |
 
-These examples target source version **1.4.1**.
+These examples target source version **1.5.0**.
 
 ### macOS quick start
 
@@ -68,12 +71,12 @@ Open **Terminal** on the Mac and run:
 node --version
 npm --version
 
-# Install my-agent-ops 1.4.1 from the GitHub release.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.1/agent-ops-local-1.4.1.tgz
+# Install my-agent-ops 1.5.0 from the GitHub release.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
 
 # Confirm the installed version.
 agent-ops --version
-# 1.4.1
+# 1.5.0
 
 # Start the app.
 agent-ops
@@ -90,12 +93,12 @@ Wait for active jobs and synchronization to finish, then press **`Ctrl+C` in the
 Run:
 
 ```bash
-# Install version 1.4.1 over the existing npm installation.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.1/agent-ops-local-1.4.1.tgz
+# Install version 1.5.0 over the existing npm installation.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
 
 # Confirm the new version.
 agent-ops --version
-# 1.4.1
+# 1.5.0
 
 # Restart the app.
 agent-ops
@@ -162,8 +165,8 @@ The UI labels sample sessions and runs; assistant execution, retries and MCP con
 ### Local npm archive
 
 After installing dependencies in a source checkout, create an archive with `npm pack`.
-The [source manifest](package.json) specifies version `1.4.1`; see [CHANGELOG.md](CHANGELOG.md) for changes.
-Download the [v1.4.1 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.4.1/agent-ops-local-1.4.1.tgz) from the [v1.4.1 release page](https://github.com/whchoi98/agent-ops/releases/tag/v1.4.1).
+The [source manifest](package.json) specifies version `1.5.0`; see [CHANGELOG.md](CHANGELOG.md) for changes.
+Download the [v1.5.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz) from the [v1.5.0 release page](https://github.com/whchoi98/agent-ops/releases/tag/v1.5.0).
 These commands install a local file and do not depend on a public npm release.
 
 ```bash
@@ -171,7 +174,7 @@ These commands install a local file and do not depend on a public npm release.
 npm pack
 
 # Install the archive and start the app.
-npm install -g ./agent-ops-local-1.4.1.tgz
+npm install -g ./agent-ops-local-1.5.0.tgz
 agent-ops
 ```
 
@@ -179,7 +182,7 @@ To run the archive without a global installation:
 
 ```bash
 # Start the archive in demo mode.
-npm exec --package=./agent-ops-local-1.4.1.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.5.0.tgz -- agent-ops demo --port 4318
 ```
 
 The archive includes the built application and public documentation.
@@ -203,6 +206,7 @@ The archive includes the built application and public documentation.
 | Skills & plugins | Inspect definitions, cached installs, activation evidence, scope, source/reference files and declared tools/MCP/hooks |
 | Resources | Inspect server and owned-work CPU/RSS, recent trends, data files and filesystem availability |
 | MCP | Inspect client-specific declarations and run previewed metadata checks |
+| Harness management | Inspect policies, test AutoHarness decisions, preview native hooks and filter audit records |
 | Settings | Check workbench/CLI versions and macOS app metadata; configure history roots, import mode/budget, concurrency, timeouts and theme |
 
 Open the command palette with `Ctrl/Cmd + K` for pages, session/work-item search, pinned views and project/template shortcuts. Use light/dark themes and mobile navigation on narrow screens.
@@ -219,6 +223,15 @@ Conversations, notes, skill source and user input remain unchanged; switching la
 Open editors retain their draft and version during background metadata refreshes. A conflict requires reviewing the latest saved record before trying again.
 Context compilation assembles saved text locally; it is neither an AI summary nor a token estimate.
 Read the [productivity guide](docs/reference/productivity.md#english) for limits, source capture, revision history and draft handling.
+
+### AutoHarness workflow
+
+1. Open **Analysis and management > Harness management** and select a project.
+2. Inspect a policy or save an app-managed policy, then validate its structure.
+3. For engine checks, install the optional Python environment and confirm it on the page.
+4. Test a tool input, review any native hook changes before applying them, and inspect audit records.
+
+Read the [harness guide](docs/reference/harness.md#english) for installation, shared Kiro hooks, approval handling and log limits.
 
 ### Run a project
 
@@ -577,6 +590,7 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무�
 - **기록된 Kiro credit 확인** - 기록된 0, 미기록, 부분 사용량을 구분하고 요약, 분석, 비교, 정렬과 내보내기에 표시합니다.
 - **이력 수집 제어** - 주기, 앱 작업 유휴, 수동 방식을 선택하고 시간 제한을 설정하며 현재 소유 수집 작업을 중단합니다.
 - **어시스턴트 설정 확인** - 출처 근거와 마스킹된 미리보기로 스킬, 플러그인, Power, MCP 선언을 살펴보고 분석이나 연결 점검을 직접 선택합니다.
+- **AutoHarness 관리** - 범위별 정책을 확인하고 편집하며 선택형 Python 엔진으로 판정 테스트, 훅 변경 미리보기와 감사 기록 조회를 사용합니다.
 - **자원과 버전 확인** - 앱의 CPU, RSS와 저장 공간, CLI 버전, 지원 대상 macOS 앱 정보를 확인하고 앱 자체의 업데이트를 직접 조회합니다.
 - **한국어와 영어 사용** - 원문을 보존하며 언어와 밝은 테마, 어두운 테마를 바꾸고 데스크톱이나 모바일에서 격리된 데모를 살펴봅니다.
 
@@ -591,6 +605,8 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무�
 | ![역할 필터, 메시지와 인계 동작이 있는 대화 상세](<docs/images/screenshots/session-detail-ko.png>) | ![상태, 우선순위, 다음 할 일과 기한을 보여 주는 작업 목록](<docs/images/screenshots/work-items-ko.png>) |
 | **실행** | **분석** |
 | ![대기, 실행 중, 완료, 확인 필요로 나뉜 실행 보드](<docs/images/screenshots/runs-ko.png>) | ![기록된 토큰, 비용, Kiro credit과 일별 활동을 보여 주는 사용량 분석](<docs/images/screenshots/analytics-ko.png>) |
+| **하니스 관리** | **하니스 감사 기록** |
+| ![AutoHarness 엔진 설정과 작업별 탭](<docs/images/screenshots/harness-ko.png>) | ![판정과 출처를 구분하는 하니스 감사 기록](<docs/images/screenshots/harness-audit-ko.png>) |
 
 ## 사전 요구 사항
 
@@ -608,7 +624,7 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무�
 | `npm install -g`로 설치 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
 | `git clone`으로 설치 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
 
-아래 예시는 소스 버전 **1.4.1**을 기준으로 합니다.
+아래 예시는 소스 버전 **1.5.0**을 기준으로 합니다.
 
 ### macOS 처음 설치
 
@@ -621,12 +637,12 @@ Mac의 **터미널**을 열고 다음 명령을 실행합니다.
 node --version
 npm --version
 
-# GitHub 릴리스에서 my-agent-ops 1.4.1을 설치합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.1/agent-ops-local-1.4.1.tgz
+# GitHub 릴리스에서 my-agent-ops 1.5.0을 설치합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
 
 # 설치한 버전을 확인합니다.
 agent-ops --version
-# 1.4.1
+# 1.5.0
 
 # 앱을 시작합니다.
 agent-ops
@@ -643,12 +659,12 @@ npm에서 `EACCES` 오류가 발생하면 [공식 npm 권한 설정 안내](http
 다음 명령으로 업데이트합니다.
 
 ```bash
-# 기존 npm 설치본을 1.4.1으로 업데이트합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.1/agent-ops-local-1.4.1.tgz
+# 기존 npm 설치본을 1.5.0으로 업데이트합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
 
 # 새 버전을 확인합니다.
 agent-ops --version
-# 1.4.1
+# 1.5.0
 
 # 앱을 다시 시작합니다.
 agent-ops
@@ -715,8 +731,8 @@ npm run demo -- --port 4318
 ### 로컬 npm 압축 파일
 
 소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만듭니다.
-[소스 매니페스트](package.json)의 버전은 `1.4.1`이며 변경 사항은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
-[v1.4.1 릴리스 페이지](https://github.com/whchoi98/agent-ops/releases/tag/v1.4.1)에서 [설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.4.1/agent-ops-local-1.4.1.tgz)을 내려받습니다.
+[소스 매니페스트](package.json)의 버전은 `1.5.0`이며 변경 사항은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
+[v1.5.0 릴리스 페이지](https://github.com/whchoi98/agent-ops/releases/tag/v1.5.0)에서 [설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz)을 내려받습니다.
 아래 명령은 로컬 파일을 설치하므로 npm에 공개된 릴리스가 없어도 사용할 수 있습니다.
 
 ```bash
@@ -724,7 +740,7 @@ npm run demo -- --port 4318
 npm pack
 
 # 압축 파일을 설치하고 앱을 시작합니다.
-npm install -g ./agent-ops-local-1.4.1.tgz
+npm install -g ./agent-ops-local-1.5.0.tgz
 agent-ops
 ```
 
@@ -732,7 +748,7 @@ agent-ops
 
 ```bash
 # 압축 파일을 데모 모드로 실행합니다.
-npm exec --package=./agent-ops-local-1.4.1.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.5.0.tgz -- agent-ops demo --port 4318
 ```
 
 압축 파일에는 빌드된 앱과 공개 문서가 포함됩니다.
@@ -758,6 +774,7 @@ npm exec --package=./agent-ops-local-1.4.1.tgz -- agent-ops demo --port 4318
 | 스킬, 플러그인 | 정의, 캐시, 활성화 근거, 적용 범위, 원문, 참조 파일과 선언된 도구, MCP, 훅 확인 |
 | 자원 | 서버와 소유 작업의 CPU, RSS, 최근 추이, 데이터 파일과 파일시스템 여유 공간 확인 |
 | MCP | 클라이언트별 선언 확인과 미리보기 후 메타데이터 점검 |
+| 하니스 관리 | 정책 확인, AutoHarness 판정 테스트, 훅 미리보기와 감사 기록 조회 |
 | 설정 | 앱 자체와 CLI 버전, macOS 앱 정보 확인, 이력 경로, 수집 방식과 시간 제한, 동시 실행 수, 작업 시간 제한, 테마 설정 |
 
 `Ctrl/Cmd + K`로 명령 팔레트를 열어 페이지 이동, 세션과 작업 검색, 고정 검색, 프로젝트와 템플릿 바로가기를 사용하세요. 밝은 테마, 어두운 테마를 지원하며 좁은 화면에서는 모바일 탐색 메뉴를 사용합니다.
@@ -774,6 +791,15 @@ npm exec --package=./agent-ops-local-1.4.1.tgz -- agent-ops demo --port 4318
 백그라운드에서 메타데이터를 새로고침해도 열린 편집 창의 초안과 버전은 유지합니다. 충돌이 나면 최신 저장 내용을 확인한 뒤 다시 시도합니다.
 컨텍스트 조합은 저장한 텍스트를 로컬에서 합치는 기능이며 AI 요약이나 토큰 추정이 아닙니다.
 한도, 원본 인용, 개정 이력과 초안 처리 방법은 [생산성 가이드](docs/reference/productivity.md#한국어)를 참고하세요.
+
+### AutoHarness 사용 순서
+
+1. **분석 및 관리 > 하니스 관리**를 열고 프로젝트를 선택합니다.
+2. 정책을 확인하거나 앱 관리 정책으로 저장한 뒤 형식을 검증합니다.
+3. 엔진 검증을 사용하려면 선택형 Python 환경을 설치하고 화면에서 확인합니다.
+4. 도구 입력을 판정하고 훅 변경을 미리 본 뒤 적용하며 감사 기록을 확인합니다.
+
+설치, Kiro 공통 훅, 승인 처리와 로그 한도는 [하니스 가이드](docs/reference/harness.md#한국어)를 참고하세요.
 
 <a id="실제-프로젝트-실행"></a>
 

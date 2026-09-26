@@ -38,9 +38,15 @@ try {
   const port = listener.address().port;
   await new Promise((done) => listener.close(done));
   const emptyBin = join(directory, 'empty-bin');
-  await mkdir(emptyBin);
+  await mkdir(emptyBin, { mode: 0o700 });
+  const fixtureHome = join(directory, 'isolated-home');
+  await mkdir(fixtureHome, { mode: 0o700 });
   const state = join(directory, 'state');
-  const environment = { ...process.env, PATH: emptyBin };
+  const environment = {
+    ...process.env, PATH: emptyBin, HOME: fixtureHome,
+    CODEX_HOME: join(fixtureHome, '.codex'), CLAUDE_CONFIG_DIR: join(fixtureHome, '.claude'),
+    XDG_DATA_HOME: join(fixtureHome, '.local/share'), AUTOHARNESS_CONFIG_HOME: join(fixtureHome, '.autoharness'),
+  };
   server = spawn(process.execPath, [entry, 'demo', '--port', String(port), '--data-dir', state], {
     cwd: directory, env: environment, stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -97,6 +103,16 @@ try {
   assert.equal(appUpdate.status, 'demo');
   assert.equal(appUpdate.commands.npm, null);
   assert.equal(appUpdate.commands.git, null);
+  const harness = await (await request('/api/harness')).json();
+  assert.equal(harness.demo, true);
+  assert.ok(harness.policies.length > 0);
+  assert.equal(harness.bindings.length, 4);
+  assert.equal((await request('/api/harness/runtime/check', {})).status, 403);
+  const harnessAudit = await (await request('/api/harness/audit?limit=2')).json();
+  assert.equal(harnessAudit.items.length, 2);
+  assert.equal(JSON.stringify(harnessAudit).includes('tool_input'), false);
+  const packagedBridge = join(directory, 'node_modules/agent-ops-local/dist/server/harness-bridge.py');
+  assert.ok((await readFile(packagedBridge)).length > 0, 'The optional engine bridge must be packaged.');
   const workItems = await (await request('/api/productivity/work-items?status=todo&limit=2')).json();
   assert.ok(workItems.total > 0 && workItems.items.length <= 2);
   assert.equal(Object.hasOwn(workItems.items[0], 'description'), false);
@@ -191,7 +207,7 @@ try {
 
   phase = 'packaged background synchronization';
   const liveState = join(directory, 'synthetic-live-state');
-  await mkdir(liveState);
+  await mkdir(liveState, { mode: 0o700 });
   const source = join(directory, 'synthetic-session.jsonl');
   const transcript = [
     { type: 'session_meta', payload: { id: 'package-sync', cwd: '/synthetic/package-project', timestamp: '2026-09-25T00:00:00Z' } },
@@ -203,6 +219,9 @@ try {
   const fixtureDb = new Database(join(liveState, 'agent-ops.sqlite'));
   fixtureDb.exec('CREATE TABLE settings (key TEXT PRIMARY KEY,value TEXT NOT NULL)');
   fixtureDb.prepare('INSERT INTO settings VALUES (?,?)').run('config', JSON.stringify({ sourceRoots: { codex: [source], claude: [], kiro: [] } }));
+  if (process.env.HARNESS_TEST_PYTHON) fixtureDb.prepare('INSERT INTO settings VALUES (?,?)').run('harness-config', JSON.stringify({
+    revision: 1, pythonPath: process.env.HARNESS_TEST_PYTHON, retentionDays: 30, maxCacheRecords: 2000,
+  }));
   fixtureDb.close();
   server = spawn(process.execPath, [entry, 'serve', '--port', String(port), '--data-dir', liveState], {
     cwd: directory, env: environment, stdio: ['ignore', 'pipe', 'pipe'],
@@ -232,6 +251,41 @@ try {
   assert.equal(updated.status, 200);
   assert.equal((await updated.json()).imported, 1);
   assert.equal((await (await request('/api/sessions?q=' + encodeURIComponent('Changed packaged import marker'))).json()).total, 1);
+  const liveHarness = await (await request('/api/harness')).json();
+  assert.equal(liveHarness.demo, false);
+  assert.equal((await (await request('/api/harness/audit')).json()).total, 0);
+  let packagedEngine = false;
+  if (process.env.HARNESS_TEST_PYTHON) {
+    phase = 'packaged optional harness engine';
+    const checked = await request('/api/harness/runtime/check', {});
+    assert.equal(checked.status, 200);
+    const engineState = await checked.json();
+    assert.equal(engineState.state, 'ready', JSON.stringify(engineState));
+    const policyResponse = await fetch(base + '/api/harness/policies/managed', {
+      method: 'PUT', signal: AbortSignal.timeout(10000),
+      headers: { 'Content-Type': 'application/json', 'X-Agent-Ops': '1' },
+      body: JSON.stringify({ expectedRevision: null, content: JSON.stringify({
+        mode: 'core', hooks: { profile: 'minimal' },
+        permissions: { defaults: { unknown_tool: 'ask', unknown_path: 'allow', on_error: 'deny' },
+          tools: { bash: { policy: 'restricted', allow_patterns: ['^echo safe$'] } } },
+        risk: { classifier: 'rules', thresholds: { low: 'allow', medium: 'allow', high: 'ask', critical: 'deny' } },
+      }) }),
+    });
+    assert.equal(policyResponse.status, 200);
+    const selected = await policyResponse.json();
+    const evaluated = await request('/api/harness/evaluate', {
+      policyId: selected.id, revision: selected.revision, client: 'claude-code',
+      toolName: 'Bash', toolInput: { command: 'echo safe' },
+    });
+    assert.equal(evaluated.status, 200);
+    const result = await evaluated.json();
+    assert.equal(result.action, 'allow');
+    assert.equal(result.executed, false);
+    assert.equal(result.engineVersion, '0.1.1');
+    const audit = await (await request('/api/harness/audit')).json();
+    assert.equal(audit.items[0].origin, 'agent-ops-test');
+    packagedEngine = true;
+  }
   phase = 'live server shutdown';
   server.kill('SIGTERM');
   const liveTermination = await Promise.race([exit, new Promise((_, reject) => setTimeout(() => reject(new Error('Package shutdown timed out')), 5000).unref())]);
@@ -246,6 +300,7 @@ try {
     executionBlocked: true, fullExport: true, pagedHistory: true, gracefulShutdown: true,
     installedVersion: version, workItems: true, contextPacks: true, templateInputsAndHistory: true,
     savedViews: true, productivityDemoIsolation: true,
+    harnessCatalog: true, harnessDemoIsolation: true, packagedPythonBridge: true, packagedEngine,
   };
   await mkdir('artifacts', { recursive: true });
   await writeFile('artifacts/package-smoke.json', JSON.stringify(report, null, 2) + '\n');

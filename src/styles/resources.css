@@ -22,6 +22,7 @@
 .resource-sync { color: #0e9f8f; }
 .resource-agents { color: #8b5cf6; }
 .resource-mcp { color: #bf8a28; }
+.resource-harness { color: #d54a87; }
 .resource-cursor { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; opacity: .6; }
 .resource-sample-picker { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 11px; padding: 0 6px; }
 .resource-sample-picker > span { display: flex; justify-content: space-between; gap: 8px; }

@@ -24,6 +24,7 @@ Code paths refer to the source checkout; npm archives provide compiled code in
 | Recorded credits/import controls | `server/providers/kiro-credits.ts`, `server/sync-manager.ts`, `shared/credits.ts`, `shared/sync-control.ts` | [Usage and sync](usage-and-sync.md#english), [API](../api.md) |
 | Workbench updates | `server/app-update.ts`, `server/app-update/`, `shared/app-update.ts`, `src/features/app-update/` | [Usage and sync](usage-and-sync.md#english), [operations](../operations.md) |
 | MCP configuration/checks | `server/mcp/`, `shared/mcp.ts`, `src/features/mcp/` | [MCP](mcp.md), [API](../api.md) |
+| Harness management | `server/harness/`, `shared/harness.ts`, `src/features/harness/` | [Harness guide](harness.md#english), [API](../api.md) |
 | macOS desktop apps | `server/desktop-apps/`, `shared/desktop-apps.ts`, `src/features/versions/DesktopApps.tsx` | [Desktop apps](desktop-apps.md) |
 | UI/language | `src/App.tsx`, `src/state/`, `src/i18n/`, `src/features/`, `src/pages/` | [Architecture](../architecture.md), [design](../design.md) |
 | Build/tests/distribution | `scripts/build.ts`, `scripts/package-smoke.mjs`, `tests/`, `src/**/*.test.*` | [Contributing](../../CONTRIBUTING.md), [verification](../verification.md) |
@@ -57,6 +58,7 @@ import concurrency, stable search identity and offline conversion.
 | 기록된 credit과 수집 제어 | `server/providers/kiro-credits.ts`, `server/sync-manager.ts`, `shared/credits.ts`, `shared/sync-control.ts` | [사용량과 수집](usage-and-sync.md#한국어), [API](../api.md) |
 | 앱 자체 업데이트 | `server/app-update.ts`, `server/app-update/`, `shared/app-update.ts`, `src/features/app-update/` | [사용량과 수집](usage-and-sync.md#한국어), [운영](../operations.md) |
 | MCP 설정·점검 | `server/mcp/`, `shared/mcp.ts`, `src/features/mcp/` | [MCP](mcp.md), [API](../api.md) |
+| 하니스 관리 | `server/harness/`, `shared/harness.ts`, `src/features/harness/` | [하니스 가이드](harness.md#한국어), [API](../api.md) |
 | macOS 데스크톱 앱 | `server/desktop-apps/`, `shared/desktop-apps.ts`, `src/features/versions/DesktopApps.tsx` | [앱 정보](desktop-apps.md) |
 | UI·언어 | `src/App.tsx`, `src/state/`, `src/i18n/`, `src/features/`, `src/pages/` | [아키텍처](../architecture.md), [설계](../design.md) |
 | 빌드·테스트·배포 파일 | `scripts/build.ts`, `scripts/package-smoke.mjs`, `tests/`, `src/**/*.test.*` | [기여](../../CONTRIBUTING.md), [검증](../verification.md) |

@@ -10,6 +10,7 @@ function report(): ResourceReport {
       sync: { cpuPercent: null, rssBytes: null, processCount: null },
       agents: { cpuPercent: 0, rssBytes: 0, processCount: 0 },
       mcp: { cpuPercent: 0, rssBytes: 0, processCount: 0 },
+      harness: { cpuPercent: 4, rssBytes: 4 * 1024 ** 2, processCount: 1 },
     },
     heapUsedBytes: 16 * 1024 ** 2, heapTotalBytes: 32 * 1024 ** 2,
     cpuWindowMs: index ? 5000 : null, durationMs: 1.25, warnings: ['owned_processes_unavailable'],
@@ -55,6 +56,7 @@ test('keeps unavailable values distinct from zero and translates the complete mo
   const scopeRows = page.locator('.resource-table').first().locator('tbody tr');
   await expect(scopeRows.filter({ hasText: '동기화 작업' })).toContainText('—');
   await expect(scopeRows.filter({ hasText: '에이전트 실행' })).toContainText('0%');
+  await expect(scopeRows.filter({ hasText: '하니스 검사' })).toContainText('4%');
   await expect(page.getByText('데이터 파일시스템의 여유 공간이 10% 미만입니다. 백업을 포함한 사용량을 확인해 주세요.')).toBeVisible();
   await page.getByRole('button', { name: '영어로 전환' }).click();
   await expect(page.getByRole('heading', { name: 'Resource monitoring', exact: true })).toBeVisible();

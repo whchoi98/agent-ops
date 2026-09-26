@@ -2,6 +2,8 @@ export const EN_MESSAGES: Record<string, string> = {
   '개요': 'Overview',
   '작업센터': 'Work items',
   '컨텍스트 묶음': 'Context packs',
+  '하니스 관리': 'Harness management',
+  '하니스 검사': 'Harness checks',
   '저장 검색': 'Saved views',
   '저장 검색 열기': 'Open saved view',
   '프로젝트 세션 열기': 'Open project sessions',

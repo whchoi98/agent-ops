@@ -1,7 +1,7 @@
 import { RESOURCE_SCOPES, type ResourceSample, type ResourceScope, type ResourceWarning } from '../../../shared/resources';
 
 export const SCOPE_NAMES: Record<ResourceScope, string> = {
-  server: '앱 서버', sync: '동기화 작업', agents: '에이전트 실행', mcp: 'MCP 점검',
+  server: '앱 서버', sync: '동기화 작업', agents: '에이전트 실행', mcp: 'MCP 점검', harness: '하니스 검사',
 };
 export const WARNING_NAMES: Record<ResourceWarning, string> = {
   owned_processes_unavailable: '일부 실행 작업의 자원을 측정하지 못했습니다.',
@@ -29,7 +29,7 @@ export function formatCpu(value: number | null | undefined, language = 'ko'): st
   return `${new Intl.NumberFormat(language === 'ko' ? 'ko-KR' : 'en-US', { maximumFractionDigits: 2 }).format(value)}%`;
 }
 export function resourcePaths(history: ResourceSample[], metric: 'cpuPercent' | 'rssBytes', width = 660, height = 160) {
-  const values = history.flatMap(sample => RESOURCE_SCOPES.map(scope => sample.scopes[scope][metric]))
+  const values = history.flatMap(sample => RESOURCE_SCOPES.map(scope => sample.scopes[scope]?.[metric] ?? null))
     .filter((value): value is number => value !== null && Number.isFinite(value) && value >= 0);
   const peak = Math.max(metric === 'cpuPercent' ? 1 : 1024, ...values);
   const step = 10 ** Math.floor(Math.log10(peak));
@@ -41,7 +41,7 @@ export function resourcePaths(history: ResourceSample[], metric: 'cpuPercent' | 
   const paths = Object.fromEntries(RESOURCE_SCOPES.map(scope => {
     let path = '', connected = false;
     history.forEach((sample, index) => {
-      const value = sample.scopes[scope][metric];
+      const value = sample.scopes[scope]?.[metric] ?? null;
       if (value === null || !Number.isFinite(value) || value < 0) { connected = false; return; }
       if (index > 0 && times[index] - times[index - 1] > 15_000) connected = false;
       path += `${connected ? 'L' : 'M'}${x(index).toFixed(2)},${y(value).toFixed(2)} `;

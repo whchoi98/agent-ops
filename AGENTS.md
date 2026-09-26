@@ -23,6 +23,9 @@ The npm package is `agent-ops-local`; the CLI and existing data paths use `agent
   `shared/template-fields.ts`: productivity contracts and bounded local rendering.
 - `src/features/runs/RunContext*`: frozen preparation state, context application
   and cancellation; keep explicit command preview and process start separate.
+- `server/harness/`, `shared/harness.ts`, `src/features/harness/`: optional
+  AutoHarness engine, scoped policies, previewed hooks and bounded audit evidence.
+  Package `bridge.py` as `dist/server/harness-bridge.py`.
 - `src/i18n/`, `src/state/refreshQueue.ts`: explicit UI translations and
   coalesced refresh with one trailing update.
 - `deploy/agent-ops.service`: example systemd service; customize paths locally.
@@ -48,6 +51,9 @@ Record actual verification results in `docs/verification.md`.
   argument arrays; cancel only processes owned by this application.
 - Keep demo state separate and prevent demo agent execution.
 - Preserve original transcripts and user text when translating interface labels.
+- Harness checks evaluate tool input without executing it. Keep native permission
+  checks, hook trust and source provenance intact; unknown/ask must never silently
+  become an approval. Never activate native hooks as a side effect of discovery.
 - Offline storage optimization must back up and verify the cache before mutation;
   never migrate a large existing search index during HTTP startup.
 - Extension status describes configuration evidence, not invocation. Preserve

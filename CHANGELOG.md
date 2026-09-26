@@ -12,9 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-26
+
 ### Added
 
-- Add Korean and English README screenshots of Overview, Sessions, Conversation details, Work items, Runs and Analytics captured from demo data.
+- Add Korean and English README screenshots of Overview, Sessions, Conversation details, Work items, Runs, Analytics and Harness management captured from demo data.
+- Add Harness management with scoped policy discovery, revision-checked managed policy editing and optional AutoHarness engine validation and decision tests.
+- Add reviewed project hook installation and removal for Claude Code, Codex and shared Kiro IDE/CLI configuration, with backups and native permission preservation.
+- Add bounded audit browsing with source provenance, separate test and hook events, retention controls and incremental file continuity checks.
+
+### Changed
+
+- Include owned harness inspection processes in CPU and memory monitoring.
 
 ## [1.4.1] - 2026-09-26
 
@@ -96,7 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and cross-origin request guards.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
@@ -115,9 +125,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-26
+
 ### Added
 
-- README에 데모 데이터로 캡처한 개요, 세션, 대화 상세, 작업센터, 실행, 분석 화면을 한국어와 영어로 추가합니다.
+- README에 데모 데이터로 캡처한 개요, 세션, 대화 상세, 작업센터, 실행, 분석, 하니스 관리 화면을 한국어와 영어로 추가.
+- 범위별 정책 조회, 개정을 확인하는 앱 관리 정책 편집, 선택형 AutoHarness 엔진 검증과 판정 테스트를 제공하는 하니스 관리 추가.
+- 백업과 기존 권한 절차를 보존하며 미리보기 후 적용하는 Claude Code, Codex, Kiro IDE/CLI 공통 프로젝트 훅 설치와 제거 추가.
+- 출처 구분, 테스트와 훅 이벤트 구분, 보관 한도와 파일 연속성 검사를 갖춘 감사 기록 조회 추가.
+
+### Changed
+
+- 소유한 하니스 검사 프로세스를 CPU와 메모리 집계에 포함.
 
 ## [1.4.1] - 2026-09-26
 
@@ -203,7 +222,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산하도록 수정.
 - 로컬 연결, 교차 출처 요청 보호를 유지하며 설정한 프록시 출처를 허용하도록 수정.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0

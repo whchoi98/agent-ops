@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toQueryString } from './query';
 
-export const PAGES = ['overview', 'work-items', 'sessions', 'runs', 'projects', 'context-packs', 'analytics', 'resources', 'templates', 'extensions', 'mcp', 'settings'] as const;
+export const PAGES = ['overview', 'work-items', 'sessions', 'runs', 'projects', 'context-packs', 'analytics', 'resources', 'templates', 'extensions', 'mcp', 'harness', 'settings'] as const;
 export type Page = (typeof PAGES)[number];
 export const PAGE_NAMES: Record<Page, string> = {
   overview: '개요', sessions: '세션', runs: '실행', projects: '프로젝트',
   'work-items': '작업센터', 'context-packs': '컨텍스트 묶음',
-  analytics: '분석', resources: '자원', templates: '템플릿', extensions: '스킬·플러그인', mcp: 'MCP', settings: '설정',
+  analytics: '분석', resources: '자원', templates: '템플릿', extensions: '스킬·플러그인', mcp: 'MCP', harness: '하니스 관리', settings: '설정',
 };
 
 function readLocation() {

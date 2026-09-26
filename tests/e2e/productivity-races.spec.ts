@@ -99,6 +99,7 @@ test('a project run can select reusable context without a project assignment', a
     await expect(dialog(page).getByRole('button', { name: '명령 미리보기', exact: true })).toBeDisabled();
     await expect(dialog(page).getByRole('button', { name: '선택한 컨텍스트 추가', exact: true })).toBeEnabled();
     await dialog(page).getByRole('button', { name: '선택한 컨텍스트 추가', exact: true }).click();
+    await expect(dialog(page).getByLabel('프롬프트', { exact: true })).toHaveValue(/Keep this reusable guidance/);
     const prompt = await dialog(page).getByLabel('프롬프트', { exact: true }).inputValue();
     expect(prompt.match(/Keep this reusable guidance/g)).toHaveLength(1);
     await expect(dialog(page).getByRole('button', { name: '명령 미리보기', exact: true })).toBeEnabled();

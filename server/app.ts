@@ -33,6 +33,9 @@ import { TemplateService, registerTemplateFieldRoutes } from './productivity/tem
 import { ContextPackService } from './productivity/context-packs.js';
 import { registerContextPackRoutes } from './productivity/context-pack-routes.js';
 import { seedProductivityDemo } from './productivity/demo.js';
+import type { HarnessSettings } from '../shared/harness.js';
+import { HarnessService, type HarnessServiceOptions } from './harness/service.js';
+import { registerHarnessRoutes } from './harness/routes.js';
 
 const agentSchema = z.enum(AGENTS);
 const policySchema = z.enum(['read-only', 'workspace-write']);
@@ -83,6 +86,7 @@ export interface AppContext {
   syncManager: SyncManager; appUpdate: AppUpdateService;
   workItems: WorkItemService;
   savedViews: SavedViewService; templates: TemplateService; contextPacks: ContextPackService;
+  harness: HarnessService;
 }
 export interface AppOptions {
   dataDir: string;
@@ -96,6 +100,7 @@ export interface AppOptions {
   mcpOptions?: Omit<McpServiceOptions, 'demo'>;
   desktopAppOptions?: Omit<DesktopAppServiceOptions, 'demo'>;
   appUpdateOptions?: Omit<AppUpdateServiceOptions, 'currentVersion' | 'demo'>;
+  harnessOptions?: Omit<HarnessServiceOptions, 'dataDir' | 'demo'>;
   /** Host/test injection only; HTTP requests cannot replace the owned import entry. */
   syncDriver?: SyncDriver;
   connectorProbe?: (settings: Settings) => Promise<ConnectorStatus[]>;
@@ -172,9 +177,26 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     }));
   const mcp = new McpService({ ...options.mcpOptions, demo }, () => store.listProjects());
   const desktopApps = new DesktopAppService({ ...options.desktopAppOptions, demo });
+  const harness = new HarnessService({ ...options.harnessOptions, dataDir: options.dataDir, demo }, {
+    getProjects: () => store.listProjects(),
+    readSettings: () => store.getMeta<HarnessSettings>('harness-config'),
+    writeSettings: (next, expectedRevision) => write(() => {
+      const previous = store.getMeta<HarnessSettings>('harness-config');
+      if ((previous?.revision ?? 0) !== expectedRevision) throw error(409, '하니스 설정이 변경되었습니다. 다시 불러온 뒤 저장하세요.');
+      store.setMeta('harness-config', next);
+    }),
+    clientVersions: async () => {
+      const [connectors, desktop] = await Promise.all([probe(store.getSettings()), desktopApps.report()]);
+      const version = (agent: string) => connectors.find(item => item.agent === agent && item.installed)?.version ?? null;
+      return {
+        codex: version('codex'), 'claude-code': version('claude'), 'kiro-cli': version('kiro'),
+        'kiro-ide': desktop.items.find(item => item.id === 'kiro-ide')?.installations[0]?.version ?? null,
+      };
+    },
+  });
   const resources = new ResourceMonitor({
     ...options.resourceOptions, dataDir: options.dataDir,
-    roots: () => [...runner.resourceRoots, ...(sync instanceof BackgroundSync ? sync.resourceRoots : []), ...mcp.resourceRoots],
+    roots: () => [...runner.resourceRoots, ...(sync instanceof BackgroundSync ? sync.resourceRoots : []), ...mcp.resourceRoots, ...harness.resourceRoots],
   });
   const policyFrom = (settings: Settings): SyncPolicy => ({
     mode: settings.syncMode ?? 'interval', intervalSeconds: settings.scanIntervalSeconds,
@@ -214,6 +236,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     return resources.snapshot();
   });
   registerMcpRoutes(app, mcp);
+  registerHarnessRoutes(app, harness);
   registerDesktopAppRoutes(app, desktopApps);
   registerAppUpdateRoutes(app, appUpdate);
   registerWorkItemRoutes(app, workItems, {
@@ -480,6 +503,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     appUpdate.close();
     for (const reply of clients) reply.raw.end();
     clients.clear();
+    await harness.close();
     await mcp.close();
     await runner.close();
   });
@@ -491,5 +515,5 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   resources.start();
   syncManager.start();
   return { app, store, runner, sync, resources, mcp, desktopApps, syncManager, appUpdate,
-    workItems, savedViews, templates, contextPacks };
+    workItems, savedViews, templates, contextPacks, harness };
 }

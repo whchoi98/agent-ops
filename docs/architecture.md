@@ -18,6 +18,11 @@ flowchart TB
     API --> Versions["CLI version comparison"]
     Versions --> Releases["Fixed public release metadata"]
     Versions -->|Local version probe| CLI
+    API --> Harness["Policy and audit management"]
+    Harness -->|Explicit local check| Python["Optional AutoHarness bridge"]
+    CLI -->|Configured native hooks| Python
+    Python --> Audit["Bounded metadata audit logs"]
+    Audit --> Harness
 ```
 
 <a id="english"></a>
@@ -60,6 +65,12 @@ uses the existing explicit run preview; catalog reads never launch a process.
 Version comparison (`server/versions.ts`, `shared/versions.ts`) combines local
 CLI detection with fixed public release metadata. It reports unknown/failure
 states without upgrading a CLI or sending local history to release endpoints.
+
+Harness management (`server/harness/`) reads scoped policies and bounded audit
+windows. Explicit requests invoke an optional Python bridge, which evaluates
+tool input without executing it. Reviewed hook changes connect that bridge to
+native clients and preserve their permission flows. Test records and native hook
+events stay separate; Kiro IDE and CLI share one hook configuration.
 
 See [operations](operations.md), [API contracts](api.md), [design](design.md),
 [decisions](decisions/README.md) and [implementation references](reference/INDEX.md).
@@ -104,6 +115,12 @@ Kiro 행별 지문은 재시작 후에도 유지하며, 같은 메시지·검색
 버전 비교(`server/versions.ts`, `shared/versions.ts`)는 로컬 CLI 확인 결과와
 고정된 공개 배포 메타데이터를 함께 표시합니다. 미확인·실패 상태를 구분하고
 CLI 업그레이드나 배포 서버로의 로컬 이력 전송은 수행하지 않습니다.
+
+하니스 관리(`server/harness/`)는 범위별 정책과 제한된 감사 기록 구간을 읽습니다.
+명시적인 요청에서 선택형 Python 브리지를 호출해 도구 입력을 실행 없이 판정합니다.
+훅 변경을 미리 보고 적용하면 브리지를 각 클라이언트에 연결하며 기존 권한 절차를
+유지합니다. 판정 테스트와 실제 훅 이벤트를 구분하고 Kiro IDE와 CLI는 한 설정을
+공유합니다.
 
 [운영](operations.md), [API 계약](api.md), [설계](design.md),
 [결정 기록](decisions/README.md), [구현 참조](reference/INDEX.md)를 함께 참고하세요.

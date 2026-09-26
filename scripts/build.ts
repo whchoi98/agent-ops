@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { chmod, readFile, readdir, writeFile } from 'node:fs/promises';
+import { chmod, copyFile, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 await build({
@@ -14,6 +14,7 @@ await build({
   logLevel: 'info',
 });
 await chmod('dist/server/index.js', 0o755);
+await copyFile('server/harness/bridge.py', 'dist/server/harness-bridge.py');
 
 // Preserve license texts in compiled distributions. This inventory also includes
 // build dependencies, which are not necessarily bundled into runtime assets.

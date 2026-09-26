@@ -635,6 +635,7 @@ export class Runner {
       child = (this.options.spawn || nodeSpawn)(prepared.preview.executable, prepared.preview.args, {
         cwd: prepared.workspace.path, shell: false, detached: process.platform !== 'win32',
         windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, AGENT_OPS_RUN_ID: running.id, AGENT_OPS_UNATTENDED: '1' },
       });
     } catch (error) {
       this.finishQueued(running, 'failed', `Could not spawn the CLI: ${messageOf(error)}`);

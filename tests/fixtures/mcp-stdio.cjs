@@ -20,6 +20,9 @@ if (process.argv[2] === '--mcp-owned-descendant') {
     process.on('SIGTERM', () => {});
     if (mode === 'exit-with-child') setTimeout(() => process.exit(0), 150);
   }
+  // This case has no list round-trip after initialized. Drain stdin to EOF so
+  // an already-sent notification is logged before the client's cleanup signal.
+  if (mode === 'no-capabilities') process.on('SIGTERM', () => {});
   if (mode === 'stderr-limit') process.stderr.write('x'.repeat(300000));
   if (mode === 'stdout-limit') process.stdout.write('x'.repeat(300000));
   if (mode === 'malformed') process.stdout.write('invalid JSON\n');

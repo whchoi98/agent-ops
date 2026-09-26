@@ -2,7 +2,7 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { Settings } from '../shared/types.js';
 
-export const VERSION = '1.4.1';
+export const VERSION = '1.5.0';
 export const defaultSettings = (): Settings => {
   const home = homedir();
   const codex = process.env.CODEX_HOME || join(home, '.codex');

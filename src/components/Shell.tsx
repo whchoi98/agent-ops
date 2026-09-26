@@ -23,6 +23,7 @@ export const NAV_ITEMS: Array<{ page: Page; label: string; english: string; icon
   { page: 'templates', label: '템플릿', english: 'Templates', icon: BookOpen },
   { page: 'extensions', label: '스킬·플러그인', english: 'Extensions', icon: Puzzle },
   { page: 'mcp', label: 'MCP', english: 'MCP', icon: Cable },
+  { page: 'harness', label: '하니스 관리', english: 'Harness management', icon: ShieldCheck },
   { page: 'settings', label: '설정', english: 'Settings', icon: Settings2 },
 ];
 const SEARCH_SHORTCUT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
