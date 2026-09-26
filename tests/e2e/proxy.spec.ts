@@ -49,6 +49,13 @@ test('UI, mutations, fonts and live events work behind a prefix-stripping proxy'
     await page.getByRole('button', { name: '영어로 전환', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('heading', { name: 'Extensions', exact: true })).toBeVisible();
+    await page.locator('aside.sidebar a[href="#/work-items"]').click();
+    await expect(page.getByRole('heading', { name: 'Work items', exact: true })).toBeVisible();
+    await expect(page.locator('.work-item-card').first()).toBeVisible();
+    await page.locator('aside.sidebar a[href="#/context-packs"]').click();
+    await expect(page.getByRole('heading', { name: 'Context packs', exact: true })).toBeVisible();
+    await page.locator('aside.sidebar a[href="#/sessions"]').click();
+    await expect(page.getByRole('region', { name: 'Saved views', exact: true })).toBeVisible();
     const started = page.waitForResponse(response => response.url().endsWith('/proxy/4327/api/sync/start') && response.request().method() === 'POST');
     await page.locator('.topbar-sync-button').click();
     expect((await started).status()).toBe(202);
@@ -60,6 +67,9 @@ test('UI, mutations, fonts and live events work behind a prefix-stripping proxy'
     expect(paths).toContain('/proxy/4327/api/settings');
     expect(paths).toContain('/proxy/4327/api/events');
     expect(paths).toContain('/proxy/4327/api/sync/start');
+    expect(paths).toContain('/proxy/4327/api/productivity/work-items');
+    expect(paths).toContain('/proxy/4327/api/productivity/context-packs');
+    expect(paths).toContain('/proxy/4327/api/productivity/saved-views');
     expect(paths.some((path) => path.startsWith('/proxy/4327/assets/'))).toBe(true);
     expect(paths.some((path) => path.startsWith('/proxy/4327/fonts/'))).toBe(true);
     expect(paths.every((path) => path.startsWith(base))).toBe(true);

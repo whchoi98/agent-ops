@@ -1,6 +1,6 @@
 import { useI18n, Trans } from '../../i18n/I18nProvider';
-import { useEffect, useState } from 'react';
-import { ArrowRightLeft, Download, Folder, MessageSquare, RotateCcw } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { ArrowRightLeft, Download, Folder, ListTodo, MessageSquare, RotateCcw } from 'lucide-react';
 import { Dialog } from '../../components/Dialog';
 import { BookmarkButton } from '../../components/SessionTable';
 import { AgentBadge, Button, ErrorState, InlineNotice, Skeleton, StatusBadge, UsageValue } from '../../components/ui';
@@ -11,6 +11,8 @@ import { useApp, useData } from '../../state/AppProvider';
 import { SessionReader } from './SessionReader';
 import { SessionInfo, SessionMetadata } from './SessionMetadata';
 import { HandoffDialog } from './HandoffDialog';
+
+const CaptureWorkItemDialog = lazy(() => import('../work-items/CaptureWorkItemDialog').then(module => ({ default: module.CaptureWorkItemDialog })));
 
 const DETAIL_TABS = [
   { id: 'conversation', label: '대화' }, { id: 'notes', label: '메모·태그' }, { id: 'info', label: '세션 정보' },
@@ -24,6 +26,7 @@ export function SessionDetailDialog({ id }: { id: string }) {
   const session = resource.data;
   const [tab, setTab] = useState<'conversation' | 'notes' | 'info'>('conversation');
   const [handoff, setHandoff] = useState(false);
+  const [createWork, setCreateWork] = useState(false);
   const [format, setFormat] = useState<'md' | 'json' | 'html'>('md');
   const [exporting, setExporting] = useState(false);
   const connector = data.connectors.find(item => item.agent === session?.agent);
@@ -52,7 +55,9 @@ export function SessionDetailDialog({ id }: { id: string }) {
         <div className="export-controls"><select aria-label={t("내보내기 형식")} value={format} onChange={event => setFormat(event.target.value as typeof format)}>
           <option value="md">Markdown</option><option value="json">JSON</option><option value="html">HTML</option>
         </select><Button icon={Download} busy={exporting} onClick={() => void download()} title={t("공통 자격증명 패턴을 마스킹한 파일을 다운로드합니다.")}><Trans message={"내보내기"} /></Button></div>
-        <div className="session-continuation-actions"><Button icon={ArrowRightLeft} onClick={() => setHandoff(true)}><Trans message={"다른 에이전트에 전달"} /></Button>
+        <div className="session-continuation-actions">
+          <Button icon={ListTodo} onClick={() => setCreateWork(true)}>{t('작업으로 저장')}</Button>
+          <Button icon={ArrowRightLeft} onClick={() => setHandoff(true)}><Trans message={"다른 에이전트에 전달"} /></Button>
           <Button icon={RotateCcw} variant="primary" onClick={resume} disabled={!canResume}
             title={canResume ? t("기존 세션을 이어갈 새 실행 준비") : t("이 기록은 CLI에서 직접 이어갈 수 없습니다. 작업 인계를 사용하세요.")}><Trans message={"이어가기"} /></Button></div>
         {!canResume && <span className="resume-unavailable"><Trans message={"이 기록은 CLI에서 직접 이어갈 수 없습니다. 다른 에이전트에 맥락을 전달할 수 있습니다."} /></span>}
@@ -89,5 +94,9 @@ export function SessionDetailDialog({ id }: { id: string }) {
       </>}
     </Dialog>
     {handoff && session && <HandoffDialog session={session} onClose={() => setHandoff(false)} />}
+    {createWork && session && <Suspense fallback={null}>
+      <CaptureWorkItemDialog session={session} onClose={() => setCreateWork(false)}
+        onCreated={() => notify('작업을 만들었습니다.')} />
+    </Suspense>}
   </>;
 }

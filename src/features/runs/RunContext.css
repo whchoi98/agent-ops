@@ -1,0 +1,6 @@
+.run-context-template, .run-context-attachment { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-secondary); }
+.run-context-template > strong { font-size: 13px; overflow-wrap: anywhere; }
+.run-context-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 600px) {
+  .run-context-template, .run-context-attachment { padding: 12px; }
+}

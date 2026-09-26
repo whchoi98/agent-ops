@@ -1,40 +1,48 @@
-import { useI18n, Trans, AppNotice } from '../../i18n/I18nProvider';
+import { Trans } from '../../i18n/I18nProvider';
 import { useState, type FormEvent } from 'react';
 import { Eye, FilePenLine, Save } from 'lucide-react';
 import { AGENTS, type PromptTemplate } from '../../../shared/types';
+import type { TemplateVariable } from '../../../shared/template-fields';
 import { Dialog } from '../../components/Dialog';
 import { Markdown } from '../../components/Markdown';
 import { Button, Field, InlineNotice } from '../../components/ui';
-import { api } from '../../lib/api';
+import { ApiError } from '../../lib/api';
 import { AGENT_META, errorMessage, TEMPLATE_CATEGORIES as CATEGORIES } from '../../lib/format';
 import { useApp } from '../../state/AppProvider';
+import { TemplateDefinitionEditor } from '../template-fields/TemplateDefinitionEditor';
+import { captureTemplateSnapshot, saveTemplateDraft } from '../template-fields/editor';
+import { useTemplateFieldsI18n } from '../template-fields/i18n';
 
 export function TemplateEditor({ template, onClose }: { template?: PromptTemplate; onClose: () => void }) {
-  const { t } = useI18n();
-  const { refresh, notify } = useApp();
-  const [name, setName] = useState(template?.name ?? '');
-  const [description, setDescription] = useState(template?.description ?? '');
-  const [category, setCategory] = useState<PromptTemplate['category']>(template?.category ?? 'custom');
-  const [agent, setAgent] = useState<PromptTemplate['agent']>(template?.agent ?? 'any');
-  const [policy, setPolicy] = useState<PromptTemplate['policy']>(template?.policy ?? 'read-only');
-  const [prompt, setPrompt] = useState(template?.prompt ?? '');
+  const { t, notice } = useTemplateFieldsI18n();
+  const { refreshTemplates, notify } = useApp();
+  const [snapshot] = useState(() => template ? captureTemplateSnapshot(template) : undefined);
+  const [name, setName] = useState(snapshot?.name ?? '');
+  const [description, setDescription] = useState(snapshot?.description ?? '');
+  const [category, setCategory] = useState<PromptTemplate['category']>(snapshot?.category ?? 'custom');
+  const [agent, setAgent] = useState<PromptTemplate['agent']>(snapshot?.agent ?? 'any');
+  const [policy, setPolicy] = useState<PromptTemplate['policy']>(snapshot?.policy ?? 'read-only');
+  const [prompt, setPrompt] = useState(snapshot?.prompt ?? '');
+  const [variables, setVariables] = useState<TemplateVariable[]>(snapshot?.variables ?? []);
   const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [conflict, setConflict] = useState(false);
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!name.trim() || !prompt.trim()) { setError('템플릿 이름과 프롬프트를 입력하세요.'); setPreview(false); return; }
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setConflict(false);
     try {
-      const fields = { name: name.trim(), description: description.trim(), category, agent, policy, prompt: prompt.trim() };
-      if (template) await api.updateTemplate(template.id, fields);
-      else await api.createTemplate(fields);
-      await refresh(true); notify(template ? '템플릿을 저장했습니다.' : '템플릿을 만들었습니다.'); onClose();
-    } catch (cause) { setError(errorMessage(cause)); setBusy(false); }
+      await saveTemplateDraft(snapshot, { name, description, category, agent, policy, prompt, variables });
+      await refreshTemplates(); notify(snapshot ? '템플릿을 저장했습니다.' : '템플릿을 만들었습니다.'); onClose();
+    } catch (cause) {
+      setError(errorMessage(cause)); setConflict(cause instanceof ApiError && cause.status === 409); setBusy(false);
+    }
   }
-  return <Dialog title={template ? t("템플릿 편집") : t("새 템플릿")} description={t("반복하는 작업을 프롬프트로 저장하세요.")} onClose={onClose} size="large"
+  return <Dialog title={snapshot ? t("템플릿 편집") : t("새 템플릿")} description={t("반복하는 작업을 프롬프트로 저장하세요.")} onClose={onClose} size="large"
     footer={<><Button onClick={onClose} disabled={busy}><Trans message={"취소"} /></Button><Button type="submit" form="template-editor" variant="primary" icon={Save} busy={busy}><Trans message={"템플릿 저장"} /></Button></>}>
     <form id="template-editor" className="form-stack" onSubmit={save}>
+      <fieldset className="form-stack form-reset" disabled={busy}>
       <div className="form-grid"><Field label={t("템플릿 이름")} htmlFor="template-name"><input id="template-name" autoFocus data-autofocus required maxLength={200}
         value={name} onChange={event => setName(event.target.value)} placeholder={t("반복해서 사용할 작업 이름")} /></Field>
       <Field label={t("분류")} htmlFor="template-category"><select id="template-category" value={category} onChange={event => setCategory(event.target.value as typeof category)}>
@@ -51,7 +59,11 @@ export function TemplateEditor({ template, onClose }: { template?: PromptTemplat
         : <textarea id="template-prompt" required rows={11} maxLength={32_000} value={prompt} onChange={event => setPrompt(event.target.value)}
           className="prompt-textarea" placeholder={t("목표, 작업 범위, 확인할 항목과 결과 형식을 적어주세요.")} />}
       <p className="field-hint"><Trans message={"템플릿을 사용할 때 프로젝트와 프롬프트를 다시 수정할 수 있습니다."} /></p>
-      {error && <InlineNotice tone="error"><AppNotice message={error} /></InlineNotice>}
+      <TemplateDefinitionEditor prompt={prompt} variables={variables} onChange={setVariables} />
+      </fieldset>
+      {error && <InlineNotice tone="error">{notice(error)}
+        {conflict && <p>{t('작성 중인 내용은 그대로 유지됩니다.')}</p>}
+      </InlineNotice>}
     </form>
   </Dialog>;
 }

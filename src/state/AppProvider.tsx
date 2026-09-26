@@ -1,7 +1,8 @@
 import {
   createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode,
 } from 'react';
-import type { Bootstrap, RunEvent, RunRequest, Settings } from '../../shared/types';
+import type { Bootstrap, PromptTemplate, RunEvent, RunRequest, Settings } from '../../shared/types';
+import type { ProductivityChange } from '../../shared/work-items';
 import { api } from '../lib/api';
 import { apiUrl } from '../lib/urls';
 import { errorMessage } from '../lib/format';
@@ -9,14 +10,17 @@ import { useNavigation } from '../lib/navigation';
 import { createRefreshQueue } from './refreshQueue';
 import { applySyncState, readSyncState } from './syncState';
 
-export type NewRunDraft = Partial<RunRequest>;
+export type NewRunDraft = Partial<RunRequest> & {
+  /** UI preparation state only; never forwarded as a CLI/API execution field. */
+  templateResolved?: boolean;
+};
 export type AppModal =
   | { type: 'session'; id: string }
   | { type: 'run'; id: string }
   | { type: 'compare'; ids: [string, string] }
-  | { type: 'new-run'; draft: NewRunDraft }
+  | { type: 'new-run'; draft: NewRunDraft; preparationId: number }
   | null;
-export type AppEvent = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent };
+export type AppEvent = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent } | ProductivityChange;
 export type Toast = { id: number; message: string; tone: 'success' | 'error' | 'info' };
 export type Connection = 'connecting' | 'connected' | 'reconnecting';
 
@@ -37,12 +41,17 @@ function useAppState() {
   const [stoppingSync, setStoppingSync] = useState(false);
   const [themeSaving, setThemeSaving] = useState(false);
   const [archiveRevision, setArchiveRevision] = useState(0);
+  const [productivityRevision, setProductivityRevision] = useState(0);
   const [connection, setConnection] = useState<Connection>('connecting');
   const [modal, setModal] = useState<AppModal>(null);
+  const nextPreparationId = useRef(0);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const listeners = useRef(new Set<(event: AppEvent) => void>());
   const refreshQueue = useRef<ReturnType<typeof createRefreshQueue> | null>(null);
+  const templateQueue = useRef<ReturnType<typeof createRefreshQueue> | null>(null);
+  const templateEpoch = useRef(0);
+  const templateSnapshot = useRef<{ epoch: number; templates: PromptTemplate[] } | null>(null);
   const mounted = useRef(true);
   const theme = data?.settings.theme ?? 'light';
   const syncing = localSyncing || (data?.syncStatus ? data.syncStatus.activity !== 'idle' : Boolean(data?.syncing));
@@ -56,9 +65,19 @@ function useAppState() {
     refreshQueue.current = createRefreshQueue(async force => {
       if (!mounted.current) return;
       try {
+        const startedTemplateEpoch = templateEpoch.current;
         const result = await api.bootstrap();
         if (!mounted.current) return;
-        setData(result);
+        if (startedTemplateEpoch === templateEpoch.current) {
+          templateSnapshot.current = { epoch: startedTemplateEpoch, templates: result.templates };
+        }
+        setData(previous => {
+          if (startedTemplateEpoch === templateEpoch.current) return result;
+          // A slow archive response must not replace a newer template-only read.
+          const current = templateSnapshot.current;
+          return { ...result, templates: current?.epoch === templateEpoch.current
+            ? current.templates : previous?.templates ?? result.templates };
+        });
         setError(null);
         if (force) setArchiveRevision(value => value + 1);
       } catch (cause) {
@@ -75,6 +94,24 @@ function useAppState() {
       if (mounted.current && !queue.isPending()) setRefreshing(false);
     });
   }, []);
+  if (!templateQueue.current) {
+    templateQueue.current = createRefreshQueue(async () => {
+      try {
+        const epoch = templateEpoch.current;
+        const templates = await api.templates();
+        if (mounted.current && epoch === templateEpoch.current) {
+          templateSnapshot.current = { epoch, templates };
+          setData(previous => previous ? { ...previous, templates } : previous);
+        }
+      } catch (cause) {
+        if (mounted.current) setError(errorMessage(cause));
+      }
+    });
+  }
+  const refreshTemplates = useCallback((): Promise<void> => {
+    templateEpoch.current++;
+    return templateQueue.current!.refresh(false);
+  }, []);
 
   useEffect(() => {
     mounted.current = true;
@@ -89,6 +126,7 @@ function useAppState() {
     source.onopen = () => {
       setConnection('connected');
       setArchiveRevision(value => value + 1);
+      setProductivityRevision(value => value + 1);
       window.clearInterval(polling);
       polling = undefined;
       void refresh();
@@ -105,15 +143,26 @@ function useAppState() {
           setData(previous => applySyncState(previous, syncState));
           return;
         }
+        if (event.type === 'productivity-change') {
+          if (typeof event.entity !== 'string' || !['work-items', 'context-packs', 'saved-views', 'templates'].includes(event.entity)) return;
+          setProductivityRevision(value => value + 1);
+          for (const listener of listeners.current) listener(event);
+          if (event.entity === 'templates') void refreshTemplates();
+          return;
+        }
         if (event.type !== 'refresh' && event.type !== 'run-event') return;
         if (event.type === 'refresh') setArchiveRevision(value => value + 1);
         for (const listener of listeners.current) listener(event);
         scheduleRefresh(event.type === 'refresh' ? 200 : 1800);
       } catch { /* Ignore incomplete event frames; reconnection refreshes state. */ }
     };
-    const visible = () => { if (!document.hidden) void refresh(true); };
+    const visible = () => {
+      if (!document.hidden) { setProductivityRevision(value => value + 1); void refresh(true); }
+    };
     document.addEventListener('visibilitychange', visible);
-    const safetyRefresh = window.setInterval(() => { if (!document.hidden) void refresh(true); }, 60_000);
+    const safetyRefresh = window.setInterval(() => {
+      if (!document.hidden) { setProductivityRevision(value => value + 1); void refresh(true); }
+    }, 60_000);
     return () => {
       mounted.current = false;
       source.close();
@@ -122,7 +171,7 @@ function useAppState() {
       window.clearInterval(safetyRefresh);
       document.removeEventListener('visibilitychange', visible);
     };
-  }, [refresh]);
+  }, [refresh, refreshTemplates]);
 
   useEffect(() => {
     if (!data) return;
@@ -151,7 +200,9 @@ function useAppState() {
   const closeModal = useCallback(() => setModal(null), []);
   const openSession = useCallback((id: string) => setModal({ type: 'session', id }), []);
   const openRun = useCallback((id: string) => setModal({ type: 'run', id }), []);
-  const openNewRun = useCallback((draft: NewRunDraft = {}) => setModal({ type: 'new-run', draft }), []);
+  const openNewRun = useCallback((draft: NewRunDraft = {}) => {
+    setModal({ type: 'new-run', draft, preparationId: ++nextPreparationId.current });
+  }, []);
   const openCompare = useCallback((ids: [string, string]) => setModal({ type: 'compare', ids }), []);
   const sync = useCallback(async () => {
     if (syncing) return;
@@ -192,7 +243,7 @@ function useAppState() {
   }, [theme, themeSaving, notify]);
 
   return {
-    ...navigation, data, error, loading, refreshing, refresh, archiveRevision, connection,
+    ...navigation, data, error, loading, refreshing, refresh, refreshTemplates, archiveRevision, productivityRevision, connection,
     syncing, sync, stoppingSync, cancelSync, themeSaving, setTheme, modal, closeModal, openSession, openRun,
     openNewRun, openCompare, paletteOpen, setPaletteOpen, subscribe, notify, toasts, dismissToast,
   };

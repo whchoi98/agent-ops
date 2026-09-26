@@ -14,6 +14,9 @@ import { useApp, useData } from '../state/AppProvider';
 import { CreditSummary } from '../features/usage/CreditSummary';
 import { DailyCredits } from '../features/usage/DailyCredits';
 import { useCreditI18n } from '../features/usage/i18n';
+import { lazy, Suspense } from 'react';
+
+const OpenWorkItems = lazy(() => import('../features/work-items/OpenWorkItems').then(module => ({ default: module.OpenWorkItems })));
 
 function AgentLane({ agent }: { agent: Agent }) {
   const { relativeTime } = useFormat();
@@ -87,6 +90,7 @@ export function Overview() {
         icon={Workflow} accent="amber" onClick={() => navigate('runs')} />
     </div>
     <CreditSummary totals={analytics} />
+    <Suspense fallback={null}><OpenWorkItems /></Suspense>
     <section className="agent-workbench" aria-labelledby="agent-activity-title">
       <div className="section-title"><div><h2 id="agent-activity-title"><Trans message={"에이전트 활동"} /></h2><span><Trans message={"세 개의 에이전트, 하나의 작업 공간"} /></span></div>
         <button className="text-button" onClick={() => navigate('settings')}><Trans message={"커넥터 설정"} /><ArrowRight size={14} aria-hidden /></button>

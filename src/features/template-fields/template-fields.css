@@ -1,0 +1,18 @@
+.template-field-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.template-field-actions > .icon-button { margin-left: auto; }
+.template-definitions > legend { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.template-definition { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-secondary); }
+.template-definition code { overflow-wrap: anywhere; }
+.template-required { display: flex; align-items: center; gap: 9px; align-self: end; min-height: 39px; font-size: 12px; }
+.template-revision-preview { min-width: 0; }
+.template-revision-preview h3 { font-size: 15px; overflow-wrap: anywhere; }
+.template-revision-preview h4 { font-size: 13px; }
+.template-revision-metadata { display: flex; flex-wrap: wrap; gap: 14px 28px; font-size: 12px; }
+.template-revision-metadata dt { color: var(--muted); margin-bottom: 5px; }
+.template-revision-prompt { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto; padding: 16px; background: var(--surface-secondary); border: 1px solid var(--border); border-radius: 9px; font: 12px/1.8 var(--font-mono); }
+.template-revision-options { padding-left: 20px; max-height: 180px; overflow: auto; }
+.template-user-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .template-definition { padding: 12px; }
+  .template-field-actions { gap: 7px; }
+}

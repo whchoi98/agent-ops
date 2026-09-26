@@ -197,6 +197,8 @@
 .source-details summary { padding: 7px 0; color: var(--muted); cursor: pointer; font-size: 12px; }
 .session-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: 1; flex-wrap: wrap; min-width: 0; }
 .export-controls, .session-continuation-actions { display: flex; gap: 7px; align-items: center; }
+.session-continuation-actions { flex-wrap: wrap; }
+.message-context-action { flex-shrink: 0; }
 .export-controls > select { font-size: 12px; min-height: 36px; padding: 7px; max-width: 120px; }
 .session-footer .button { font-size: 12px; min-height: 36px; padding: 7px 11px; }
 .resume-unavailable { flex-basis: 100%; font-size: 10px; color: var(--muted); }

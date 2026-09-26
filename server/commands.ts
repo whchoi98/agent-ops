@@ -6,6 +6,7 @@ import { redact } from './privacy.js';
 
 const requestFields = new Set([
   'agent', 'projectId', 'prompt', 'title', 'model', 'policy', 'allowShell', 'resumeSessionId', 'sourceSessionId', 'templateId',
+  'workItemId', 'workItemVersion', 'contextPackIds',
 ]);
 
 /** Bound the shared pattern matcher on hostile CLI text, without altering the actual prompt. */
@@ -44,6 +45,19 @@ export function validateRunRequest(request: RunRequest): void {
     }
   }
   if (request.resumeSessionId && request.sourceSessionId) throw commandError('Choose a native resume or a cross-agent source session, not both.');
+  if (request.workItemId !== undefined || request.workItemVersion !== undefined) {
+    if (typeof request.workItemId !== 'string' || !request.workItemId.trim()
+      || request.workItemId.length > 200 || /[\u0000-\u001f]/.test(request.workItemId)
+      || !Number.isSafeInteger(request.workItemVersion) || request.workItemVersion! < 1
+      || request.workItemVersion! >= Number.MAX_SAFE_INTEGER) {
+      throw commandError('A work item and its current version are required together.');
+    }
+  }
+  if (request.contextPackIds !== undefined && (!Array.isArray(request.contextPackIds) || request.contextPackIds.length > 5
+    || request.contextPackIds.some(id => typeof id !== 'string' || !id.trim() || id.length > 200 || /[\u0000-\u001f]/.test(id))
+    || new Set(request.contextPackIds).size !== request.contextPackIds.length)) {
+    throw commandError('Invalid context pack references.');
+  }
 }
 
 function validateExecutable(connector: ConnectorStatus) {

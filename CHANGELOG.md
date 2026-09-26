@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-26
+
+### Added
+
+- Add work items with paginated list/board views, priorities, due dates, session/context links and version-checked run preparation, while leaving completion to the operator.
+- Add parameterized templates with literal substitution, explicit input/apply steps and bounded revision preview and restoration.
+- Add reusable context packs with immutable message excerpts, source provenance, editable notes, local prompt compilation and redacted Markdown/JSON exports.
+- Add saved session views with local-calendar relative periods and pinning, plus command-palette shortcuts for views, work items, projects and templates.
+
+### Changed
+
+- Refresh productivity metadata and template lists separately from the archive while preserving open drafts and requiring a new command preview after preparation changes.
+
 ## [1.3.0] - 2026-09-25
 
 ### Added
@@ -69,7 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and cross-origin request guards.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0
@@ -85,6 +99,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 따릅니다.
 
 ## [Unreleased]
+
+## [1.4.0] - 2026-09-26
+
+### Added
+
+- 페이지별 목록과 보드, 우선순위, 기한, 세션과 컨텍스트 연결, 버전을 검사하는 실행 준비를 갖추고 사용자가 완료 여부를 정하는 작업센터 추가.
+- 문자열 치환, 명시적인 입력과 적용, 보관량을 제한한 개정 미리보기와 복원을 지원하는 변수형 템플릿 추가.
+- 변경되지 않는 메시지 인용과 출처, 편집 가능한 메모, 로컬 프롬프트 조합, 마스킹된 Markdown/JSON 내보내기를 갖춘 컨텍스트 묶음 추가.
+- 현지 날짜 기준 상대 기간과 고정을 지원하는 저장 검색, 검색과 작업, 프로젝트, 템플릿을 여는 명령 팔레트 바로가기 추가.
+
+### Changed
+
+- 전체 이력과 별도로 생산성 메타데이터와 템플릿 목록을 갱신하고 열린 초안을 유지하며 실행 준비 내용이 바뀌면 새 명령 미리보기를 요구하도록 변경.
 
 ## [1.3.0] - 2026-09-25
 
@@ -147,7 +174,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산하도록 수정.
 - 로컬 연결, 교차 출처 요청 보호를 유지하며 설정한 프록시 출처를 허용하도록 수정.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/whchoi98/agent-ops/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/whchoi98/agent-ops/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/whchoi98/agent-ops/releases/tag/v1.2.0

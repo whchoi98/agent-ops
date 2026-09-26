@@ -1,6 +1,6 @@
 # my-agent-ops
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.3.0](https://img.shields.io/badge/version-1.3.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.4.0](https://img.shields.io/badge/version-1.4.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, Claude Code, Kiro CLI의 대화와 실행 작업을 관리하는 로컬 운영 도구입니다.
 
@@ -10,7 +10,7 @@ Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, 
 
 ## Overview
 
-my-agent-ops is a local workbench for finding conversations, running jobs and handing context between Codex, Claude Code and Kiro CLI.
+my-agent-ops is a local workbench for finding conversations, organizing follow-up work, running jobs and handing context between Codex, Claude Code and Kiro CLI.
 It stores imported conversations and workbench state in local SQLite, requires no separate workbench account or hosted backend, and sends no telemetry.
 The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the terminal command is `agent-ops`.
 
@@ -18,6 +18,10 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 
 - **Search and organize** - Import native history, search full conversations, filter sessions, add notes and tags, compare sessions and export results.
 - **Control execution** - Preview CLI commands, queue jobs, follow live logs, cancel owned work and prepare editable handoffs.
+- **Work items** - Organize next actions in a list or board with priorities, due dates, session/context links and a last-run result; choose completion yourself.
+- **Parameterized templates** - Fill text, multiline or selection inputs, apply an editable prompt and preview or restore retained template revisions.
+- **Context packs** - Reuse captured message excerpts and operator notes with provenance, local prompt compilation and Markdown/JSON export.
+- **Saved views and quick access** - Save session filters with relative date ranges and open pinned views, work items, projects or templates from the command palette.
 - **Track recorded Kiro credits** - Keep recorded zero, missing and partial usage distinct across summaries, analytics, comparisons, sorting and exports.
 - **Control history imports** - Choose interval, workbench-idle or manual imports, set a time budget and stop the current owned import.
 - **Inspect assistant configuration** - Browse skills, plugins, Powers and MCP declarations with source evidence, redacted previews and explicit analysis or connection checks.
@@ -38,7 +42,7 @@ The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the t
 | `npm install -g` installation | [macOS upgrade (npm)](#macos-upgrade-npm) |
 | `git clone` installation | [Upgrade a source checkout](#upgrade-a-source-checkout) |
 
-These examples target source version **1.3.0**.
+These examples target source version **1.4.0**.
 
 ### macOS quick start
 
@@ -51,12 +55,12 @@ Open **Terminal** on the Mac and run:
 node --version
 npm --version
 
-# Install my-agent-ops 1.3.0 from the GitHub release.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
+# Install my-agent-ops 1.4.0 from the GitHub release.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.0/agent-ops-local-1.4.0.tgz
 
 # Confirm the installed version.
 agent-ops --version
-# 1.3.0
+# 1.4.0
 
 # Start the app.
 agent-ops
@@ -73,12 +77,12 @@ Wait for active jobs and synchronization to finish, then press **`Ctrl+C` in the
 Run:
 
 ```bash
-# Install version 1.3.0 over the existing npm installation.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
+# Install version 1.4.0 over the existing npm installation.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.0/agent-ops-local-1.4.0.tgz
 
 # Confirm the new version.
 agent-ops --version
-# 1.3.0
+# 1.4.0
 
 # Restart the app.
 agent-ops
@@ -144,8 +148,9 @@ The UI labels sample sessions and runs; assistant execution, retries and MCP con
 
 ### Local npm archive
 
-After installing dependencies in a source checkout, create an archive with `npm pack`, or download the [v1.3.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz).
-The [source manifest](package.json) specifies version `1.3.0`. See the [v1.3.0 release](https://github.com/whchoi98/agent-ops/releases/tag/v1.3.0) and [CHANGELOG.md](CHANGELOG.md) for changes.
+After installing dependencies in a source checkout, create an archive with `npm pack`.
+The [source manifest](package.json) specifies version `1.4.0`; see [CHANGELOG.md](CHANGELOG.md) for changes.
+Download the [v1.4.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.4.0/agent-ops-local-1.4.0.tgz) from the [v1.4.0 release page](https://github.com/whchoi98/agent-ops/releases/tag/v1.4.0).
 These commands install a local file and do not depend on a public npm release.
 
 ```bash
@@ -153,7 +158,7 @@ These commands install a local file and do not depend on a public npm release.
 npm pack
 
 # Install the archive and start the app.
-npm install -g ./agent-ops-local-1.3.0.tgz
+npm install -g ./agent-ops-local-1.4.0.tgz
 agent-ops
 ```
 
@@ -161,7 +166,7 @@ To run the archive without a global installation:
 
 ```bash
 # Start the archive in demo mode.
-npm exec --package=./agent-ops-local-1.3.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.4.0.tgz -- agent-ops demo --port 4318
 ```
 
 The archive includes the built application and public documentation.
@@ -172,22 +177,35 @@ The archive includes the built application and public documentation.
 
 | Workspace | Use |
 |---|---|
-| Overview | View assistant history, recent jobs, execution status and 30-day activity |
-| Sessions | Search conversation text and filter by assistant, project, date, tag or bookmark, with pagination |
+| Overview | View assistant history, open work items, recent jobs, execution status and 30-day activity |
+| Work items | Organize work in a paginated list or board, link sessions/context packs and prepare a run |
+| Sessions | Search conversation text, filter and paginate results, and save or reopen named views |
 | Conversation details | Read Markdown and tool output, filter roles, edit notes/tags and compare sessions |
+| Context packs | Capture message excerpts, add notes, arrange context and compile, export or prepare a run |
 | Runs | Create jobs, preview commands, inspect the queue and live logs, cancel or retry |
 | Handoff | Prepare a prompt from a session's context and notes for another assistant |
 | Projects | Register working directories, enable execution per project and browse related history |
 | Analytics | Inspect recorded Kiro credits and coverage, tokens/costs, model/project/tool distributions, cache usage and run outcomes |
-| Templates | Use review, implementation, debugging and documentation prompts, or save your own |
+| Templates | Use or edit categorized prompts, define variable inputs and inspect or restore revision history |
 | Skills & plugins | Inspect definitions, cached installs, activation evidence, scope, source/reference files and declared tools/MCP/hooks |
 | Resources | Inspect server and owned-work CPU/RSS, recent trends, data files and filesystem availability |
 | MCP | Inspect client-specific declarations and run previewed metadata checks |
 | Settings | Check workbench/CLI versions and macOS app metadata; configure history roots, import mode/budget, concurrency, timeouts and theme |
 
-Open the command palette with `Ctrl/Cmd + K`. Use light/dark themes and mobile navigation on narrow screens.
+Open the command palette with `Ctrl/Cmd + K` for pages, session/work-item search, pinned views and project/template shortcuts. Use light/dark themes and mobile navigation on narrow screens.
 The **한/EN** control beside the theme button switches languages and saves the choice in the browser.
 Conversations, notes, skill source and user input remain unchanged; switching languages preserves filters and settings drafts.
+
+### Productivity workflow
+
+1. Create a work item from **Sessions** or **Work items**, record the next action and link useful sessions or context packs.
+2. Save it, then choose **Prepare run**. Fill and apply any template before adding context; after reapplying a template, add the selected context again.
+3. Review the editable prompt and project, add selected context, preview the command and explicitly start the CLI.
+4. Inspect the linked run result and mark the work item done when the work is complete. Save recurring session filters and pin them for quick access.
+
+Open editors retain their draft and version during background metadata refreshes. A conflict requires reviewing the latest saved record before trying again.
+Context compilation assembles saved text locally; it is neither an AI summary nor a token estimate.
+Read the [productivity guide](docs/reference/productivity.md#english) for limits, source capture, revision history and draft handling.
 
 ### Run a project
 
@@ -414,6 +432,7 @@ agent-ops/
 │   ├── runner.ts          # Owned CLI job queue
 │   ├── maintenance.ts     # Offline backup and compaction
 │   ├── providers/         # Read-only native history parsers
+│   ├── productivity/      # Work items, context, templates and saved views
 │   ├── extensions/        # Skills, plugins and Powers
 │   ├── resources/         # CPU/RSS and disk metadata
 │   ├── mcp/               # Declarations and explicit checks
@@ -530,7 +549,7 @@ Kiro and Codex icons are official vendor assets included locally; read [icon sou
 
 ## 개요
 
-my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실행하며 에이전트 사이에 맥락을 인계하는 로컬 운영 도구입니다.
+my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무를 정리하며 작업을 실행하고 맥락을 인계하는 로컬 운영 도구입니다.
 가져온 대화와 앱 상태를 로컬 SQLite에 저장하며 별도 앱 계정이나 호스팅 백엔드, 텔레메트리 없이 동작합니다.
 앱 표시 제목은 `my-agent-ops`, npm 패키지명은 `agent-ops-local`, 터미널 명령은 `agent-ops`입니다.
 
@@ -538,6 +557,10 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 
 - **검색과 정리** - 원본 이력을 가져와 전체 대화를 검색하고 세션 필터, 메모, 태그, 세션 비교와 내보내기를 사용합니다.
 - **실행 제어** - CLI 명령을 미리 보고 작업을 대기열에 넣으며 실시간 로그 확인, 소유 작업 취소와 편집 가능한 작업 인계를 지원합니다.
+- **작업센터** - 목록과 보드에서 다음 할 일, 우선순위, 기한, 세션과 컨텍스트 연결, 마지막 실행 결과를 정리하고 완료 여부를 직접 선택합니다.
+- **변수형 템플릿** - 텍스트, 여러 줄, 선택 입력으로 프롬프트를 준비하고 적용 후 편집하며 보관된 개정을 미리 보거나 복원합니다.
+- **컨텍스트 묶음** - 메시지 인용과 사용자 메모를 출처와 함께 재사용하고 로컬 프롬프트 조합, Markdown/JSON 내보내기를 지원합니다.
+- **저장 검색과 빠른 접근** - 상대 기간을 포함한 세션 조건을 저장하고 명령 팔레트에서 고정 검색, 작업, 프로젝트와 템플릿을 엽니다.
 - **기록된 Kiro credit 확인** - 기록된 0, 미기록, 부분 사용량을 구분하고 요약, 분석, 비교, 정렬과 내보내기에 표시합니다.
 - **이력 수집 제어** - 주기, 앱 작업 유휴, 수동 방식을 선택하고 시간 제한을 설정하며 현재 소유 수집 작업을 중단합니다.
 - **어시스턴트 설정 확인** - 출처 근거와 마스킹된 미리보기로 스킬, 플러그인, Power, MCP 선언을 살펴보고 분석이나 연결 점검을 직접 선택합니다.
@@ -560,7 +583,7 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 작업을 실�
 | `npm install -g`로 설치 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
 | `git clone`으로 설치 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
 
-아래 예시는 소스 버전 **1.3.0**을 기준으로 합니다.
+아래 예시는 소스 버전 **1.4.0**을 기준으로 합니다.
 
 ### macOS 처음 설치
 
@@ -573,12 +596,12 @@ Mac의 **터미널**을 열고 다음 명령을 실행합니다.
 node --version
 npm --version
 
-# GitHub 릴리스에서 my-agent-ops 1.3.0을 설치합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
+# GitHub 릴리스에서 my-agent-ops 1.4.0을 설치합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.0/agent-ops-local-1.4.0.tgz
 
 # 설치한 버전을 확인합니다.
 agent-ops --version
-# 1.3.0
+# 1.4.0
 
 # 앱을 시작합니다.
 agent-ops
@@ -595,12 +618,12 @@ npm에서 `EACCES` 오류가 발생하면 [공식 npm 권한 설정 안내](http
 다음 명령으로 업데이트합니다.
 
 ```bash
-# 기존 npm 설치본을 1.3.0으로 업데이트합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz
+# 기존 npm 설치본을 1.4.0으로 업데이트합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.4.0/agent-ops-local-1.4.0.tgz
 
 # 새 버전을 확인합니다.
 agent-ops --version
-# 1.3.0
+# 1.4.0
 
 # 앱을 다시 시작합니다.
 agent-ops
@@ -666,8 +689,9 @@ npm run demo -- --port 4318
 
 ### 로컬 npm 압축 파일
 
-소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만들거나 [v1.3.0 설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.3.0/agent-ops-local-1.3.0.tgz)을 내려받습니다.
-[소스 매니페스트](package.json)의 버전은 `1.3.0`입니다. 변경 사항은 [v1.3.0 릴리스](https://github.com/whchoi98/agent-ops/releases/tag/v1.3.0)와 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
+소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만듭니다.
+[소스 매니페스트](package.json)의 버전은 `1.4.0`이며 변경 사항은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
+[v1.4.0 릴리스 페이지](https://github.com/whchoi98/agent-ops/releases/tag/v1.4.0)에서 [설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.4.0/agent-ops-local-1.4.0.tgz)을 내려받습니다.
 아래 명령은 로컬 파일을 설치하므로 npm에 공개된 릴리스가 없어도 사용할 수 있습니다.
 
 ```bash
@@ -675,7 +699,7 @@ npm run demo -- --port 4318
 npm pack
 
 # 압축 파일을 설치하고 앱을 시작합니다.
-npm install -g ./agent-ops-local-1.3.0.tgz
+npm install -g ./agent-ops-local-1.4.0.tgz
 agent-ops
 ```
 
@@ -683,7 +707,7 @@ agent-ops
 
 ```bash
 # 압축 파일을 데모 모드로 실행합니다.
-npm exec --package=./agent-ops-local-1.3.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.4.0.tgz -- agent-ops demo --port 4318
 ```
 
 압축 파일에는 빌드된 앱과 공개 문서가 포함됩니다.
@@ -696,22 +720,35 @@ npm exec --package=./agent-ops-local-1.3.0.tgz -- agent-ops demo --port 4318
 
 | 화면 | 용도 |
 |---|---|
-| 개요 | 에이전트 이력, 최근 작업, 실행 상태와 30일 활동 확인 |
-| 세션 | 대화 본문 검색, 에이전트, 프로젝트, 날짜, 태그, 북마크 필터와 페이지 탐색 |
+| 개요 | 에이전트 이력, 진행할 작업, 최근 실행, 실행 상태와 30일 활동 확인 |
+| 작업센터 | 페이지별 목록과 보드에서 업무 정리, 세션과 컨텍스트 묶음 연결, 실행 준비 |
+| 세션 | 대화 본문 검색, 필터와 페이지 탐색, 이름을 붙인 검색 조건 저장과 다시 열기 |
 | 대화 상세 | Markdown, 도구 출력 확인, 역할 필터, 메모, 태그 편집과 세션 비교 |
+| 컨텍스트 묶음 | 메시지 인용, 메모 추가, 순서 정리, 프롬프트 조합, 내보내기와 실행 준비 |
 | 실행 | 작업 생성, 명령 미리보기, 대기열, 실시간 로그 확인, 취소와 재실행 |
 | 작업 인계 | 세션의 맥락과 메모를 다른 에이전트용 프롬프트로 준비 |
 | 프로젝트 | 작업 경로 등록, 프로젝트별 실행 허용과 관련 이력 탐색 |
 | 분석 | 기록된 Kiro credit과 기록 범위, 토큰, 비용, 모델, 프로젝트, 도구별 분포, 캐시 사용량과 실행 결과 확인 |
-| 템플릿 | 검토, 구현, 디버깅, 문서화 프롬프트 사용과 사용자 템플릿 저장 |
+| 템플릿 | 분류별 프롬프트 사용과 편집, 변수 입력 정의, 개정 이력 확인과 복원 |
 | 스킬, 플러그인 | 정의, 캐시, 활성화 근거, 적용 범위, 원문, 참조 파일과 선언된 도구, MCP, 훅 확인 |
 | 자원 | 서버와 소유 작업의 CPU, RSS, 최근 추이, 데이터 파일과 파일시스템 여유 공간 확인 |
 | MCP | 클라이언트별 선언 확인과 미리보기 후 메타데이터 점검 |
 | 설정 | 앱 자체와 CLI 버전, macOS 앱 정보 확인, 이력 경로, 수집 방식과 시간 제한, 동시 실행 수, 작업 시간 제한, 테마 설정 |
 
-`Ctrl/Cmd + K`로 명령 팔레트를 여세요. 밝은 테마, 어두운 테마를 지원하며 좁은 화면에서는 모바일 탐색 메뉴를 사용합니다.
+`Ctrl/Cmd + K`로 명령 팔레트를 열어 페이지 이동, 세션과 작업 검색, 고정 검색, 프로젝트와 템플릿 바로가기를 사용하세요. 밝은 테마, 어두운 테마를 지원하며 좁은 화면에서는 모바일 탐색 메뉴를 사용합니다.
 테마 버튼 옆의 **한/EN**으로 언어를 전환하면 선택한 언어를 브라우저에 저장합니다.
 대화, 메모, 스킬 원문, 사용자 입력은 바꾸지 않습니다. 언어를 전환해도 필터와 작성 중인 설정을 보존합니다.
+
+### 생산성 기능 사용 순서
+
+1. **세션**이나 **작업센터**에서 작업을 만들고 다음 할 일을 적은 뒤 필요한 세션이나 컨텍스트 묶음을 연결합니다.
+2. 저장한 뒤 **실행 준비**를 선택합니다. 템플릿을 사용한다면 값을 입력하고 적용한 뒤 컨텍스트를 추가합니다. 템플릿을 다시 적용하면 선택한 컨텍스트도 다시 추가합니다.
+3. 편집 가능한 프롬프트와 프로젝트를 확인하고 선택한 컨텍스트를 추가한 뒤 명령 미리보기를 거쳐 CLI를 직접 시작합니다.
+4. 연결된 실행 결과를 살펴보고 업무를 마쳤을 때 작업을 완료로 표시합니다. 반복해서 쓰는 세션 조건은 저장하고 고정해 빠르게 엽니다.
+
+백그라운드에서 메타데이터를 새로고침해도 열린 편집 창의 초안과 버전은 유지합니다. 충돌이 나면 최신 저장 내용을 확인한 뒤 다시 시도합니다.
+컨텍스트 조합은 저장한 텍스트를 로컬에서 합치는 기능이며 AI 요약이나 토큰 추정이 아닙니다.
+한도, 원본 인용, 개정 이력과 초안 처리 방법은 [생산성 가이드](docs/reference/productivity.md#한국어)를 참고하세요.
 
 <a id="실제-프로젝트-실행"></a>
 
@@ -948,6 +985,7 @@ agent-ops/
 │   ├── runner.ts          # 앱이 소유한 CLI 작업 대기열
 │   ├── maintenance.ts     # 오프라인 백업과 압축
 │   ├── providers/         # 읽기 전용 원본 이력 파서
+│   ├── productivity/      # 작업, 컨텍스트, 템플릿과 저장 검색
 │   ├── extensions/        # 스킬, 플러그인, Power
 │   ├── resources/         # CPU, RSS와 디스크 메타데이터
 │   ├── mcp/               # 선언과 명시적 점검

@@ -186,10 +186,17 @@ export class Store {
       const message = json<Message>(row.data);
       if (message.content.length <= 16000) return message;
       const match = query.q ? message.content.toLowerCase().indexOf(query.q.toLowerCase()) : -1;
-      const start = match > 1000 ? match - 1000 : 0;
+      let start = match > 1000 ? match - 1000 : 0;
+      const splitPair = (at: number) => {
+        const before = message.content.charCodeAt(at - 1), after = message.content.charCodeAt(at);
+        return before >= 0xd800 && before <= 0xdbff && after >= 0xdc00 && after <= 0xdfff;
+      };
+      if (splitPair(start)) start--;
+      let end = Math.min(message.content.length, start + 16000);
+      if (splitPair(end)) end--;
       return {
-        ...message, content: message.content.slice(start, start + 16000),
-        truncated: true, contentLength: message.content.length,
+        ...message, content: message.content.slice(start, end),
+        truncated: true, contentLength: message.content.length, contentOffset: start,
       };
     });
     return { items, total, offset, limit, roleCounts };

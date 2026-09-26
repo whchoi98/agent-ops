@@ -18,6 +18,7 @@ Code paths refer to the source checkout; npm archives provide compiled code in
 | History/storage | `server/providers/`, `server/sync.ts`, `server/background-sync.ts`, `server/store.ts`, `server/search-index.ts` | [Storage decision](../decisions/0002-history-storage.md) |
 | Maintenance | `server/maintenance.ts`, `server/database-file.ts`, `server/write-retry.ts` | [Runbook](../runbooks/local-operations.md) |
 | Execution/sharing | `server/commands.ts`, `server/runner.ts`, `server/privacy.ts` | [API](../api.md), [local-workbench decision](../decisions/0001-local-workbench.md) |
+| Productivity workspace | `server/productivity/`, `shared/work-items.ts`, `shared/context-packs.ts`, `shared/template-fields.ts`, `shared/saved-views.ts`, `src/features/runs/RunContextModel.ts` | [Productivity](productivity.md#english), [API](../api.md#productivity-workspace) |
 | Extensions/versions | `server/extensions/`, `server/versions.ts`, `shared/extensions.ts`, `shared/versions.ts` | [Operations](../operations.md), [API](../api.md) |
 | Resource monitoring | `server/resources/`, `shared/resources.ts`, `src/pages/Resources.tsx` | [Resources](resources.md) |
 | Recorded credits/import controls | `server/providers/kiro-credits.ts`, `server/sync-manager.ts`, `shared/credits.ts`, `shared/sync-control.ts` | [Usage and sync](usage-and-sync.md#english), [API](../api.md) |
@@ -50,6 +51,7 @@ import concurrency, stable search identity and offline conversion.
 | 이력·저장소 | `server/providers/`, `server/sync.ts`, `server/background-sync.ts`, `server/store.ts`, `server/search-index.ts` | [저장소 결정](../decisions/0002-history-storage.md) |
 | 유지보수 | `server/maintenance.ts`, `server/database-file.ts`, `server/write-retry.ts` | [런북](../runbooks/local-operations.md) |
 | 실행·공유 | `server/commands.ts`, `server/runner.ts`, `server/privacy.ts` | [API](../api.md), [로컬 워크벤치 결정](../decisions/0001-local-workbench.md) |
+| 생산성 작업 공간 | `server/productivity/`, `shared/work-items.ts`, `shared/context-packs.ts`, `shared/template-fields.ts`, `shared/saved-views.ts`, `src/features/runs/RunContextModel.ts` | [생산성](productivity.md#한국어), [API](../api.md#productivity-workspace) |
 | 확장·버전 | `server/extensions/`, `server/versions.ts`, `shared/extensions.ts`, `shared/versions.ts` | [운영](../operations.md), [API](../api.md) |
 | 자원 모니터링 | `server/resources/`, `shared/resources.ts`, `src/pages/Resources.tsx` | [자원](resources.md) |
 | 기록된 credit과 수집 제어 | `server/providers/kiro-credits.ts`, `server/sync-manager.ts`, `shared/credits.ts`, `shared/sync-control.ts` | [사용량과 수집](usage-and-sync.md#한국어), [API](../api.md) |

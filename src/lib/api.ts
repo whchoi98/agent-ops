@@ -45,7 +45,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 const id = encodeURIComponent;
 const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
-type TemplateFields = Omit<PromptTemplate, 'id' | 'updatedAt'>;
+type TemplateFields = Omit<PromptTemplate, 'id' | 'updatedAt' | 'revision'> & { expectedRevision?: number };
 type ProjectFields = Pick<Project, 'name' | 'path'> & Partial<Pick<Project, 'color' | 'executionEnabled'>>;
 
 export const api = {
@@ -89,6 +89,7 @@ export const api = {
   updateProject: (projectId: string, body: Partial<Omit<ProjectFields, 'path'>>) =>
     request<Project>(`/projects/${id(projectId)}`, json('PATCH', body)),
   createTemplate: (body: TemplateFields) => request<PromptTemplate>('/templates', json('POST', body)),
+  templates: (signal?: AbortSignal) => request<PromptTemplate[]>('/templates', { signal }),
   updateTemplate: (templateId: string, body: TemplateFields) =>
     request<PromptTemplate>(`/templates/${id(templateId)}`, json('PATCH', body)),
   deleteTemplate: (templateId: string) =>

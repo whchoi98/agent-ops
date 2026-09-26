@@ -12,11 +12,17 @@ The npm package is `agent-ops-local`; the CLI and existing data paths use `agent
 - `server/search-index.ts`, `server/maintenance.ts`: compressed search documents
   and explicit offline backup/compaction.
 - `server/background-sync.ts`: bounded, owned `agent-ops sync` subprocess.
+- `server/productivity/`: versioned work items, context snapshots, saved views
+  and parameterized template history; keep native history and schema 4 intact.
 - `server/providers/`, `server/sync.ts`: bounded, read-only native history import.
 - `server/commands.ts`, `server/runner.ts`: CLI arguments and owned process queue.
 - `server/extensions/`: bounded skill/plugin discovery, local analysis and previews;
   `shared/extensions.ts`: public extension contracts.
 - `src/`: React UI; `shared/types.ts`: API and persistence contracts.
+- `shared/work-items.ts`, `shared/context-packs.ts`, `shared/saved-views.ts`,
+  `shared/template-fields.ts`: productivity contracts and bounded local rendering.
+- `src/features/runs/RunContext*`: frozen preparation state, context application
+  and cancellation; keep explicit command preview and process start separate.
 - `src/i18n/`, `src/state/refreshQueue.ts`: explicit UI translations and
   coalesced refresh with one trailing update.
 - `deploy/agent-ops.service`: example systemd service; customize paths locally.

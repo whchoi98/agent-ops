@@ -1,7 +1,7 @@
 import {
   Activity, ArrowUpRight, BarChart3, BookOpen, Cable, ChevronRight, Command, FlaskConical, FolderKanban,
   LayoutDashboard, Menu, MessageSquare, Moon, Play, Plus, Puzzle, RefreshCw, Search, Settings2,
-  ShieldCheck, Sun, type LucideIcon,
+  ShieldCheck, Sun, ListTodo, Layers, type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { PAGE_NAMES, type Page } from '../lib/navigation';
@@ -13,9 +13,11 @@ import { LanguageToggle, useI18n, Trans } from '../i18n/I18nProvider';
 
 export const NAV_ITEMS: Array<{ page: Page; label: string; english: string; icon: LucideIcon }> = [
   { page: 'overview', label: '개요', english: 'Overview', icon: LayoutDashboard },
+  { page: 'work-items', label: '작업센터', english: 'Work items', icon: ListTodo },
   { page: 'sessions', label: '세션', english: 'Sessions', icon: MessageSquare },
   { page: 'runs', label: '실행', english: 'Runs', icon: Play },
   { page: 'projects', label: '프로젝트', english: 'Projects', icon: FolderKanban },
+  { page: 'context-packs', label: '컨텍스트 묶음', english: 'Context packs', icon: Layers },
   { page: 'analytics', label: '분석', english: 'Analytics', icon: BarChart3 },
   { page: 'resources', label: '자원', english: 'Resources', icon: Activity },
   { page: 'templates', label: '템플릿', english: 'Templates', icon: BookOpen },
@@ -47,8 +49,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     </div>
     <nav aria-label={t("주요 메뉴")} className="main-nav">
       <span className="nav-caption"><Trans message={"워크스페이스"} /></span>
-      {NAV_ITEMS.map(({ page: item, label, english, icon: Icon }, index) => <div key={item}>
-        {index === 4 && <span className="nav-caption nav-caption-secondary"><Trans message={"분석 및 관리"} /></span>}
+      {NAV_ITEMS.map(({ page: item, label, english, icon: Icon }) => <div key={item}>
+        {item === 'analytics' && <span className="nav-caption nav-caption-secondary"><Trans message={"분석 및 관리"} /></span>}
         <a href={`#/${item}`} onClick={onNavigate} className={`nav-item ${page === item ? 'nav-active' : ''}`}
           aria-current={page === item ? 'page' : undefined}>
           <Icon size={18} strokeWidth={page === item ? 2.1 : 1.7} aria-hidden /><span>{language === 'en' ? english : label}</span>

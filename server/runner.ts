@@ -13,6 +13,7 @@ import { buildCommand, validateRunRequest, redactCliText as redact } from './com
 import { connectorForResume, detectConnectors } from './connectors.js';
 import { newId, type Store } from './store.js';
 import type { OwnedProcessRoot } from './resources/processes.js';
+import { retryWrite } from './write-retry.js';
 
 type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent };
 type Options = {
@@ -21,6 +22,8 @@ type Options = {
   connectors?: () => Promise<ConnectorStatus[]>;
   spawn?: typeof nodeSpawn;
   timeoutMs?: number;
+  /** Synchronous, inside the run-insert transaction and before any process launch. */
+  onCreated?: (run: Run) => void;
 };
 type Workspace = { path: string; identity: string };
 type Prepared = { project: Project; workspace: Workspace; preview: CommandPreview; nativeId?: string };
@@ -71,6 +74,10 @@ function requestFrom(run: Run): RunRequest {
     agent: run.agent, projectId: run.projectId, prompt: run.prompt, policy: run.policy,
     title: run.title, model: run.model, allowShell: run.allowShell,
     resumeSessionId: run.resumeSessionId, sourceSessionId: run.sourceSessionId, templateId: run.templateId,
+    ...(run.workItemId ? {
+      workItemId: run.workItemId, workItemVersion: run.workItemLinkedVersion ?? run.workItemVersion,
+    } : {}),
+    ...(run.contextPackIds ? { contextPackIds: [...run.contextPackIds] } : {}),
   };
 }
 function usageOf(value: unknown, extraCost?: unknown): Usage {
@@ -208,6 +215,14 @@ export class Runner {
     return pending ? snapshot(pending) : this.store.getRun(id);
   }
 
+  getRunStatus(id: string): Run['status'] | null {
+    this.scheduleReconciliation();
+    const pending = this.unpersisted.get(id);
+    if (pending) return pending.status;
+    const row = this.store.db.prepare('SELECT status FROM runs WHERE id=?').get(id) as { status: Run['status'] } | undefined;
+    return row?.status ?? null;
+  }
+
   listRuns(limit = 200): Run[] {
     this.scheduleReconciliation();
     // The original rows retain their creation order and remain subject to LIMIT.
@@ -248,7 +263,11 @@ export class Runner {
       error: null, nativeSessionId: prepared.nativeId || null, usage: emptyUsage(),
       command: prepared.preview.displayCommand,
     };
-    this.store.insertRun(run);
+    await retryWrite(this.store, () => {
+      this.store.insertRun(run);
+      this.options.onCreated?.(run);
+    }, () => this.closing);
+    this.assertOpen();
     this.queuedWorkspaces.set(run.id, prepared.workspace);
     try {
       this.append(run.id, 'system', `Run queued with ${run.policy} policy${run.allowShell ? ' and explicit shell opt-in' : ''}.`);
@@ -328,7 +347,7 @@ export class Runner {
   private copyRequest(input: RunRequest): RunRequest {
     try { validateRunRequest(input); }
     catch (error) { throw failure(400, messageOf(error)); }
-    return { ...input };
+    return { ...input, ...(input.contextPackIds ? { contextPackIds: [...input.contextPackIds] } : {}) };
   }
   private publish(notice: Notice) {
     if (this.deferredNotices) { this.deferredNotices.push(notice); return; }

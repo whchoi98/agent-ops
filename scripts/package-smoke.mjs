@@ -97,6 +97,28 @@ try {
   assert.equal(appUpdate.status, 'demo');
   assert.equal(appUpdate.commands.npm, null);
   assert.equal(appUpdate.commands.git, null);
+  const workItems = await (await request('/api/productivity/work-items?status=todo&limit=2')).json();
+  assert.ok(workItems.total > 0 && workItems.items.length <= 2);
+  assert.equal(Object.hasOwn(workItems.items[0], 'description'), false);
+  const workDraft = await (await request(`/api/productivity/work-items/${workItems.items[0].id}/prepare`,
+    { version: workItems.items[0].version })).json();
+  assert.equal(workDraft.draft.policy, 'read-only');
+  assert.equal((await request('/api/runs/preview', workDraft.draft)).status, 200);
+  assert.equal((await request('/api/runs', workDraft.draft)).status, 403);
+  const packs = await (await request('/api/productivity/context-packs?limit=2')).json();
+  assert.ok(packs.total > 0 && packs.items.length <= 2);
+  assert.equal(Object.hasOwn(packs.items[0], 'items'), false);
+  const compiledContext = await (await request(`/api/productivity/context-packs/${packs.items[0].id}/compile`, {})).json();
+  assert.equal(compiledContext.packId, packs.items[0].id);
+  assert.ok(compiledContext.prompt.length > 0 && compiledContext.prompt.length <= 64_000);
+  const savedViews = await (await request('/api/productivity/saved-views')).json();
+  assert.ok(savedViews.items.length > 0);
+  const variableTemplate = data.templates.find(template => template.variables?.length);
+  assert.ok(variableTemplate);
+  const renderedTemplate = await (await request(`/api/templates/${variableTemplate.id}/render`,
+    { values: { target: 'source.ts', goal: 'Inspect the scope.', format: 'a checklist' } })).json();
+  assert.match(renderedTemplate.prompt, /source\.ts/);
+  assert.ok((await (await request(`/api/templates/${variableTemplate.id}/history`)).json()).length >= 2);
   const resources = await (await request('/api/resources')).json();
   assert.equal(resources.sampleIntervalSeconds, 5);
   assert.equal(resources.diskIntervalSeconds, 60);
@@ -112,7 +134,7 @@ try {
   const desktopApps = await (await request('/api/desktop-apps')).json();
   assert.equal(desktopApps.status, 'demo');
   assert.equal(desktopApps.items.every(item => item.installed === null && item.candidates.length === 0), true);
-  for (const document of ['resources.md', 'mcp.md', 'desktop-apps.md', 'usage-and-sync.md']) {
+  for (const document of ['resources.md', 'mcp.md', 'desktop-apps.md', 'usage-and-sync.md', 'productivity.md']) {
     const body = await readFile(join(directory, 'node_modules/agent-ops-local/docs/reference', document), 'utf8');
     assert.ok(body.includes('## 한국어'));
   }
@@ -196,6 +218,9 @@ try {
     await new Promise(done => setTimeout(done, 100));
   }
   assert.equal(health?.demo, false, diagnostics);
+  assert.equal((await (await request('/api/productivity/work-items')).json()).total, 0);
+  assert.equal((await (await request('/api/productivity/context-packs')).json()).total, 0);
+  assert.deepEqual((await (await request('/api/productivity/saved-views')).json()).items, []);
   const imported = await request('/api/sync', {});
   assert.equal(imported.status, 200);
   assert.ok(Array.isArray((await imported.json()).warnings));
@@ -219,6 +244,8 @@ try {
     officialBrandIcons: true, cliVersionComparison: true, offlineOptimization: true, packagedBackgroundSync: true,
     demoSessions: data.sessionTotal, cliAbsent: true, allThreePreviews: true,
     executionBlocked: true, fullExport: true, pagedHistory: true, gracefulShutdown: true,
+    installedVersion: version, workItems: true, contextPacks: true, templateInputsAndHistory: true,
+    savedViews: true, productivityDemoIsolation: true,
   };
   await mkdir('artifacts', { recursive: true });
   await writeFile('artifacts/package-smoke.json', JSON.stringify(report, null, 2) + '\n');

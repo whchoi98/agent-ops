@@ -1,13 +1,16 @@
 import { useFormat } from '../../i18n/useFormat';
 import { useI18n, Trans } from '../../i18n/I18nProvider';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronUp, Search, Settings2, Terminal, UserRound, X } from 'lucide-react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronUp, Quote, Search, Settings2, Terminal, UserRound, X } from 'lucide-react';
 import type { Message, MessageQuery, SessionDetail } from '../../../shared/types';
 import { Button, EmptyState, ErrorState, IconButton, ProviderMark, Skeleton } from '../../components/ui';
 import { useDebounced, useResource } from '../../hooks/useResource';
 import { api } from '../../lib/api';
 import { AGENT_META, number } from '../../lib/format';
 import { MessageBody } from './MessageBody';
+import { useApp, useData } from '../../state/AppProvider';
+
+const CaptureContextDialog = lazy(() => import('../context-packs/CaptureContextDialog').then(module => ({ default: module.CaptureContextDialog })));
 
 const PAGE_SIZE = 50;
 const ROLES = [
@@ -30,6 +33,9 @@ export function getFindTarget(active: number, total: number, direction: -1 | 1) 
 export function SessionReader({ session }: { session: SessionDetail }) {
   const { dateTime } = useFormat();
   const { t } = useI18n();
+  const { notify } = useApp();
+  const { projects } = useData();
+  const [capture, setCapture] = useState<{ messageId: string; offset: number; length: number; previewText: string } | null>(null);
   const [role, setRole] = useState<Message['role'] | 'all'>('all');
   const [find, setFind] = useState('');
   const [offset, setOffset] = useState(0);
@@ -62,6 +68,7 @@ export function SessionReader({ session }: { session: SessionDetail }) {
 
   useEffect(() => {
     setRole('all'); setFind(''); setOffset(0); setActiveMatch(0);
+    setCapture(null);
     pendingMatch.current = null;
   }, [session.id]);
 
@@ -112,6 +119,17 @@ export function SessionReader({ session }: { session: SessionDetail }) {
     pendingMatch.current = searching ? nextOffset : null;
   }
 
+  function captureMessage(message: Message) {
+    let length = Math.min(8000, message.content.length);
+    const last = message.content.charCodeAt(length - 1);
+    if (last >= 0xd800 && last <= 0xdbff) length--;
+    if (!length) return;
+    setCapture({
+      messageId: message.id, offset: message.contentOffset ?? 0, length,
+      previewText: message.content.slice(0, length),
+    });
+  }
+
   return <div className="session-reader">
     <div className="reader-toolbar">
       <div className="role-filters" aria-label={t("메시지 역할 필터")} title={t("전체 세션의 역할별 메시지 수")}>{ROLES.map(item => {
@@ -158,6 +176,8 @@ export function SessionReader({ session }: { session: SessionDetail }) {
                 <strong>{message.role === 'user' ? t("사용자") : message.role === 'assistant' ? AGENT_META[session.agent].name : message.role === 'tool' ? message.toolName || t("도구") : t("시스템")}</strong>
                 {message.model && <span className="message-model">{message.model}</span>}
                 <time dateTime={message.timestamp} title={dateTime(message.timestamp)}>{dateTime(message.timestamp, { hour: '2-digit', minute: '2-digit', hour12: false })}</time>
+                <IconButton icon={Quote} label={t('컨텍스트 묶음에 추가')} className="message-context-action"
+                  disabled={!message.content.length} onClick={() => captureMessage(message)} />
               </div><MessageBody sessionId={session.id} message={message} find={debouncedFind} /></div>
             </article>)}
             <div className="conversation-end"><span />{hasNext ? t("다음 페이지에서 계속됩니다") : searching
@@ -184,5 +204,10 @@ export function SessionReader({ session }: { session: SessionDetail }) {
           onClick={() => goToPage(getLastMessageOffset(total))} />
       </div>
     </nav>
+    {capture && <Suspense fallback={<p role="status">{t('인용 준비 중…')}</p>}>
+      <CaptureContextDialog sessionId={session.id} {...capture}
+        projectId={projects.find(project => project.path === session.projectPath)?.id}
+        onClose={() => setCapture(null)} onCaptured={() => notify('컨텍스트에 인용을 저장했습니다.')} />
+    </Suspense>}
   </div>;
 }

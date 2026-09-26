@@ -26,6 +26,8 @@ export interface Message {
   model?: string;
   truncated?: boolean;
   contentLength?: number;
+  /** Source UTF-16 offset for a paginated/search preview; not a stored transcript field. */
+  contentOffset?: number;
 }
 export interface MessageQuery {
   role?: Message['role'];
@@ -87,6 +89,9 @@ export interface RunRequest {
   resumeSessionId?: string;
   sourceSessionId?: string;
   templateId?: string;
+  workItemId?: string;
+  workItemVersion?: number;
+  contextPackIds?: string[];
 }
 export interface Run extends RunRequest {
   id: string;
@@ -102,6 +107,8 @@ export interface Run extends RunRequest {
   nativeSessionId: string | null;
   usage: Usage;
   command: string;
+  /** Work-item version after this run was linked; retries use this snapshot. */
+  workItemLinkedVersion?: number;
 }
 export interface RunEvent {
   id: number;
@@ -128,6 +135,8 @@ export interface PromptTemplate {
   agent: Agent | 'any';
   policy: Policy;
   updatedAt: string;
+  variables?: TemplateVariable[];
+  revision?: number;
 }
 export interface ConnectorStatus {
   agent: Agent;
@@ -223,3 +232,4 @@ export const emptyUsage = (): Usage => ({
   cacheWriteTokens: null, costUsd: null,
 });
 import type { SyncMode, SyncStatus } from './sync-control.js';
+import type { TemplateVariable } from './template-fields.js';

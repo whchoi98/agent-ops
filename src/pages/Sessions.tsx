@@ -1,5 +1,5 @@
 import { useI18n, Trans } from '../i18n/I18nProvider';
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import {
   Bookmark, Check, ChevronLeft, ChevronRight, GitCompareArrows, ListFilter, RefreshCw, Search, SlidersHorizontal, X,
 } from 'lucide-react';
@@ -11,6 +11,8 @@ import { AGENT_META, inputDate, localDateBoundary, number } from '../lib/format'
 import { useDebounced, useResource } from '../hooks/useResource';
 import { useApp, useData } from '../state/AppProvider';
 import { useCreditI18n } from '../features/usage/i18n';
+
+const SavedViewsBar = lazy(() => import('../features/saved-views').then(module => ({ default: module.SavedViewsBar })));
 
 function readQuery(search: string): SessionQuery {
   const params = new URLSearchParams(search);
@@ -25,7 +27,8 @@ function readQuery(search: string): SessionQuery {
     tag: params.get('tag') || undefined,
     since: params.get('since') || undefined, until: params.get('until') || undefined,
     sort: sort && ['recent', 'oldest', 'tokens', 'credits'].includes(sort) ? sort : 'recent',
-    limit: [20, 40, 60].includes(Number(params.get('limit'))) ? Number(params.get('limit')) : 20,
+    limit: Number.isInteger(Number(params.get('limit'))) && Number(params.get('limit')) >= 1 && Number(params.get('limit')) <= 200
+      ? Number(params.get('limit')) : 20,
     offset: Math.max(0, Number(params.get('offset')) || 0),
   };
 }
@@ -34,7 +37,7 @@ export function Sessions() {
   const { t } = useI18n();
   const { t: creditT } = useCreditI18n();
   const data = useData();
-  const { search, navigate, archiveRevision, openCompare, notify, sync, syncing } = useApp();
+  const { search, navigate, archiveRevision, productivityRevision, openCompare, notify, sync, syncing } = useApp();
   const query = useMemo(() => readQuery(search), [search]);
   const debouncedQ = useDebounced(query.q ?? '');
   const debouncedTag = useDebounced(query.tag ?? '');
@@ -64,6 +67,9 @@ export function Sessions() {
   return <>
     <PageHeading title={t("세션 탐색")} description={t("대화의 전체 내용을 검색하고, 필요한 맥락에서 다시 시작하세요.")} eyebrow="SESSION EXPLORER"
       actions={<Button icon={RefreshCw} busy={syncing} onClick={() => void sync()}><Trans message={"세션 동기화"} /></Button>} />
+    <Suspense fallback={<Skeleton rows={1} />}>
+      <SavedViewsBar query={query} revision={productivityRevision} onApply={value => navigate('sessions', value, true)} />
+    </Suspense>
     <section className="panel session-explorer">
       <div className="explorer-search-row"><div className="search-input search-input-large">
         <Search size={19} aria-hidden /><input aria-label={t("세션 전체 내용 검색")} maxLength={500} placeholder={t("제목과 대화 내용 검색…")} value={query.q ?? ''}
@@ -122,6 +128,7 @@ export function Sessions() {
       {resource.data && total > 0 && <div className="pagination">
         <div className="pagination-summary"><span>{number(Math.min(offset + 1, total))}–{number(Math.min(offset + limit, total))} / {number(total)}</span>
           <select aria-label={t("페이지당 세션 수")} value={limit} onChange={event => update({ limit: Number(event.target.value) })}>
+            {![20, 40, 60].includes(limit) && <option value={limit}>{t('{0}개씩', { 0: limit })}</option>}
             <option value={20}><Trans message={"20개씩"} /></option><option value={40}><Trans message={"40개씩"} /></option><option value={60}><Trans message={"60개씩"} /></option>
           </select>
         </div>

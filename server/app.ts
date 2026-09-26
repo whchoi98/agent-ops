@@ -4,8 +4,9 @@ import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z, ZodError } from 'zod';
-import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent } from '../shared/types.js';
+import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent, type RunRequest } from '../shared/types.js';
 import type { SyncPolicy, SyncStatus } from '../shared/sync-control.js';
+import type { ProductivityChange } from '../shared/work-items.js';
 import { Store, newId } from './store.js';
 import { VERSION } from './config.js';
 import { computeAnalytics } from './analytics.js';
@@ -25,6 +26,13 @@ import { McpService, registerMcpRoutes, type McpServiceOptions } from './mcp/ind
 import { DesktopAppService, registerDesktopAppRoutes, type DesktopAppServiceOptions } from './desktop-apps.js';
 import { SyncManager, type SyncDriver } from './sync-manager.js';
 import { AppUpdateService, registerAppUpdateRoutes, type AppUpdateServiceOptions } from './app-update.js';
+import { WorkItemService } from './productivity/work-items.js';
+import { registerWorkItemRoutes } from './productivity/work-item-routes.js';
+import { SavedViewService, registerSavedViewRoutes } from './productivity/saved-views.js';
+import { TemplateService, registerTemplateFieldRoutes } from './productivity/templates.js';
+import { ContextPackService } from './productivity/context-packs.js';
+import { registerContextPackRoutes } from './productivity/context-pack-routes.js';
+import { seedProductivityDemo } from './productivity/demo.js';
 
 const agentSchema = z.enum(AGENTS);
 const policySchema = z.enum(['read-only', 'workspace-write']);
@@ -35,7 +43,10 @@ const runSchema = z.object({
   policy: policySchema.default('read-only'),
   allowShell: z.boolean().optional(),
   resumeSessionId: shortText.optional(), sourceSessionId: shortText.optional(), templateId: shortText.optional(),
-}).strict();
+  workItemId: shortText.optional(), workItemVersion: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER - 1).optional(),
+  contextPackIds: z.array(shortText).max(5).refine(ids => new Set(ids).size === ids.length).optional(),
+}).strict().refine(value => (value.workItemId === undefined) === (value.workItemVersion === undefined),
+  'A work item and its current version are required together');
 const dateSchema = z.string().max(40).refine((value) => /^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(value) && Number.isFinite(Date.parse(value)), 'Invalid date');
 const sessionQuerySchema = z.object({
   q: z.string().max(500).optional(), agent: agentSchema.optional(), project: z.string().max(4096).optional(),
@@ -46,10 +57,6 @@ const sessionQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).optional(),
   offset: z.coerce.number().int().min(0).max(100000000).optional(),
 });
-const templateSchema = z.object({
-  name: shortText, description: z.string().max(500), category: z.enum(['review', 'build', 'debug', 'docs', 'custom']),
-  prompt: z.string().trim().min(1).max(32000), agent: z.enum([...AGENTS, 'any']), policy: policySchema,
-}).strict();
 const settingsSchema = z.object({
   concurrency: z.number().int().min(1).max(8),
   timeoutMinutes: z.number().int().min(1).max(240),
@@ -69,11 +76,13 @@ function error(statusCode: number, message: string): Error & { statusCode: numbe
 }
 const idParam = (params: unknown) => z.object({ id: shortText }).parse(params).id;
 type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent }
-  | { type: 'sync-state'; status: SyncStatus };
+  | { type: 'sync-state'; status: SyncStatus } | ProductivityChange;
 export interface AppContext {
   app: FastifyInstance; store: Store; runner: Runner; sync: SyncController;
   resources: ResourceMonitor; mcp: McpService; desktopApps: DesktopAppService;
   syncManager: SyncManager; appUpdate: AppUpdateService;
+  workItems: WorkItemService;
+  savedViews: SavedViewService; templates: TemplateService; contextPacks: ContextPackService;
 }
 export interface AppOptions {
   dataDir: string;
@@ -128,7 +137,31 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     }
   }
   const probe = options.connectorProbe || detectConnectors;
-  const runner = new Runner(store, { demo, onEvent: broadcast, connectors: () => probe(store.getSettings()) });
+  const savedViews = new SavedViewService(store);
+  const templates = new TemplateService(store);
+  const contextPacks = new ContextPackService(store);
+  const checkContextReferences = (request: Pick<RunRequest, 'contextPackIds'>) => {
+    if (request.contextPackIds?.some(id => !contextPacks.info(id))) {
+      throw error(400, 'A referenced context pack is unavailable. Review the attached context before starting.');
+    }
+  };
+  const workItems = new WorkItemService(store, {
+    runStatus: id => runner.getRunStatus(id),
+    contextPackInfo: id => contextPacks.info(id),
+    compileContextPack: id => contextPacks.compile(id).prompt,
+  });
+  const runner = new Runner(store, {
+    demo, onEvent: broadcast, connectors: () => probe(store.getSettings()),
+    onCreated: run => {
+      checkContextReferences(run);
+      const linked = workItems.linkRun(run);
+      if (linked) {
+        run.workItemLinkedVersion = linked.version;
+        store.updateRun(run.id, { workItemLinkedVersion: linked.version });
+      }
+    },
+  });
+  if (demo) seedProductivityDemo(store, { workItems, contextPacks, savedViews, templates });
   if (!demo) runner.start();
   const refreshNotice = () => broadcast({ type: 'refresh' });
   const sync: SyncController = options.syncDriver ?? (demo
@@ -183,6 +216,18 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   registerMcpRoutes(app, mcp);
   registerDesktopAppRoutes(app, desktopApps);
   registerAppUpdateRoutes(app, appUpdate);
+  registerWorkItemRoutes(app, workItems, {
+    write, onChange: () => broadcast({ type: 'productivity-change', entity: 'work-items' }),
+  });
+  registerSavedViewRoutes(app, savedViews, {
+    write, onChange: () => broadcast({ type: 'productivity-change', entity: 'saved-views' }),
+  });
+  registerTemplateFieldRoutes(app, templates, {
+    write, onChange: () => broadcast({ type: 'productivity-change', entity: 'templates' }),
+  });
+  registerContextPackRoutes(app, contextPacks, {
+    write, onChange: () => broadcast({ type: 'productivity-change', entity: 'context-packs' }),
+  });
   registerExtensionRoutes(app, new ExtensionService({ ...options.extensionOptions, demo }, () => store.listProjects()));
   const versions = new VersionService({ ...options.versionOptions, demo }, () => probe(store.getSettings()));
   app.get('/api/connector-versions', async request => {
@@ -293,7 +338,15 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     void syncManager.runManual().catch(() => {});
     return reply.code(202).send({ syncing: sync.active });
   });
-  app.post('/api/runs/preview', async (request) => runner.preview(runSchema.parse(request.body)));
+  app.post('/api/runs/preview', async request => {
+    const input = runSchema.parse(request.body);
+    workItems.checkRunEligibility(input);
+    checkContextReferences(input);
+    const preview = await runner.preview(input);
+    workItems.checkRunEligibility(input);
+    checkContextReferences(input);
+    return preview;
+  });
   app.post('/api/runs', async (request, reply) => {
     if (demo) throw error(403, '데모 모드에서는 에이전트를 실행할 수 없습니다.');
     const run = await runner.create(runSchema.parse(request.body));
@@ -349,26 +402,27 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     broadcast({ type: 'refresh' });
     return updated;
   });
+  app.get('/api/templates', async request => {
+    z.object({}).strict().parse(request.query);
+    return store.listTemplates();
+  });
   app.post('/api/templates', async (request, reply) => {
-    const input = templateSchema.parse(request.body);
-    const template = await write(() => store.saveTemplate({ ...input, id: newId('template'), updatedAt: new Date().toISOString() }));
-    broadcast({ type: 'refresh' });
+    z.object({}).strict().parse(request.query);
+    const template = await write(() => templates.create(request.body));
+    broadcast({ type: 'productivity-change', entity: 'templates' });
     return reply.code(201).send(template);
   });
   app.patch('/api/templates/:id', async (request) => {
     const id = idParam(request.params);
-    const input = templateSchema.partial().parse(request.body);
-    const updated = await write(() => {
-      const template = store.listTemplates().find((t) => t.id === id);
-      if (!template) throw error(404, '템플릿을 찾을 수 없습니다.');
-      return store.saveTemplate({ ...template, ...input, updatedAt: new Date().toISOString() });
-    });
-    broadcast({ type: 'refresh' });
+    z.object({}).strict().parse(request.query);
+    const updated = await write(() => templates.update(id, request.body));
+    broadcast({ type: 'productivity-change', entity: 'templates' });
     return updated;
   });
   app.delete('/api/templates/:id', async (request) => {
-    if (!await write(() => store.deleteTemplate(idParam(request.params)))) throw error(404, '템플릿을 찾을 수 없습니다.');
-    broadcast({ type: 'refresh' });
+    z.object({}).strict().parse(request.query);
+    if (!await write(() => templates.remove(idParam(request.params)))) throw error(404, '템플릿을 찾을 수 없습니다.');
+    broadcast({ type: 'productivity-change', entity: 'templates' });
     return { ok: true };
   });
   app.patch('/api/settings', async (request) => {
@@ -436,5 +490,6 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
   await app.ready();
   resources.start();
   syncManager.start();
-  return { app, store, runner, sync, resources, mcp, desktopApps, syncManager, appUpdate };
+  return { app, store, runner, sync, resources, mcp, desktopApps, syncManager, appUpdate,
+    workItems, savedViews, templates, contextPacks };
 }

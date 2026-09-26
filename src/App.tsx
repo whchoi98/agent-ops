@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { AppProvider, useApp } from './state/AppProvider';
 import { Shell } from './components/Shell';
-import { CommandPalette } from './components/CommandPalette';
 import { Button, EmptyState, Skeleton, Toasts } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Overview } from './pages/Overview';
@@ -10,7 +9,6 @@ import { Sessions } from './pages/Sessions';
 import { Runs } from './pages/Runs';
 import { Projects } from './pages/Projects';
 import { Analytics } from './pages/Analytics';
-import { Templates } from './pages/Templates';
 import { Extensions } from './pages/Extensions';
 import { I18nProvider, useI18n, Trans } from './i18n/I18nProvider';
 
@@ -21,6 +19,10 @@ const RunDetailDialog = lazy(() => import('./features/runs/RunDetailDialog').the
 const Resources = lazy(() => import('./pages/Resources').then(module => ({ default: module.Resources })));
 const Mcp = lazy(() => import('./pages/Mcp').then(module => ({ default: module.Mcp })));
 const Settings = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
+const Templates = lazy(() => import('./pages/Templates').then(module => ({ default: module.Templates })));
+const WorkItems = lazy(() => import('./pages/WorkItems').then(module => ({ default: module.WorkItems })));
+const ContextPacks = lazy(() => import('./pages/ContextPacks').then(module => ({ default: module.ContextPacks })));
+const CommandPalette = lazy(() => import('./components/CommandPalette').then(module => ({ default: module.CommandPalette })));
 
 function WorkspaceContent() {
   const { t, notice } = useI18n();
@@ -32,13 +34,15 @@ function WorkspaceContent() {
     <div className="panel"><Skeleton rows={5} /></div><div className="panel"><Skeleton rows={6} /></div>
   </div>;
   switch (page) {
+    case 'work-items': return <Suspense fallback={<Skeleton rows={6} />}><WorkItems /></Suspense>;
+    case 'context-packs': return <Suspense fallback={<Skeleton rows={6} />}><ContextPacks /></Suspense>;
     case 'sessions': return <Sessions />;
     case 'runs': return <Runs />;
     case 'projects': return <Projects />;
     case 'analytics': return <Analytics />;
     case 'resources': return <Suspense fallback={<Skeleton rows={6} />}><Resources /></Suspense>;
     case 'mcp': return <Suspense fallback={<Skeleton rows={6} />}><Mcp /></Suspense>;
-    case 'templates': return <Templates />;
+    case 'templates': return <Suspense fallback={<Skeleton rows={6} />}><Templates /></Suspense>;
     case 'extensions': return <Extensions />;
     case 'settings': return <Suspense fallback={<Skeleton rows={6} />}><Settings /></Suspense>;
     default: return <Overview />;
@@ -52,7 +56,7 @@ function ModalHost() {
     {modal.type === 'session' ? <SessionDetailDialog id={modal.id} key={`session-${modal.id}`} />
       : modal.type === 'run' ? <RunDetailDialog id={modal.id} key={`run-${modal.id}`} />
         : modal.type === 'compare' ? <CompareDialog ids={modal.ids} />
-          : <NewRunDialog draft={modal.draft} />}
+          : <NewRunDialog key={modal.preparationId} draft={modal.draft} />}
   </Suspense>;
 }
 
@@ -60,7 +64,7 @@ function AppWorkspace() {
   const { paletteOpen, page } = useApp();
   return <>
     <Shell><ErrorBoundary key={page}><WorkspaceContent /></ErrorBoundary></Shell>
-    <ErrorBoundary><ModalHost />{paletteOpen && <CommandPalette />}</ErrorBoundary><Toasts />
+    <ErrorBoundary><ModalHost />{paletteOpen && <Suspense fallback={null}><CommandPalette /></Suspense>}</ErrorBoundary><Toasts />
   </>;
 }
 
