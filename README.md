@@ -13,6 +13,7 @@ Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, 
 my-agent-ops is a local workbench for finding conversations, organizing follow-up work, running jobs and handing context between Codex, Claude Code and Kiro CLI.
 It stores imported conversations and workbench state in local SQLite, requires no separate workbench account or hosted backend, and sends no telemetry.
 The app title is `my-agent-ops`, the npm package is `agent-ops-local`, and the terminal command is `agent-ops`.
+For a one-page introduction in Korean, see the [product brochure](https://whchoi98.github.io/agent-ops/brochure/).
 
 ## Features
 
@@ -578,6 +579,7 @@ Kiro and Codex icons are official vendor assets included locally; read [icon sou
 my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무를 정리하며 작업을 실행하고 맥락을 인계하는 로컬 운영 도구입니다.
 가져온 대화와 앱 상태를 로컬 SQLite에 저장하며 별도 앱 계정이나 호스팅 백엔드, 텔레메트리 없이 동작합니다.
 앱 표시 제목은 `my-agent-ops`, npm 패키지명은 `agent-ops-local`, 터미널 명령은 `agent-ops`입니다.
+한 페이지로 정리한 소개는 [제품 브로셔](https://whchoi98.github.io/agent-ops/brochure/)에서 볼 수 있습니다.
 
 ## 주요 기능
 

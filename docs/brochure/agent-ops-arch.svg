@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="740" viewBox="0 0 1200 740" role="img" aria-labelledby="t d">
+<title id="t">my-agent-ops architecture</title>
+<desc id="d">원본 세션 파일은 읽기 전용 수집기를 거쳐 SQLite와 FTS5에 저장되고, 127.0.0.1의 Fastify API가 React UI, 소유 프로세스 대기열, 확장 목록과 하니스 관리를 연결합니다. 대기열은 Codex, Claude Code, Kiro CLI를 실행하며 선택형 AutoHarness 브리지가 도구 입력을 판정합니다.</desc>
+<defs>
+<marker id="ae" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#46536B"/></marker>
+<marker id="as" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#46536B"/></marker>
+</defs>
+<rect width="1200" height="740" fill="#FFFFFF"/>
+<rect x="20" y="20" width="1160" height="700" rx="20" fill="#F6F8FB" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="44" y="56" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1" fill="#2451D6">LOCAL MACHINE · 127.0.0.1</text>
+<text x="44" y="78" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="13" fill="#5B667A">별도 계정 · 호스팅 백엔드 · 텔레메트리 없음 — 앱 상태는 로컬 SQLite에만 저장됩니다</text>
+<rect x="44" y="110" width="200" height="100" rx="12" fill="#FFFFFF" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="60" y="134" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">SOURCE</text>
+<text x="60" y="156" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">원본 세션 파일</text>
+<text x="60" y="177" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">Codex · Claude Code · Kiro</text>
+<text x="60" y="195" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">각 CLI가 남긴 대화 이력</text>
+<rect x="306" y="110" width="250" height="100" rx="12" fill="#FFFFFF" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="322" y="134" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">IMPORT</text>
+<text x="322" y="156" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">읽기 전용 수집기</text>
+<text x="322" y="177" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">소유한 agent-ops sync 자식 프로세스</text>
+<text x="322" y="195" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">소스 지문 비교 · 변경분만 기록</text>
+<rect x="306" y="250" width="250" height="100" rx="12" fill="#EAF0FE" stroke="#BFD0FA" stroke-width="1.4"/>
+<text x="322" y="274" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">STORE</text>
+<text x="322" y="296" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">SQLite + FTS5</text>
+<text x="322" y="317" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">세션 · 메시지 · 메모 · 태그 · 작업</text>
+<text x="322" y="335" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">압축 본문 전문 검색 색인</text>
+<rect x="44" y="390" width="200" height="100" rx="12" fill="#FFFFFF" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="60" y="414" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">CONFIG</text>
+<text x="60" y="436" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">확장 설정 파일</text>
+<text x="60" y="457" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">스킬 · 플러그인 · Power</text>
+<text x="60" y="475" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">MCP 선언</text>
+<rect x="306" y="390" width="250" height="100" rx="12" fill="#FFFFFF" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="322" y="414" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">CATALOG</text>
+<text x="322" y="436" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">읽기 전용 확장 목록</text>
+<text x="322" y="457" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">출처 근거 · 마스킹 미리보기</text>
+<text x="322" y="475" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">조회만으로 프로세스를 띄우지 않음</text>
+<rect x="306" y="600" width="250" height="96" rx="12" fill="#FFFFFF" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="322" y="624" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">HARNESS</text>
+<text x="322" y="646" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">하니스 관리</text>
+<text x="322" y="667" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">범위별 정책 · 판정 테스트</text>
+<text x="322" y="685" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">훅 미리보기 · 감사 기록 조회</text>
+<rect x="660" y="110" width="190" height="440" rx="14" fill="#16233D"/>
+<text x="678" y="138" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#9FB4F5">SERVER</text>
+<text x="678" y="164" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF">Fastify API</text>
+<text x="678" y="194" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">127.0.0.1 루프백 바인딩</text>
+<text x="678" y="214" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">UI · API · SSE 같은 출처</text>
+<text x="678" y="254" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">요청 검사</text>
+<text x="678" y="274" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">· Host · Origin</text>
+<text x="678" y="294" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">· 로컬 연결</text>
+<text x="678" y="314" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">· 변경 요청 헤더</text>
+<text x="678" y="354" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">데이터 디렉터리 잠금</text>
+<rect x="916" y="110" width="240" height="100" rx="12" fill="#EAF0FE" stroke="#BFD0FA" stroke-width="1.4"/>
+<text x="932" y="134" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">BROWSER</text>
+<text x="932" y="156" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">React UI</text>
+<text x="932" y="177" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">브라우저 · 한국어 / English</text>
+<text x="932" y="195" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">선택: 인증 프록시 --public-url</text>
+<rect x="916" y="250" width="240" height="100" rx="12" fill="#FFFFFF" stroke="#D5DBE6" stroke-width="1.4"/>
+<text x="932" y="274" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">RUNNER</text>
+<text x="932" y="296" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">소유 프로세스 대기열</text>
+<text x="932" y="317" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">검증한 인수 배열로만 실행</text>
+<text x="932" y="335" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">같은 프로젝트는 순차 · 시간/출력 한도</text>
+<rect x="916" y="390" width="240" height="100" rx="12" fill="#16233D" stroke="#16233D" stroke-width="1.4"/>
+<text x="932" y="414" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#9FB4F5">AGENT CLI</text>
+<text x="932" y="436" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF">코딩 에이전트 CLI</text>
+<text x="932" y="457" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">Codex · Claude Code · Kiro CLI</text>
+<text x="932" y="475" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#C9D3E6">인증 정보는 각 CLI가 관리</text>
+<rect x="916" y="600" width="240" height="96" rx="12" fill="#FFFFFF" stroke="#AEB8C9" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="932" y="624" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" letter-spacing=".6" fill="#2451D6">PYTHON</text>
+<text x="932" y="646" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="15.5" font-weight="700" fill="#15213A">AutoHarness 브리지 (선택)</text>
+<text x="932" y="667" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">도구 입력을 실행 없이 판정</text>
+<text x="932" y="685" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="12.5" fill="#5B667A">제한된 메타데이터 감사 로그</text>
+<path d="M244,160 L300,160" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="275.0" y="152" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">읽기 전용</text>
+<path d="M436,210 L436,244" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="446" y="234" text-anchor="start" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">지문이 바뀐 항목만</text>
+<path d="M654,140 L562,140" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="608.0" y="132" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">sync 시작</text>
+<path d="M562,300 L654,300" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)" marker-start="url(#as)"/>
+<text x="608.0" y="292" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">조회 · 저장</text>
+<path d="M244,440 L300,440" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="275.0" y="432" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">요청 시</text>
+<path d="M654,440 L562,440" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<path d="M720,550 L720,648 L562,648" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="652.0" y="640" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">정책 · 감사</text>
+<path d="M856,160 L910,160" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)" marker-start="url(#as)"/>
+<text x="883.0" y="152" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">HTTP · SSE</text>
+<path d="M850,300 L910,300" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="883.0" y="292" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">실행 접수</text>
+<path d="M1036,350 L1036,384" fill="none" stroke="#46536B" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="1046" y="374" text-anchor="start" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">spawn · 소유 작업만 취소</text>
+<path d="M1036,490 L1036,594" fill="none" stroke="#7C88A0" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="1046" y="514" text-anchor="start" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">설정한 네이티브 훅</text>
+<path d="M800,550 L800,672 L910,672" fill="none" stroke="#7C88A0" stroke-width="1.6" marker-end="url(#ae)"/>
+<text x="868.0" y="664" text-anchor="middle" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif" font-size="11.5" fill="#5B667A">명시적 점검</text>
+</svg>

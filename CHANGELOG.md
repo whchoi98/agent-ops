@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Publish a responsive Korean product brochure on GitHub Pages with screens, architecture and how the workbench operates.
+
 ## [1.5.0] - 2026-09-26
 
 ### Added
@@ -124,6 +128,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 따릅니다.
 
 ## [Unreleased]
+
+### Added
+
+- 화면, 아키텍처와 동작 원리를 담은 반응형 한국어 제품 브로셔를 GitHub Pages에 게시합니다.
 
 ## [1.5.0] - 2026-09-26
 

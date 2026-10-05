@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>my-agent-ops — Codex · Claude Code · Kiro CLI 로컬 작업대</title>
+<meta name="description" content="my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고, 후속 작업을 정리하고, 실행과 맥락 인계를 한 화면에서 다루는 로컬 운영 도구입니다. 계정, 호스팅 백엔드, 텔레메트리 없이 로컬 SQLite로 동작합니다." />
+<meta property="og:title" content="my-agent-ops — 흩어진 에이전트 대화를 하나의 로컬 작업대로" />
+<meta property="og:description" content="검색 · 작업센터 · 실행 제어 · 컨텍스트 인계 · 하니스 관리. 127.0.0.1에서만 동작하는 오픈소스(MIT) 워크벤치." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2316233D'/%3E%3Cpath d='M7 6v12M17 6v12M7 12h10' stroke='%237EE0D2' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<style>
+  :root{
+    /* accent — the app's signal blue */
+    --accent:#2451D6; --accent-hover:#1C40AE; --accent-ink:#1A3A9E; --accent-50:#EEF3FE; --accent-100:#DCE6FD; --accent-200:#BFD0FA;
+    /* ink — the app's navy ramp */
+    --ink-100:#E6EAF1; --ink-200:#D5DBE6; --ink-400:#8792A6; --ink-500:#46536B; --ink-800:#15213A; --ink-900:#0E172B;
+    --navy:#16233D;
+    /* paper — cool, document-like */
+    --paper:#F6F7F9; --paper-muted:#EEF1F5; --white:#FFFFFF;
+    --positive:#0F8A5F; --warning:#A5620B;
+
+    --bg:var(--paper); --surface:var(--white); --sunken:var(--paper-muted);
+    --text:var(--ink-800); --text-2:var(--ink-500);
+    --text-3:#5B667A;   /* muted text, ~5.6:1 on paper (WCAG AA) */
+    --line:var(--ink-100); --line-2:var(--ink-200);
+
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+    --shadow-card:0 1px 2px rgba(21,33,58,.04), 0 8px 28px rgba(21,33,58,.07);
+    --shadow-pop:0 18px 50px rgba(21,33,58,.16);
+    --maxw:1180px;
+    --r:16px;
+  }
+
+  *{box-sizing:border-box}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:4px}
+  a:focus-visible, .btn:focus-visible{outline-offset:4px}
+  .skip-link{position:absolute; left:12px; top:-48px; z-index:200; background:var(--ink-900); color:var(--paper);
+    padding:10px 16px; border-radius:10px; font-size:14px; font-weight:600; transition:top .18s}
+  .skip-link:focus{top:12px}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+  html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:17px; line-height:1.65;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; overflow-x:hidden; word-break:keep-all}
+  /* faint graph-paper grid */
+  body::before{content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:48px 48px; opacity:.35; mask-image:linear-gradient(to bottom, #000 0, transparent 900px)}
+  .num{font-variant-numeric:tabular-nums lining-nums}
+  a{color:inherit; text-decoration:none}
+  img,svg{display:block}
+  code{font-family:var(--mono); font-size:.88em; font-variant-ligatures:none}
+
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px; position:relative; z-index:1}
+  section{position:relative; z-index:1}
+
+  /* ---------- nav ---------- */
+  .nav{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.4) blur(10px);
+    background:color-mix(in srgb, var(--paper) 82%, transparent); border-bottom:1px solid var(--line)}
+  .nav-in{display:flex; align-items:center; gap:24px; height:64px}
+  .brand{display:flex; align-items:center; gap:11px}
+  .brand .mark{width:30px; height:30px; border-radius:8px; background:var(--navy); display:grid; place-items:center}
+  .brand b{font-weight:800; font-size:18px; letter-spacing:-.02em}
+  .brand .pill{font-family:var(--mono); font-size:11px; color:var(--text-3); padding:2px 8px; border:1px solid var(--line-2); border-radius:99px}
+  .nav-links{margin-left:auto; display:flex; gap:26px; align-items:center}
+  .nav-links a{font-size:14.5px; color:var(--text-2); transition:color .2s}
+  .nav-links a:hover{color:var(--accent-ink)}
+  .nav-cta{font-size:14px; font-weight:600; color:var(--white)!important; background:var(--navy); padding:9px 16px; border-radius:99px; transition:transform .2s, background .2s}
+  .nav-cta:hover{background:var(--accent); transform:translateY(-1px)}
+  @media (max-width:880px){ .nav-links a:not(.nav-cta){display:none} .brand .pill{display:none} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:84px 0 70px; overflow:hidden}
+  .hero-grid{display:grid; grid-template-columns:1fr 1.05fr; gap:52px; align-items:center}
+  .eyebrow{display:inline-flex; align-items:center; gap:9px; font-family:var(--mono); font-size:12px; letter-spacing:.05em;
+    color:var(--accent-ink); background:var(--accent-50); border:1px solid var(--accent-100); padding:6px 13px; border-radius:99px; margin-bottom:26px}
+  .eyebrow .dot{width:7px; height:7px; border-radius:99px; background:var(--accent); animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(36,81,214,.45)}70%{box-shadow:0 0 0 9px rgba(36,81,214,0)}100%{box-shadow:0 0 0 0 rgba(36,81,214,0)}}
+  h1.hero-title{font-weight:800; font-size:clamp(34px,5vw,58px); line-height:1.12; letter-spacing:-.035em; margin:0 0 22px}
+  h1.hero-title .hl{color:var(--accent); background:linear-gradient(transparent 68%, var(--accent-100) 68%)}
+  .hero-sub{font-size:clamp(16px,1.6vw,18.5px); color:var(--text-2); max-width:40ch; margin:0 0 30px}
+  .hero-actions{display:flex; flex-wrap:wrap; gap:14px; align-items:center}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; font-weight:600; font-size:15px; padding:12px 22px; border-radius:99px;
+    transition:transform .2s, box-shadow .2s, background .2s, border-color .2s; border:1px solid transparent}
+  .btn-primary{background:var(--accent); color:var(--white); box-shadow:0 6px 20px rgba(36,81,214,.26)}
+  .btn-primary:hover{background:var(--accent-hover); transform:translateY(-2px)}
+  .btn-ghost{background:var(--surface); color:var(--text); border-color:var(--line-2)}
+  .btn-ghost:hover{border-color:var(--ink-400); transform:translateY(-2px)}
+
+  .metrics{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:40px; padding-top:28px; border-top:1px solid var(--line-2)}
+  .metric .v{font-family:var(--sans); font-variant-numeric:lining-nums tabular-nums; font-weight:800; font-size:30px; letter-spacing:-.03em; line-height:1.05; white-space:nowrap}
+  .metric .v.mono{font-family:var(--mono); font-size:21px; font-weight:600; letter-spacing:-.02em; padding-top:6px}
+  .metric .l{font-size:13px; color:var(--text-3); margin-top:8px; line-height:1.4}
+
+  /* hero figure — framed product screenshot */
+  .shot{margin:0; background:var(--surface); border:1px solid var(--line-2); border-radius:14px; box-shadow:var(--shadow-pop); overflow:hidden}
+  .shot .bar{display:flex; align-items:center; gap:6px; height:32px; padding:0 12px; background:var(--sunken); border-bottom:1px solid var(--line)}
+  .shot .bar i{width:9px; height:9px; border-radius:99px; background:var(--ink-200)}
+  .shot .bar span{margin-left:10px; font-family:var(--mono); font-size:11px; color:var(--text-3)}
+  .shot img{width:100%; height:auto}
+  .hero-fig{position:relative}
+  .hero-fig .tag{position:absolute; left:-14px; bottom:26px; background:var(--navy); color:#fff; font-size:13px; padding:10px 14px; border-radius:12px; box-shadow:var(--shadow-card); max-width:250px; line-height:1.45}
+  .hero-fig .tag b{display:block; font-family:var(--mono); font-size:11px; color:#9FB4F5; font-weight:500; letter-spacing:.05em; margin-bottom:3px}
+
+  /* ---------- section heads ---------- */
+  .sec{padding:84px 0}
+  .sec.alt{background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+  .sec-head{max-width:64ch; margin-bottom:44px}
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); margin-bottom:14px}
+  h2{font-weight:800; font-size:clamp(26px,3.3vw,38px); letter-spacing:-.03em; line-height:1.2; margin:0 0 16px}
+  h2 em{font-family:var(--serif); font-style:italic; font-weight:500; color:var(--accent-ink); letter-spacing:-.01em}
+  .sec-head p{font-size:17px; color:var(--text-2); margin:0}
+
+  /* ---------- problem + pillars ---------- */
+  .problem{display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid var(--line-2); border-radius:var(--r); background:var(--surface); margin-bottom:28px; overflow:hidden}
+  .problem div{padding:20px 22px; font-size:15px; color:var(--text-2); border-right:1px solid var(--line)}
+  .problem div:last-child{border-right:0}
+  .problem b{display:block; font-family:var(--mono); font-size:11.5px; font-weight:500; color:var(--warning); letter-spacing:.05em; margin-bottom:6px}
+  .pillars{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+  .pillar{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:28px 26px; box-shadow:var(--shadow-card)}
+  .pillar .n{font-family:var(--serif); font-size:15px; color:var(--accent); font-style:italic}
+  .pillar h3{font-size:21px; font-weight:800; letter-spacing:-.02em; margin:8px 0 10px}
+  .pillar p{font-size:15.5px; color:var(--text-2); margin:0}
+
+  /* ---------- features ---------- */
+  .features{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  .feat{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 22px 20px; transition:border-color .2s, transform .2s}
+  .feat:hover{border-color:var(--accent-200); transform:translateY(-2px)}
+  .feat .ic{width:36px; height:36px; border-radius:10px; background:var(--accent-50); color:var(--accent); display:grid; place-items:center; margin-bottom:14px}
+  .feat .ic svg{width:19px; height:19px}
+  .feat h3{font-size:16.5px; font-weight:750; margin:0 0 6px; letter-spacing:-.01em}
+  .feat p{font-size:14.5px; color:var(--text-2); margin:0; line-height:1.6}
+
+  /* ---------- screens gallery ---------- */
+  .gallery{display:grid; grid-template-columns:repeat(2,1fr); gap:26px}
+  .gallery figure{margin:0}
+  .gallery figcaption{margin-top:12px; font-size:14.5px; color:var(--text-2)}
+  .gallery figcaption b{color:var(--text); font-weight:700; margin-right:6px}
+  .demo-note{margin-top:26px; font-size:13.5px; color:var(--text-3)}
+
+  /* ---------- spec table ---------- */
+  .spec{width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r); overflow:hidden; font-size:15px}
+  .spec th, .spec td{text-align:left; padding:13px 18px; border-bottom:1px solid var(--line); vertical-align:top}
+  .spec thead th{font-family:var(--mono); font-size:11.5px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); background:var(--sunken)}
+  .spec tbody tr:last-child td{border-bottom:0}
+  .spec td.name{font-weight:700; white-space:nowrap; width:170px}
+  .spec td.group{font-family:var(--mono); font-size:12px; color:var(--accent-ink); white-space:nowrap; width:120px}
+  .spec td.use{color:var(--text-2)}
+
+  /* ---------- architecture ---------- */
+  .arch-figure{margin:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-card); padding:14px; overflow:hidden}
+  .arch-figure img{display:block; width:100%; height:auto}
+  .arch-rot-hint{display:none}
+  .how-kicker{margin-top:44px}
+  .how-steps{margin:16px 0 0; padding:0; list-style:none; counter-reset:hs; display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+  .how-steps li{counter-increment:hs; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px 18px; font-size:14px; line-height:1.6; color:var(--text-2)}
+  .how-steps li::before{content:counter(hs, decimal-leading-zero); font-family:var(--mono); font-size:12px; color:var(--accent-ink); display:block; margin-bottom:6px}
+  .how-steps li b{display:block; color:var(--text); font-weight:750; font-size:16px; margin-bottom:4px}
+
+  /* ---------- trust ---------- */
+  .trust{display:grid; grid-template-columns:1.25fr .75fr; gap:26px}
+  .posture{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+  .posture div{background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:18px}
+  .posture h3{display:flex; align-items:center; gap:8px; font-size:15.5px; margin:0 0 6px}
+  .posture h3::before{content:""; width:8px; height:8px; border-radius:2px; background:var(--positive); flex:none}
+  .posture p{margin:0; font-size:14px; color:var(--text-2)}
+  .side{display:flex; flex-direction:column; gap:14px}
+  .panel{background:var(--navy); color:#E4E9F3; border-radius:var(--r); padding:24px}
+  .panel .cap{font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; color:#9FB4F5; margin-bottom:12px}
+  .panel .big{font-family:var(--serif); font-variant-numeric:lining-nums tabular-nums; font-size:40px; font-weight:600; line-height:1; color:#fff}
+  .panel .big small{font-family:var(--sans); font-size:15px; font-weight:500; color:#C9D3E6; margin-left:6px}
+  .panel .row + .row{margin-top:16px}
+  .panel p{margin:14px 0 0; font-size:13.5px; color:#C9D3E6; line-height:1.55}
+  .stack{display:flex; flex-wrap:wrap; gap:8px}
+  .stack span{font-family:var(--mono); font-size:12.5px; padding:6px 11px; border:1px solid var(--line-2); border-radius:99px; background:var(--surface); color:var(--text-2)}
+
+  /* ---------- cta ---------- */
+  .cta{text-align:center}
+  .cta h2{max-width:22ch; margin:0 auto 16px}
+  .cta > .wrap > p{max-width:54ch; margin:0 auto 30px; color:var(--text-2)}
+  .term{font-variant-ligatures:none; max-width:700px; margin:0 auto 30px; text-align:left; background:var(--ink-900); color:#DCE3F0; border-radius:14px; padding:22px 24px; font-family:var(--mono); font-size:14px; line-height:1.9; overflow-x:auto; box-shadow:var(--shadow-pop)}
+  .term .c{color:#8FA0BE}
+  .term .p{color:#7EA2FF; user-select:none}
+  .cta .hero-actions{justify-content:center}
+
+  footer{padding:36px 0 48px; border-top:1px solid var(--line); font-size:13.5px; color:var(--text-3)}
+  footer .wrap{display:flex; flex-wrap:wrap; gap:10px 24px; justify-content:space-between}
+  footer a{text-decoration:underline; text-underline-offset:3px}
+
+  /* ---------- reveal ---------- */
+  .reveal{opacity:1; transform:none}
+  .js .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease}
+  .js .reveal.in{opacity:1; transform:none}
+
+  /* ---------- tablet ---------- */
+  @media (max-width:1024px){
+    .hero-grid{grid-template-columns:1fr; gap:44px}
+    .hero-fig .tag{left:12px}
+    .pillars, .features{grid-template-columns:repeat(2,1fr)}
+    .how-steps{grid-template-columns:repeat(2,1fr)}
+    .trust{grid-template-columns:1fr}
+    .side{flex-direction:row; flex-wrap:wrap}
+    .side > *{flex:1 1 280px}
+  }
+  /* ---------- mobile ---------- */
+  @media (max-width:640px){
+    .wrap{padding:0 18px}
+    body{font-size:16px}
+    .hero{padding:52px 0 48px}
+    .metrics{grid-template-columns:repeat(2,1fr); gap:20px 14px}
+    .hero-actions .btn{flex:1 1 100%}
+    .hero-fig .tag{position:static; margin-top:12px; max-width:none}
+    .sec{padding:60px 0}
+    .problem{grid-template-columns:1fr}
+    .problem div{border-right:0; border-bottom:1px solid var(--line)}
+    .problem div:last-child{border-bottom:0}
+    .pillars, .features, .gallery, .how-steps, .posture{grid-template-columns:1fr}
+    /* spec table → stacked cards */
+    .spec thead{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+    .spec, .spec tbody, .spec tr{display:block; width:100%}
+    .spec tr{border-bottom:1px solid var(--line); padding:14px 16px; position:relative}
+    .spec tbody tr:last-child{border-bottom:0}
+    .spec td{display:block; border:0; padding:0; width:auto!important}
+    .spec td.name{padding-right:96px; font-size:15.5px}
+    .spec td.group{position:absolute; top:15px; right:16px}
+    .spec td.use{margin-top:4px; font-size:14.5px}
+    /* architecture rotated to fill the vertical screen (SVG 1200×740) */
+    .arch-figure{position:relative; padding:0; aspect-ratio:740 / 1200}
+    .arch-figure img{position:absolute; top:50%; left:50%; max-width:none;
+      width:calc((100vw - 36px) * 1200 / 740); height:auto; transform:translate(-50%,-50%) rotate(90deg)}
+    .arch-rot-hint{display:block; font-size:12.5px; color:var(--text-3); text-align:center; margin-top:12px}
+    .term{font-size:12.5px; padding:18px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *, *::before, *::after{animation:none!important; transition:none!important}
+    .js .reveal{opacity:1; transform:none}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="my-agent-ops 처음으로">
+      <span class="mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M5 4v16M19 4v16M5 12h14" stroke="#7EE0D2" stroke-width="3" stroke-linecap="round"/></svg>
+      </span>
+      <b>my-agent-ops</b><span class="pill">local workbench</span>
+    </a>
+    <nav class="nav-links" aria-label="주요 섹션">
+      <a href="#value">가치</a>
+      <a href="#features">기능</a>
+      <a href="#screens">화면</a>
+      <a href="#architecture">동작 원리</a>
+      <a href="#trust">신뢰</a>
+      <a class="nav-cta" href="https://github.com/whchoi98/agent-ops">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ======== hero ======== -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span>CODEX · CLAUDE CODE · KIRO CLI</div>
+        <h1 class="hero-title">흩어진 에이전트 대화를<br><span class="hl">하나의 로컬 작업대</span>로</h1>
+        <p class="hero-sub">지난 대화를 찾고, 다음 할 일을 정리하고, 필요한 맥락을 담아 다시 실행합니다. 가져온 대화와 작업 상태는 내 컴퓨터의 SQLite에만 남습니다.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#start">설치하고 시작하기</a>
+          <a class="btn btn-ghost" href="#screens">화면 둘러보기</a>
+        </div>
+        <div class="metrics" role="list">
+          <div class="metric" role="listitem"><div class="v num">3</div><div class="l">지원 CLI<br>Codex · Claude Code · Kiro</div></div>
+          <div class="metric" role="listitem"><div class="v mono">127.0.0.1</div><div class="l">루프백에만<br>바인딩하는 서버</div></div>
+          <div class="metric" role="listitem"><div class="v num">0</div><div class="l">별도 계정 · 호스팅<br>백엔드 · 텔레메트리</div></div>
+          <div class="metric" role="listitem"><div class="v">한 / EN</div><div class="l">원문을 보존하는<br>화면 언어 전환</div></div>
+        </div>
+      </div>
+      <div class="hero-fig reveal">
+        <figure class="shot">
+          <div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>127.0.0.1 · #/overview</span></div>
+          <img src="../images/screenshots/overview-ko.png" width="1440" height="900" alt="my-agent-ops 워크스페이스 개요 화면. 전체 세션, 기록된 토큰과 비용, 실행 중인 작업, 기록된 Kiro credit과 진행할 작업 목록을 보여 줍니다.">
+        </figure>
+        <div class="tag"><b>OVERVIEW</b>세 CLI의 이력과 진행할 작업, 실행 상태를 한 화면에서 확인합니다.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== value ======== -->
+  <section class="sec" id="value">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Why my-agent-ops</div>
+        <h2>에이전트는 여럿인데, <em>기억</em>은 제각각입니다</h2>
+        <p>Codex, Claude Code, Kiro CLI는 각자 다른 위치와 형식으로 대화를 남깁니다. 어제 조사한 내용을 다시 찾고, 그 맥락을 다른 에이전트에 넘기고, 무엇을 실행했는지 확인하려면 도구 사이를 오가야 합니다.</p>
+      </div>
+      <div class="problem reveal">
+        <div><b>BEFORE · 찾기</b>CLI마다 따로 쌓인 이력을 파일 단위로 뒤져야 합니다.</div>
+        <div><b>BEFORE · 이어가기</b>다음 할 일과 필요한 맥락이 대화 속에 묻혀 사라집니다.</div>
+        <div><b>BEFORE · 확인하기</b>어떤 설정과 훅이 적용됐는지, 무엇이 실행됐는지 한눈에 보기 어렵습니다.</div>
+      </div>
+      <div class="pillars">
+        <article class="pillar reveal">
+          <div class="n">01</div>
+          <h3>한곳에서 찾습니다</h3>
+          <p>세 CLI의 원본 이력을 읽기 전용으로 가져와 대화 전체를 검색합니다. 메모와 태그, 저장 검색으로 다시 찾기 쉽게 정리합니다.</p>
+        </article>
+        <article class="pillar reveal">
+          <div class="n">02</div>
+          <h3>이어서 실행합니다</h3>
+          <p>작업센터에 다음 할 일을 남기고, 템플릿과 컨텍스트 묶음으로 프롬프트를 준비합니다. 명령을 미리 본 뒤 직접 실행을 시작합니다.</p>
+        </article>
+        <article class="pillar reveal">
+          <div class="n">03</div>
+          <h3>통제권을 지킵니다</h3>
+          <p>서버는 127.0.0.1에만 열리고 원본 이력은 수정하지 않습니다. 앱이 시작한 프로세스만 취소하며, 기록되지 않은 사용량은 추정하지 않고 미기록으로 남깁니다.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== features ======== -->
+  <section class="sec alt" id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Features</div>
+        <h2>찾기부터 실행, 점검까지 <em>한 흐름</em>으로</h2>
+        <p>대화 검색에서 시작해 작업 정리, 실행, 맥락 인계, 설정 점검까지 같은 로컬 데이터 위에서 이어집니다.</p>
+      </div>
+      <div class="features">
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+          <h3>검색과 정리</h3>
+          <p>원본 이력을 가져와 전체 대화를 검색하고 세션 필터, 메모, 태그, 세션 비교와 내보내기를 사용합니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></svg></div>
+          <h3>작업센터</h3>
+          <p>목록과 보드에서 다음 할 일, 우선순위, 기한, 세션·컨텍스트 연결과 마지막 실행 결과를 정리합니다. 완료 여부는 직접 정합니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 4v16l13-8z"/></svg></div>
+          <h3>실행 제어</h3>
+          <p>CLI 명령을 미리 보고 작업을 대기열에 넣습니다. 실시간 로그를 확인하고 앱이 시작한 작업만 취소하거나 다시 실행합니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></div>
+          <h3>컨텍스트 묶음</h3>
+          <p>메시지 인용과 메모를 출처와 함께 모아 로컬에서 프롬프트로 조합하고, Markdown이나 JSON으로 내보냅니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg></div>
+          <h3>변수형 템플릿</h3>
+          <p>텍스트, 여러 줄, 선택 입력으로 프롬프트를 채우고 적용 후 편집합니다. 이전 개정은 미리 보거나 복원할 수 있습니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 3h10l-1 7 3 3H5l3-3z"/><path d="M12 13v8"/></svg></div>
+          <h3>저장 검색과 빠른 접근</h3>
+          <p>상대 기간을 포함한 세션 조건을 저장하고, <code>Ctrl/Cmd + K</code> 팔레트에서 고정 검색, 작업, 프로젝트와 템플릿을 엽니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <h3>기록된 사용량 분석</h3>
+          <p>토큰, 비용, 모델·프로젝트·도구별 분포와 Kiro credit을 보여 줍니다. 기록된 0, 미기록, 부분 기록을 구분합니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 3H5a2 2 0 0 0-2 2v5M14 3h5a2 2 0 0 1 2 2v5M10 21H5a2 2 0 0 1-2-2v-5M14 21h5a2 2 0 0 0 2-2v-5"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h3>스킬 · 플러그인 · MCP 확인</h3>
+          <p>스킬, 플러그인, Power, MCP 선언을 출처 근거와 마스킹된 미리보기로 살펴봅니다. 분석이나 연결 점검은 직접 선택합니다.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg></div>
+          <h3>AutoHarness 관리</h3>
+          <p>범위별 정책을 확인하고 편집합니다. 선택형 Python 엔진으로 판정을 테스트하고, 훅 변경을 미리 보며 감사 기록을 조회합니다.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== screens ======== -->
+  <section class="sec" id="screens">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Screens</div>
+        <h2>실제 화면으로 보는 <em>작업 흐름</em></h2>
+        <p>세션을 찾고, 대화를 읽고, 할 일로 옮기고, 실행 결과와 사용량을 확인합니다.</p>
+      </div>
+      <div class="gallery">
+        <figure class="reveal">
+          <div class="shot"><div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>#/sessions</span></div>
+            <img src="../images/screenshots/sessions-ko.png" width="1440" height="900" loading="lazy" alt="세션 탐색 화면. 저장 검색, 어시스턴트별 필터와 세션 목록을 보여 줍니다."></div>
+          <figcaption><b>세션 탐색</b>대화 본문 전체를 검색하고 어시스턴트와 프로젝트로 좁힙니다.</figcaption>
+        </figure>
+        <figure class="reveal">
+          <div class="shot"><div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>#/sessions · 대화 상세</span></div>
+            <img src="../images/screenshots/session-detail-ko.png" width="1440" height="900" loading="lazy" alt="대화 상세 화면. 역할 필터, 메시지 목록과 작업 저장, 다른 에이전트 전달, 이어가기 버튼이 있습니다."></div>
+          <figcaption><b>대화 상세</b>역할별로 메시지를 걸러 읽고, 작업으로 저장하거나 다른 에이전트에 넘깁니다.</figcaption>
+        </figure>
+        <figure class="reveal">
+          <div class="shot"><div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>#/work-items</span></div>
+            <img src="../images/screenshots/work-items-ko.png" width="1440" height="900" loading="lazy" alt="작업센터 화면. 상태, 우선순위, 다음 할 일과 기한이 있는 작업 목록입니다."></div>
+          <figcaption><b>작업센터</b>다음 할 일과 기한, 연결된 세션을 목록이나 보드로 정리합니다.</figcaption>
+        </figure>
+        <figure class="reveal">
+          <div class="shot"><div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>#/runs</span></div>
+            <img src="../images/screenshots/runs-ko.png" width="1440" height="900" loading="lazy" alt="실행 보드 화면. 대기, 실행 중, 완료, 확인 필요로 나뉜 실행 카드가 있습니다."></div>
+          <figcaption><b>실행 보드</b>대기, 실행 중, 완료, 확인 필요 상태로 작업을 추적합니다.</figcaption>
+        </figure>
+        <figure class="reveal">
+          <div class="shot"><div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>#/analytics</span></div>
+            <img src="../images/screenshots/analytics-ko.png" width="1440" height="900" loading="lazy" alt="사용량 분석 화면. 기록된 토큰, 비용, 캐시 비율, Kiro credit과 일별 활동 차트가 있습니다."></div>
+          <figcaption><b>사용량 분석</b>기록된 값만 합산하고, 빠진 기록은 추정하지 않고 따로 표시합니다.</figcaption>
+        </figure>
+        <figure class="reveal">
+          <div class="shot"><div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>#/harness</span></div>
+            <img src="../images/screenshots/harness-ko.png" width="1440" height="900" loading="lazy" alt="하니스 관리 화면. AutoHarness 엔진 설정과 정책, 판정 테스트, 훅, 감사 탭이 있습니다."></div>
+          <figcaption><b>하니스 관리</b>정책, 판정 테스트, 훅 미리보기, 감사 기록을 탭으로 나눠 다룹니다.</figcaption>
+        </figure>
+      </div>
+      <p class="demo-note">모든 화면은 실제 대화 이력이 아닌 <code>agent-ops demo</code>의 격리된 샘플 데이터로 캡처했습니다.</p>
+    </div>
+  </section>
+
+  <!-- ======== spec: workspaces ======== -->
+  <section class="sec alt" id="workspaces">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Workspaces</div>
+        <h2>하루의 에이전트 작업을 담는 <em>워크스페이스</em></h2>
+        <p>사이드바의 각 화면은 같은 로컬 데이터를 서로 다른 용도로 보여 줍니다.</p>
+      </div>
+      <table class="spec reveal">
+        <caption class="sr-only">my-agent-ops 워크스페이스와 용도</caption>
+        <thead><tr><th scope="col">화면</th><th scope="col">용도</th><th scope="col">영역</th></tr></thead>
+        <tbody>
+          <tr><td class="name">개요</td><td class="use">에이전트 이력, 진행할 작업, 최근 실행, 실행 상태와 30일 활동 확인</td><td class="group">작업</td></tr>
+          <tr><td class="name">작업센터</td><td class="use">목록과 보드에서 업무 정리, 세션과 컨텍스트 묶음 연결, 실행 준비</td><td class="group">작업</td></tr>
+          <tr><td class="name">세션 · 대화 상세</td><td class="use">대화 본문 검색, 저장 검색, Markdown과 도구 출력 확인, 메모·태그 편집과 세션 비교</td><td class="group">작업</td></tr>
+          <tr><td class="name">실행 · 작업 인계</td><td class="use">명령 미리보기, 대기열과 실시간 로그, 취소와 재실행, 다른 에이전트용 프롬프트 준비</td><td class="group">작업</td></tr>
+          <tr><td class="name">프로젝트</td><td class="use">작업 경로 등록, 프로젝트별 실행 허용과 관련 이력 탐색</td><td class="group">작업</td></tr>
+          <tr><td class="name">컨텍스트 묶음</td><td class="use">메시지 인용, 메모 추가, 순서 정리, 프롬프트 조합, 내보내기와 실행 준비</td><td class="group">작업</td></tr>
+          <tr><td class="name">분석</td><td class="use">기록된 Kiro credit, 토큰, 비용, 모델·프로젝트·도구별 분포, 캐시 사용량과 실행 결과</td><td class="group">분석·관리</td></tr>
+          <tr><td class="name">자원</td><td class="use">서버와 소유 작업의 CPU, RSS, 최근 추이, 데이터 파일과 파일시스템 여유 공간</td><td class="group">분석·관리</td></tr>
+          <tr><td class="name">템플릿</td><td class="use">분류별 프롬프트 사용과 편집, 변수 입력 정의, 개정 이력 확인과 복원</td><td class="group">분석·관리</td></tr>
+          <tr><td class="name">스킬 · 플러그인</td><td class="use">정의, 캐시, 활성화 근거, 적용 범위, 원문과 선언된 도구·MCP·훅 확인</td><td class="group">분석·관리</td></tr>
+          <tr><td class="name">MCP</td><td class="use">클라이언트별 선언 확인과 미리보기 후 메타데이터 점검</td><td class="group">분석·관리</td></tr>
+          <tr><td class="name">하니스 관리</td><td class="use">정책 확인, AutoHarness 판정 테스트, 훅 미리보기와 감사 기록 조회</td><td class="group">분석·관리</td></tr>
+          <tr><td class="name">설정</td><td class="use">앱과 CLI 버전, 이력 경로, 수집 방식과 시간 제한, 동시 실행 수, 테마 설정</td><td class="group">분석·관리</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======== architecture + how it works ======== -->
+  <section class="sec" id="architecture">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Architecture</div>
+        <h2>모든 구성 요소가 <em>내 컴퓨터 안</em>에 있습니다</h2>
+        <p>Fastify 서버 하나가 화면, API, 실시간 이벤트를 같은 출처에서 제공합니다. 이력 수집과 에이전트 실행은 서로 분리돼 있어서, 세션을 가져오는 동작이 에이전트를 실행하지 않습니다. 모델 호출은 실행을 시작했을 때 각 CLI가 직접 담당합니다.</p>
+      </div>
+      <figure class="arch-figure reveal">
+        <img src="agent-ops-arch.svg" width="1200" height="740" loading="lazy" alt="my-agent-ops 아키텍처. 원본 세션 파일은 읽기 전용 수집기를 거쳐 SQLite와 FTS5에 저장됩니다. 127.0.0.1의 Fastify API가 React UI, 소유 프로세스 대기열, 읽기 전용 확장 목록, 하니스 관리를 연결합니다. 대기열은 Codex, Claude Code, Kiro CLI를 실행하고, 선택형 AutoHarness 브리지가 도구 입력을 실행 없이 판정합니다.">
+      </figure>
+      <p class="arch-rot-hint">모바일에서는 다이어그램을 세로로 돌려 보여 줍니다.</p>
+
+      <div class="kicker how-kicker reveal">동작 원리</div>
+      <ol class="how-steps">
+        <li class="reveal"><b>수집</b>읽기 전용 수집기가 앱이 소유한 <code>agent-ops sync</code> 자식 프로세스에서 원본 세션 파일을 읽고, 지문이 바뀐 항목만 SQLite + FTS5에 기록합니다.</li>
+        <li class="reveal"><b>탐색 · 정리</b>React UI가 Fastify API를 통해 전문 검색, 메모와 태그, 작업센터, 컨텍스트 묶음을 다룹니다. 변경은 SSE로 곧바로 반영됩니다.</li>
+        <li class="reveal"><b>실행</b>명령을 미리 보고 시작하면 소유 프로세스 대기열이 검증한 인수 배열로 Codex, Claude Code, Kiro CLI를 실행하고 로그와 결과를 저장합니다.</li>
+        <li class="reveal"><b>점검</b>읽기 전용 확장 목록과 하니스 관리가 설정 근거와 감사 기록을 보여 줍니다. 명시적으로 요청하면 AutoHarness 브리지가 도구 입력을 실행하지 않고 판정합니다.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ======== trust ======== -->
+  <section class="sec alt" id="trust">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Trust &amp; Stack</div>
+        <h2>편리함보다 먼저 지키는 <em>원칙</em></h2>
+        <p>코딩 에이전트의 대화에는 코드, 경로, 판단 근거가 담겨 있습니다. my-agent-ops는 그 기록을 밖으로 보내지도, 바꾸지도 않습니다.</p>
+      </div>
+      <div class="trust">
+        <div class="posture">
+          <div class="reveal"><h3>루프백 전용</h3><p>서버는 <code>127.0.0.1</code>에만 바인딩합니다. 프록시 접근은 <code>--public-url</code>을 명시해야 하며 Host, Origin, 로컬 연결, 변경 요청 헤더를 검사합니다.</p></div>
+          <div class="reveal"><h3>원본은 읽기 전용</h3><p>각 CLI의 원본 이력은 수정하지 않습니다. 세션 식별자, 사용자 메타데이터와 진단 정보를 그대로 보존합니다.</p></div>
+          <div class="reveal"><h3>소유한 프로세스만</h3><p>지원하는 CLI만 인수 배열로 실행하고, 이 앱이 시작한 프로세스만 취소합니다. 인증 정보는 각 CLI가 관리합니다.</p></div>
+          <div class="reveal"><h3>모르는 값은 모른다고</h3><p>토큰이나 비용 기록이 없으면 추정하거나 0으로 바꾸지 않고 미기록으로 표시합니다.</p></div>
+          <div class="reveal"><h3>데모는 따로</h3><p>데모 상태는 실제 데이터와 분리되고, 데모 모드에서는 에이전트가 실행되지 않습니다.</p></div>
+          <div class="reveal"><h3>설정은 근거로만</h3><p>확장 상태는 설정에서 확인한 근거일 뿐 실제 호출을 뜻하지 않습니다. 미리보기에서는 민감한 값을 가립니다.</p></div>
+        </div>
+        <div class="side">
+          <div class="panel reveal">
+            <div class="cap">VERIFIED · v1.5.0 기준</div>
+            <div class="row"><div class="big num">2,145<small>개 테스트</small></div></div>
+            <div class="row"><div class="big num">70<small>개 Chromium 시나리오</small></div></div>
+            <p>임시 저장소와 제어된 CLI 픽스처로 검증하며, 유료 모델 추론은 호출하지 않습니다.</p>
+          </div>
+          <div class="reveal">
+            <div class="kicker" style="margin-bottom:12px">Stack</div>
+            <div class="stack">
+              <span>Node.js 20.19+</span><span>TypeScript</span><span>Fastify</span><span>React</span><span>SQLite · FTS5</span><span>SSE</span><span>Playwright</span><span>MIT License</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== cta ======== -->
+  <section class="sec cta" id="start">
+    <div class="wrap">
+      <div class="kicker reveal">Get started</div>
+      <h2 class="reveal">샘플 데이터로 먼저, <em>내 이력</em>은 그다음에</h2>
+      <p class="reveal">Node.js 20.19 이상이 있으면 설치할 수 있습니다. 이력 수집과 데모 탐색에는 모델 실행이 필요하지 않습니다.</p>
+      <pre class="term reveal" aria-label="설치와 실행 명령"><span class="c"># GitHub 릴리스의 설치 파일(.tgz) 주소로 설치합니다.</span>
+<span class="p">$ </span>npm install -g &lt;release-url&gt;/agent-ops-local-&lt;version&gt;.tgz
+
+<span class="c"># 격리된 샘플 데이터로 둘러봅니다. 에이전트는 실행되지 않습니다.</span>
+<span class="p">$ </span>agent-ops demo
+
+<span class="c"># 내 Codex · Claude Code · Kiro 이력으로 시작합니다.</span>
+<span class="p">$ </span>agent-ops</pre>
+      <div class="hero-actions reveal">
+        <a class="btn btn-primary" href="https://github.com/whchoi98/agent-ops/releases/latest">최신 릴리스 받기</a>
+        <a class="btn btn-ghost" href="https://github.com/whchoi98/agent-ops#설치-방법">설치 안내 보기</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>my-agent-ops · npm 패키지 <code>agent-ops-local</code> · 명령 <code>agent-ops</code></span>
+    <span><a href="https://github.com/whchoi98/agent-ops">GitHub</a> · <a href="https://github.com/whchoi98/agent-ops/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/whchoi98/agent-ops/blob/main/CHANGELOG.md">변경 기록</a></span>
+  </div>
+</footer>
+
+<script>
+  document.documentElement.classList.add('js');
+  (function(){
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) document.querySelectorAll('svg animate, svg animateTransform').forEach(function(a){ a.remove(); });
+    var els = document.querySelectorAll('.reveal');
+    if (reduce || !('IntersectionObserver' in window)) { els.forEach(function(e){ e.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin:'0px 0px -8% 0px', threshold:.08 });
+    els.forEach(function(e){ io.observe(e); });
+  })();
+</script>
+</body>
+</html>

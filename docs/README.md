@@ -5,6 +5,7 @@
 <a id="english"></a>
 ## English
 
+- [Product brochure](https://whchoi98.github.io/agent-ops/brochure/): one-page Korean introduction with screens and architecture.
 - [Getting started](onboarding.md): prerequisites, installation and verification.
 - [Architecture](architecture.md): components, data flow and code locations.
 - [Design](design.md): product requirements and operating defaults.
@@ -27,6 +28,7 @@
 <a id="korean"></a>
 ## 한국어
 
+- [제품 브로셔](https://whchoi98.github.io/agent-ops/brochure/): 화면과 아키텍처를 담은 한 페이지 소개.
 - [시작하기](onboarding.md): 요구 사항, 설치와 검증.
 - [아키텍처](architecture.md): 구성 요소, 데이터 흐름과 코드 위치.
 - [설계](design.md): 제품 요구 사항과 운영 기본값.
