@@ -850,3 +850,20 @@ HARNESS_TEST_PYTHON=/tmp/agent-ops-harness-engine/bin/python \
 agent-ops-local-1.5.0.tgz
 SHA-256: 61d523100fc882f8b63fd9ebbc138e1d9fcc786dbd555b18ce1fe9566efb456f
 ```
+
+## 제품 브로셔와 GitHub Pages 게시
+
+`docs/brochure/`에 반응형 한국어 제품 브로셔와 아키텍처 SVG를 추가했습니다.
+화면 캡처는 기존 데모 데이터 스크린샷을 상대 경로로 재사용합니다. 수치는
+README와 이 문서의 기록만 사용했고, 테스트 수는 v1.5.0 기준으로 표시했습니다.
+
+브로셔 구조 점검 스크립트의 26개 항목이 모두 통과했습니다. Chromium에서
+1280px, 768px, 375px 폭으로 렌더링해 가로 넘침, 깨진 이미지와 스크립트
+오류가 없음을 확인했고, 375px에서는 표를 카드로 바꾸고 다이어그램을 세로로
+회전합니다.
+
+2026-10-05에 GitHub Pages를 `main` 브랜치의 `/docs`로 활성화하고
+`docs/.nojekyll`로 Jekyll 처리를 껐습니다. 인증 없이 요청한
+`https://whchoi98.github.io/agent-ops/brochure/`, 아키텍처 SVG와 스크린샷
+7개가 모두 HTTP 200을 반환했으며 게시된 페이지에서도 같은 세 가지 폭의
+렌더링 점검이 통과했습니다.
