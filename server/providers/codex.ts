@@ -77,8 +77,9 @@ export function createCodexParser(context: ParseContext): SessionParser {
   return {
     consume(value) {
       ordinal++;
-      // A child rollout starts with a copy of its parent's history, which the
-      // parent session already holds; only records after the boundary are its own.
+      // A child rollout starts with a copy of its parent's history, which the parent
+      // session already holds. subagent_history_start_ordinal is the 0-based line of
+      // the first record this thread owns; ordinal is 1-based, so lines 1..start-1 skip.
       if (ordinal > 1 && ordinal <= inheritedUntil) return;
       const record = object(value);
       const payload = object(record.payload);
