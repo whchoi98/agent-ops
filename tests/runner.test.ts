@@ -430,6 +430,22 @@ describe('project and session permission gates', () => {
     expect((await finished(created.id)).status).toBe('completed');
     expect(fixtureCalls()[0].stdin).toBe('Continue from the child context');
   });
+
+  it('rejects native resume after native cleanup removed the source while allowing a handoff', async () => {
+    const removed = { ...session('codex'), sourcePath: join(root, 'cleaned-rollout.jsonl') };
+    store.upsertSession(removed);
+    const instance = runner();
+    await expect(instance.preview(request({ resumeSessionId: removed.id })))
+      .rejects.toMatchObject({ statusCode: 409, message: expect.stringMatching(/source file.*handoff/i) });
+    await expect(instance.create(request({ resumeSessionId: removed.id }))).rejects.toMatchObject({ statusCode: 409 });
+    expect(fixtureCalls()).toEqual([]);
+    const handoff = await instance.create(request({ agent: 'claude', sourceSessionId: removed.id, prompt: 'Continue from the retained history' }));
+    expect((await finished(handoff.id)).status).toBe('completed');
+    writeFileSync(removed.sourcePath, '{}\n');
+    const resumed = await instance.create(request({ resumeSessionId: removed.id }));
+    expect((await finished(resumed.id)).status).toBe('completed');
+    expect(fixtureCalls().at(-1)?.argv).toContain('resume');
+  });
 });
 
 describe('queue scheduling and lifecycle', () => {

@@ -1,7 +1,7 @@
 import { constants, type Stats } from 'node:fs';
 import { lstat, open, opendir, realpath } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { extname, join, parse, resolve, sep } from 'node:path';
+import { extname, isAbsolute, join, parse, resolve, sep } from 'node:path';
 import type { Agent } from '../../shared/types.js';
 import { hash } from './common.js';
 
@@ -150,6 +150,17 @@ async function stamp(path: string, optional = false): Promise<unknown> {
 export async function assertSourcePath(source: Source) {
   validateSourceFile(source.kind, await lstat(source.path));
   if (await realpath(source.path) !== source.path) throw new SourceError('Symbolic link source ancestor skipped.');
+}
+
+/** False only when a recorded local source is gone; virtual paths and other errors stay unknown. */
+export async function sourceAvailable(path: string): Promise<boolean | undefined> {
+  if (!path || !isAbsolute(path)) return undefined;
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    return ['ENOENT', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '') ? false : undefined;
+  }
 }
 
 /**

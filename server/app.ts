@@ -17,6 +17,7 @@ import { BackgroundSync } from './background-sync.js';
 import { retryWrite } from './write-retry.js';
 import { Runner } from './runner.js';
 import { detectConnectors, invalidateConnectorCache } from './connectors.js';
+import { sourceAvailable } from './providers/files.js';
 import { enforceAccess, parsePublicUrl, stripProxyPrefix } from './access.js';
 import { ExtensionService, type ExtensionServiceOptions } from './extensions/service.js';
 import { registerExtensionRoutes } from './extensions/routes.js';
@@ -279,7 +280,9 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     const query = z.object({ includeMessages: z.enum(['true', 'false']).optional() }).parse(request.query);
     const session = store.getSession(idParam(request.params), query.includeMessages !== 'false');
     if (!session) throw error(404, '세션을 찾을 수 없습니다.');
-    return session;
+    // Native cleanup can remove a source between syncs; it is checked per read, never stored.
+    const available = await sourceAvailable(session.sourcePath);
+    return available === undefined ? session : { ...session, sourceAvailable: available };
   });
   app.get('/api/sessions/:id/messages', async (request) => {
     const id = idParam(request.params);
