@@ -1,7 +1,7 @@
 import { constants, type Stats } from 'node:fs';
-import { lstat, open, opendir, realpath } from 'node:fs/promises';
+import { lstat, open, opendir, realpath, stat as followStat } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { extname, join, parse, resolve, sep } from 'node:path';
+import { extname, isAbsolute, join, parse, resolve, sep } from 'node:path';
 import type { Agent } from '../../shared/types.js';
 import { hash } from './common.js';
 
@@ -150,6 +150,17 @@ async function stamp(path: string, optional = false): Promise<unknown> {
 export async function assertSourcePath(source: Source) {
   validateSourceFile(source.kind, await lstat(source.path));
   if (await realpath(source.path) !== source.path) throw new SourceError('Symbolic link source ancestor skipped.');
+}
+
+/** False when no file is left at a recorded local source path; virtual paths and other errors stay unknown. */
+export async function sourceAvailable(path: string): Promise<boolean | undefined> {
+  if (!path || !isAbsolute(path)) return undefined;
+  try {
+    // Follow links: the CLI needs a readable file, not a dangling link or a directory.
+    return (await followStat(path)).isFile();
+  } catch (error) {
+    return ['ENOENT', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '') ? false : undefined;
+  }
 }
 
 /**

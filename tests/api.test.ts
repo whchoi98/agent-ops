@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createApp, type AppContext } from '../server/app.js';
 import { Store } from '../server/store.js';
-import type { ConnectorStatus } from '../shared/types.js';
+import { emptyUsage, type ConnectorStatus } from '../shared/types.js';
 
 const contexts: AppContext[] = [];
 const dirs: string[] = [];
@@ -56,6 +56,42 @@ describe('local API boundary', () => {
     expect(retry.statusCode).toBe(403);
     const real = await setup(false);
     expect((await real.app.inject({ url: '/api/sessions' })).json()).toEqual({ items: [], total: 0 });
+  });
+  it('reports whether a session native source still exists at detail time without listing it', async () => {
+    const { app, store } = await setup(false);
+    const dir = mkdtempSync(join(tmpdir(), 'agent-ops-api-source-'));
+    dirs.push(dir);
+    const present = join(dir, 'present.jsonl');
+    writeFileSync(present, '{}\n');
+    const recorded = (id: string, sourcePath: string) => store.upsertSession({
+      id: `codex:${id}`, nativeId: id, agent: 'codex', title: 'Retained session', projectPath: dir, projectName: 'retained',
+      model: 'recorded-model', startedAt: '2026-10-18T10:00:00.000Z', updatedAt: '2026-10-18T10:01:00.000Z', status: 'recorded',
+      messageCount: 1, toolCallCount: 0, usage: emptyUsage(), sourcePath,
+      messages: [{ id: 'm1', role: 'user', content: 'Synthetic retained request', timestamp: '2026-10-18T10:00:00.000Z' }],
+    });
+    const replaced = join(dir, 'replaced.jsonl');
+    mkdirSync(replaced);
+    const dangling = join(dir, 'dangling.jsonl');
+    symlinkSync(join(dir, 'gone.jsonl'), dangling);
+    recorded('present', present);
+    recorded('removed', join(dir, 'removed.jsonl'));
+    recorded('replaced', replaced);
+    recorded('dangling', dangling);
+    recorded('virtual', 'demo://codex/virtual');
+    const detail = async (id: string) => (await app.inject({ url: `/api/sessions/${encodeURIComponent(id)}?includeMessages=false` })).json();
+    expect(await detail('codex:present')).toMatchObject({ sourceAvailable: true });
+    expect(await detail('codex:removed')).toMatchObject({ sourceAvailable: false, messageCount: 1 });
+    expect(await detail('codex:replaced')).toMatchObject({ sourceAvailable: false });
+    expect(await detail('codex:dangling')).toMatchObject({ sourceAvailable: false });
+    expect(await detail('codex:virtual')).not.toHaveProperty('sourceAvailable');
+    // Saving metadata returns the detail the client keeps, so it carries the same check.
+    const patched = await app.inject({
+      method: 'PATCH', url: `/api/sessions/${encodeURIComponent('codex:removed')}?includeMessages=false`, headers, payload: { note: 'Retained note' },
+    });
+    expect(patched.json()).toMatchObject({ note: 'Retained note', sourceAvailable: false });
+    const listed = (await app.inject({ url: '/api/sessions' })).json().items as Record<string, unknown>[];
+    expect(listed).toHaveLength(5);
+    expect(listed.some(item => 'sourceAvailable' in item)).toBe(false);
   });
   it('persists metadata, searches it, and downloads a safe export', async () => {
     const { app, store } = await setup();

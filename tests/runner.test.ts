@@ -382,9 +382,12 @@ describe('project and session permission gates', () => {
 
   it('rejects historical Kiro SQLite resume on V3 when an engine selector is not advertised', async () => {
     const previous = { ...session('kiro'), sourcePath: join(root, 'conversations.sqlite3') };
+    // The database exists, so the engine-selector guard rather than the missing-source check rejects it.
+    writeFileSync(previous.sourcePath, '');
     store.upsertSession(previous);
     const instance = runner({ connectors: async () => connectors({ version: 'kiro-cli 3.0.1' }) });
-    await expect(instance.create(request({ agent: 'kiro', resumeSessionId: previous.id }))).rejects.toMatchObject({ statusCode: 409 });
+    await expect(instance.create(request({ agent: 'kiro', resumeSessionId: previous.id })))
+      .rejects.toMatchObject({ statusCode: 409, message: expect.stringMatching(/engine selector/) });
     expect(fixtureCalls()).toEqual([]);
   });
 
@@ -429,6 +432,22 @@ describe('project and session permission gates', () => {
     const created = await instance.create(request({ sourceSessionId: child.id, prompt: 'Continue from the child context' }));
     expect((await finished(created.id)).status).toBe('completed');
     expect(fixtureCalls()[0].stdin).toBe('Continue from the child context');
+  });
+
+  it('rejects native resume after native cleanup removed the source while allowing a handoff', async () => {
+    const removed = { ...session('codex'), sourcePath: join(root, 'cleaned-rollout.jsonl') };
+    store.upsertSession(removed);
+    const instance = runner();
+    await expect(instance.preview(request({ resumeSessionId: removed.id })))
+      .rejects.toMatchObject({ statusCode: 409, message: expect.stringMatching(/source file.*handoff/i) });
+    await expect(instance.create(request({ resumeSessionId: removed.id }))).rejects.toMatchObject({ statusCode: 409 });
+    expect(fixtureCalls()).toEqual([]);
+    const handoff = await instance.create(request({ agent: 'claude', sourceSessionId: removed.id, prompt: 'Continue from the retained history' }));
+    expect((await finished(handoff.id)).status).toBe('completed');
+    writeFileSync(removed.sourcePath, '{}\n');
+    const resumed = await instance.create(request({ resumeSessionId: removed.id }));
+    expect((await finished(resumed.id)).status).toBe('completed');
+    expect(fixtureCalls().at(-1)?.argv).toContain('resume');
   });
 });
 

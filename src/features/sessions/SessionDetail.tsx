@@ -11,6 +11,7 @@ import { useApp, useData } from '../../state/AppProvider';
 import { SessionReader } from './SessionReader';
 import { SessionInfo, SessionMetadata } from './SessionMetadata';
 import { HandoffDialog } from './HandoffDialog';
+import { RESUME_BLOCK_MESSAGES, resumeBlock } from './resume';
 
 const CaptureWorkItemDialog = lazy(() => import('../work-items/CaptureWorkItemDialog').then(module => ({ default: module.CaptureWorkItemDialog })));
 
@@ -30,7 +31,8 @@ export function SessionDetailDialog({ id }: { id: string }) {
   const [format, setFormat] = useState<'md' | 'json' | 'html'>('md');
   const [exporting, setExporting] = useState(false);
   const connector = data.connectors.find(item => item.agent === session?.agent);
-  const canResume = Boolean(connector?.supportsResume && session?.resumable !== false);
+  const blocked = resumeBlock(session, connector);
+  const canResume = blocked === null;
   useEffect(() => subscribe(event => { if (event.type === 'refresh') resource.reload(); }), [subscribe, resource.reload]);
   async function download() {
     setExporting(true);
@@ -59,8 +61,8 @@ export function SessionDetailDialog({ id }: { id: string }) {
           <Button icon={ListTodo} onClick={() => setCreateWork(true)}>{t('작업으로 저장')}</Button>
           <Button icon={ArrowRightLeft} onClick={() => setHandoff(true)}><Trans message={"다른 에이전트에 전달"} /></Button>
           <Button icon={RotateCcw} variant="primary" onClick={resume} disabled={!canResume}
-            title={canResume ? t("기존 세션을 이어갈 새 실행 준비") : t("이 기록은 CLI에서 직접 이어갈 수 없습니다. 작업 인계를 사용하세요.")}><Trans message={"이어가기"} /></Button></div>
-        {!canResume && <span className="resume-unavailable"><Trans message={"이 기록은 CLI에서 직접 이어갈 수 없습니다. 다른 에이전트에 맥락을 전달할 수 있습니다."} /></span>}
+            title={blocked ? t(RESUME_BLOCK_MESSAGES[blocked].title) : t("기존 세션을 이어갈 새 실행 준비")}><Trans message={"이어가기"} /></Button></div>
+        {blocked && <span className="resume-unavailable"><Trans message={RESUME_BLOCK_MESSAGES[blocked].notice} /></span>}
       </div>}>
       {resource.error && <ErrorState message={resource.error} retry={resource.reload} compact />}
       {!session ? <Skeleton rows={8} /> : <>

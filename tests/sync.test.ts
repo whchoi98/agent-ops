@@ -104,3 +104,50 @@ it('persists Kiro row checkpoints across restarts and only imports the changed c
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+function codexSource(dir: string, nativeId: string) {
+  const source = join(dir, `${nativeId}.jsonl`);
+  writeFileSync(source, [
+    { type: 'session_meta', payload: { id: nativeId, cwd: dir, timestamp: '2026-10-18T10:00:00Z' } },
+    { type: 'response_item', timestamp: '2026-10-18T10:00:01Z', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Synthetic retained request' }] } },
+  ].map((value) => JSON.stringify(value)).join('\n'));
+  return source;
+}
+
+it('re-reads unchanged Codex history once after the thread-lineage parser change', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-ops-sync-codex-format-'));
+  const store = new Store(':memory:');
+  try {
+    const source = codexSource(dir, 'format-fixture');
+    store.saveSettings({ sourceRoots: { codex: [source], claude: [], kiro: [] } });
+    expect((await new SyncService(store).run()).imported).toBe(1);
+    expect(store.getFingerprint(source)?.startsWith('format-v4-codex-threads:')).toBe(true);
+    store.setFingerprint(source, store.getFingerprint(source)!.replace(/^[^:]+:/, 'format-v3:'));
+    expect((await new SyncService(store).run()).imported).toBe(1);
+    expect((await new SyncService(store).run()).imported).toBe(0);
+  } finally {
+    store.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+it('keeps imported history and annotations after native cleanup deletes the source file', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-ops-sync-retained-'));
+  const store = new Store(':memory:');
+  try {
+    const source = codexSource(dir, 'retained-fixture');
+    store.saveSettings({ sourceRoots: { codex: [dir], claude: [], kiro: [] } });
+    expect((await new SyncService(store).run()).imported).toBe(1);
+    store.patchSession('codex:retained-fixture', { note: 'Keep after cleanup', bookmarked: true });
+    rmSync(source);
+    const report = await new SyncService(store).run();
+    expect(report).toMatchObject({ imported: 0, filesScanned: 0 });
+    expect(store.getSession('codex:retained-fixture')).toMatchObject({
+      sourcePath: source, note: 'Keep after cleanup', bookmarked: true,
+      messages: [expect.objectContaining({ role: 'user', content: 'Synthetic retained request' })],
+    });
+  } finally {
+    store.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -4,7 +4,7 @@ import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z, ZodError } from 'zod';
-import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent, type RunRequest } from '../shared/types.js';
+import { AGENTS, type Bootstrap, type ConnectorStatus, type Settings, type RunEvent, type RunRequest, type SessionDetail } from '../shared/types.js';
 import type { SyncPolicy, SyncStatus } from '../shared/sync-control.js';
 import type { ProductivityChange } from '../shared/work-items.js';
 import { Store, newId } from './store.js';
@@ -17,6 +17,7 @@ import { BackgroundSync } from './background-sync.js';
 import { retryWrite } from './write-retry.js';
 import { Runner } from './runner.js';
 import { detectConnectors, invalidateConnectorCache } from './connectors.js';
+import { sourceAvailable } from './providers/files.js';
 import { enforceAccess, parsePublicUrl, stripProxyPrefix } from './access.js';
 import { ExtensionService, type ExtensionServiceOptions } from './extensions/service.js';
 import { registerExtensionRoutes } from './extensions/routes.js';
@@ -78,6 +79,11 @@ function error(statusCode: number, message: string): Error & { statusCode: numbe
   return Object.assign(new Error(message), { statusCode });
 }
 const idParam = (params: unknown) => z.object({ id: shortText }).parse(params).id;
+/** Native cleanup can remove a source between syncs, so details check it per response and never store it. */
+async function withSourceAvailability(session: SessionDetail): Promise<SessionDetail> {
+  const available = await sourceAvailable(session.sourcePath);
+  return available === undefined ? session : { ...session, sourceAvailable: available };
+}
 type Notice = { type: 'refresh' } | { type: 'run-event'; runId: string; event: RunEvent }
   | { type: 'sync-state'; status: SyncStatus } | ProductivityChange;
 export interface AppContext {
@@ -279,7 +285,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     const query = z.object({ includeMessages: z.enum(['true', 'false']).optional() }).parse(request.query);
     const session = store.getSession(idParam(request.params), query.includeMessages !== 'false');
     if (!session) throw error(404, '세션을 찾을 수 없습니다.');
-    return session;
+    return withSourceAvailability(session);
   });
   app.get('/api/sessions/:id/messages', async (request) => {
     const id = idParam(request.params);
@@ -309,7 +315,7 @@ export async function createApp(options: AppOptions): Promise<AppContext> {
     const session = await write(() => store.patchSession(idParam(request.params), patch, query.includeMessages !== 'false'));
     if (!session) throw error(404, '세션을 찾을 수 없습니다.');
     broadcast({ type: 'refresh' });
-    return session;
+    return withSourceAvailability(session);
   });
   app.get('/api/sessions/:id/export', async (request, reply) => {
     const format = z.object({ format: z.enum(['json', 'md', 'html']).default('md') }).parse(request.query).format;

@@ -46,7 +46,9 @@ and retain diagnostics. Each parsed session's ledger is capped at **20,000 turns
 Numeric overflow also remains unknown.
 
 The one-time backfill changes only Kiro's parser fingerprint to
-`format-v4-kiro-credits`. Other providers keep `format-v3`. Schema **4** and the
+`format-v4-kiro-credits`. Codex later moved to `format-v4-codex-threads` for thread
+links and tool outcomes, so each Codex file is read once more; Claude Code keeps
+`format-v3`. Schema **4** and the
 existing session JSON remain in use, without a persistent per-turn ledger.
 Usage-only updates skip inflation and reconstruction of existing search content;
 transcripts and user titles, notes, tags and bookmarks remain intact.
@@ -202,8 +204,9 @@ envelope의 `updated_at` 또는 `updatedAt`, 그다음 turn 종료 시각으로 
 40,000개**까지 보관하며 한도를 넘으면 credit을 미확인으로 처리합니다.
 숫자 합산 범위를 넘는 값도 미확인으로 남깁니다.
 
-한 번의 보충 수집에는 Kiro 파서 지문만 `format-v4-kiro-credits`로 바꾸고 다른
-제공자는 `format-v3`를 유지합니다. 스키마 **4**와 기존 세션 JSON을 사용하며
+한 번의 보충 수집에는 Kiro 파서 지문만 `format-v4-kiro-credits`로 바꿉니다. 이후 Codex는
+thread 연결과 도구 결과 판정을 위해 `format-v4-codex-threads`로 바뀌어 각 Codex 파일을
+한 번 더 읽고, Claude Code는 `format-v3`를 유지합니다. 스키마 **4**와 기존 세션 JSON을 사용하며
 turn별 집계를 영구 저장하지 않습니다. 사용량만 바뀌면 기존 검색 본문의 압축
 해제와 재구축을 건너뜁니다. 대화 원문, 사용자 제목, 메모, 태그와 북마크는 유지합니다.
 

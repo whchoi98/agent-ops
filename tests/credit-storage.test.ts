@@ -126,7 +126,8 @@ it('backfills unchanged Kiro credit metadata without reparsing unchanged Codex o
   const saved = db.allSessions().find(value => value.agent === 'kiro')!;
   db.patchSession(saved.id, { bookmarked: true, note: 'Keep my note', title: 'Pinned Kiro title' });
   db.db.prepare("UPDATE sessions SET data=json_remove(data,'$.usage.credits','$.usage.creditsPartial') WHERE agent='kiro'").run();
-  for (const path of sources) db.setFingerprint(path, db.getFingerprint(path)!.replace(/^[^:]+:/, 'format-v3:'));
+  // Claude Code is still on format-v3; Codex has since moved on and is left current.
+  for (const path of [claude, kiro, transcript]) db.setFingerprint(path, db.getFingerprint(path)!.replace(/^[^:]+:/, 'format-v3:'));
   const originalCodex = db.getFingerprint(codex);
   const originalClaude = db.getFingerprint(claude);
   const report = await new SyncService(db).run();

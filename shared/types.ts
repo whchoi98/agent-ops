@@ -69,6 +69,8 @@ export interface ImportedSession extends Omit<Session, 'bookmarked' | 'tags' | '
 }
 export interface SessionDetail extends Session {
   messages: Message[];
+  /** Checked when the detail is read; false after native cleanup removed the local source file. */
+  sourceAvailable?: boolean;
 }
 export interface Project {
   id: string;

@@ -16,6 +16,8 @@ export function createCodexParser(context: ParseContext): SessionParser {
   const mirrors = new Map<string, Mirror>();
   const aliases = new Map<string, string>();
   const eventIds = new Set<string>();
+  const failedCalls = new Set<string>();
+  let inheritedUntil = 0;
   let ordinal = 0;
   let turn = '';
 
@@ -56,21 +58,29 @@ export function createCodexParser(context: ParseContext): SessionParser {
       if (role === 'user' || role === 'assistant' || role === 'system' || role === 'developer') {
         message('response', `message:${key}`, role === 'developer' ? 'system' : role, text(item.content), time);
       } else builder.warn('An unsupported Codex message role was ignored.');
+    } else if (type === 'agent_message') {
+      // Inter-agent traffic is neither the user's prompt nor this thread's answer.
+      message('response', `agent-message:${key}`, 'system', text(item.content), time);
     } else if (['function_call', 'custom_tool_call', 'tool_call'].includes(type)) {
       builder.toolCall(firstString(item.call_id, item.id) || key, firstString(item.name, item.tool_name),
         item.arguments ?? item.input ?? item.args, time, builder.model);
-    } else if (['function_call_output', 'custom_tool_call_output', 'tool_result'].includes(type)) {
-      builder.toolResult(firstString(item.call_id, item.tool_call_id, item.id) || key,
-        item.output ?? item.content, time, item.is_error === true || item.status === 'failed');
-    } else if (['local_shell_call', 'web_search_call', 'computer_call'].includes(type)) {
+    } else if (['function_call_output', 'custom_tool_call_output', 'tool_result', 'tool_search_output'].includes(type)) {
+      const callId = firstString(item.call_id, item.tool_call_id, item.id) || key;
+      builder.toolResult(callId, item.output ?? item.content ?? item.tools, time,
+        item.is_error === true || item.status === 'failed' || failedCalls.has(callId));
+    } else if (['local_shell_call', 'web_search_call', 'computer_call', 'tool_search_call'].includes(type)) {
       builder.toolCall(firstString(item.call_id, item.id) || key,
-        type === 'local_shell_call' ? 'local_shell' : type.replace(/_call$/, ''), item.action ?? item.input, time, builder.model);
+        type === 'local_shell_call' ? 'local_shell' : type.replace(/_call$/, ''), item.action ?? item.input ?? item.arguments, time, builder.model);
     }
   }
 
   return {
     consume(value) {
       ordinal++;
+      // A child rollout starts with a copy of its parent's history, which the parent
+      // session already holds. subagent_history_start_ordinal is the 0-based line of
+      // the first record this thread owns; ordinal is 1-based, so lines 1..start-1 skip.
+      if (ordinal > 1 && ordinal <= inheritedUntil) return;
       const record = object(value);
       const payload = object(record.payload);
       const type = string(record.type);
@@ -78,12 +88,18 @@ export function createCodexParser(context: ParseContext): SessionParser {
       builder.observe(time);
       if (type === 'session_meta' || (!type && record.id && record.timestamp)) {
         const metadata = type ? payload : record;
+        // Without this boundary, copied parent records cannot be told apart and
+        // the copied parent session_meta keeps the rollout withheld.
+        const start = metadata.subagent_history_start_ordinal;
+        if (ordinal === 1 && typeof start === 'number' && Number.isSafeInteger(start) && start > 1) inheritedUntil = start;
         builder.identify(metadata.id ?? metadata.session_id);
         builder.observe(metadata.timestamp);
         builder.projectPath = firstString(metadata.cwd, metadata.project_path, builder.projectPath);
         builder.model = firstString(metadata.model, builder.model);
         builder.title = firstString(metadata.title, builder.title);
-        builder.parentId = firstString(metadata.forked_from_id, metadata.parent_session_id, builder.parentId);
+        builder.parentId = firstString(metadata.parent_thread_id, metadata.forked_from_id, metadata.parent_session_id, builder.parentId);
+        // Spawned workers and automatic reviews belong to another thread; a user fork is its own root.
+        if (['subagent', 'guardian_review'].includes(string(metadata.thread_source))) builder.resumable = false;
       } else if (type === 'turn_context') {
         builder.projectPath = firstString(payload.cwd, builder.projectPath);
         builder.model = firstString(payload.model, builder.model);
@@ -108,6 +124,16 @@ export function createCodexParser(context: ParseContext): SessionParser {
           if (eventType === 'user_message' && !builder.title) builder.title = codexTitleCandidate(text(payload.message ?? payload.content));
           message('event', `event:${eventId}`, eventType === 'user_message' ? 'user' : 'assistant',
             text(payload.message ?? payload.content), time);
+        } else if (eventType === 'item_completed') {
+          // Paginated history mirrors response items here; only the outcome is new,
+          // so it annotates the matching tool result instead of adding a call.
+          const item = object(payload.item);
+          const itemId = string(item.id);
+          if (itemId && (item.status === 'failed' || item.status === 'declined')) {
+            const result = builder.get(`result:${itemId}`);
+            if (result) result.isError = true;
+            else if (failedCalls.size < 40_000) failedCalls.add(itemId);
+          }
         } else if (eventType === 'session_title' || eventType === 'thread_name_updated') {
           builder.title = firstString(payload.title, payload.name, builder.title);
         }
@@ -115,7 +141,12 @@ export function createCodexParser(context: ParseContext): SessionParser {
         response(record, time);
       }
     },
-    finish: () => builder.finish(),
+    finish() {
+      if (inheritedUntil && ordinal <= inheritedUntil) {
+        builder.warn('The inherited-history boundary is beyond the recorded lines; no records of this thread were read.');
+      }
+      return builder.finish();
+    },
   };
 }
 

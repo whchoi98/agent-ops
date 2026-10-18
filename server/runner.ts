@@ -11,6 +11,7 @@ import {
 } from '../shared/types.js';
 import { buildCommand, validateRunRequest, redactCliText as redact } from './commands.js';
 import { connectorForResume, detectConnectors } from './connectors.js';
+import { sourceAvailable } from './providers/files.js';
 import { newId, type Store } from './store.js';
 import type { OwnedProcessRoot } from './resources/processes.js';
 import { retryWrite } from './write-retry.js';
@@ -406,6 +407,11 @@ export class Runner {
       this.assertOpen();
       if (sourceWorkspace.identity !== workspace.identity) throw failure(400, 'The source session belongs to a different project workspace.');
       if (request.resumeSessionId) {
+        const available = await sourceAvailable(session.sourcePath);
+        this.assertOpen();
+        if (available === false) {
+          throw failure(409, 'The native source file is no longer at its recorded path, so the CLI cannot resume this session. Sync again if it was moved, or start a new run with a context handoff instead.');
+        }
         nativeId = session.nativeId;
         if (!nativeId) throw failure(409, 'The session has no known native resume ID.');
         connector = connectorForResume(connector, session.sourcePath);

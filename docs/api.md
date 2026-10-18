@@ -69,6 +69,11 @@ excerpt around the match without splitting surrogate pairs. Context capture
 uses original-message offsets, not offsets relative to that preview. The
 single-message endpoint returns full content.
 `PATCH /sessions/:id?includeMessages=false` also avoids returning the transcript.
+`GET` and `PATCH /sessions/:id` add `sourceAvailable` when `sourcePath` is a local
+absolute path: `false` means no regular file is at that path (deleted, or moved until
+the next sync). It is checked on each detail response, is not stored and is absent
+from session lists, virtual demo paths and inconclusive checks. A native resume of
+such a session is rejected with 409; a handoff still works.
 Demo rejects run creation/retry; preview and all local organization actions work.
 No endpoint executes a handoff, export, prompt template, or imported session on read.
 Project creation verifies an existing directory except in demo mode. Projects
