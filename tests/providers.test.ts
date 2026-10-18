@@ -272,6 +272,148 @@ describe('native Codex sessions', () => {
     expect(result.session?.title).toBe(title);
     expect(result.session?.messages[0].content).toBe(content);
   });
+
+  it('links subagent and guardian review threads to their parent thread as non-resumable children', () => {
+    const thread = (id: string, meta: Record<string, unknown>) => parseCodexSession([
+      { type: 'session_meta', timestamp: firstTime, payload: { id, session_id: 'root-thread', cwd: '/work/synthetic', ...meta } },
+      codexRecords()[2],
+    ], { sourcePath: `/synthetic/${id}.jsonl` }).session;
+    expect(thread('subagent-thread', { thread_source: 'subagent', parent_thread_id: 'root-thread' })).toMatchObject({
+      id: 'codex:subagent-thread', nativeId: 'subagent-thread', parentId: 'codex:root-thread', resumable: false,
+    });
+    expect(thread('review-thread', { thread_source: 'guardian_review', parent_thread_id: 'subagent-thread' })).toMatchObject({
+      id: 'codex:review-thread', parentId: 'codex:subagent-thread', resumable: false,
+    });
+    const root = thread('root-thread', { thread_source: 'user' });
+    expect(root?.parentId).toBeUndefined();
+    expect(root?.resumable).toBeUndefined();
+    // A user fork is linked to its origin but remains a resumable root of its own.
+    const fork = thread('forked-thread', { thread_source: 'user', forked_from_id: 'root-thread' });
+    expect(fork).toMatchObject({ parentId: 'codex:root-thread' });
+    expect(fork?.resumable).toBeUndefined();
+  });
+
+  it.each(['before', 'after'])('marks a tool result failed from a completed item recorded %s its output', (order) => {
+    const output = { type: 'response_item', timestamp: secondTime, payload: {
+      type: 'function_call_output', call_id: 'call-failed', output: 'Process exited with code 1',
+    } };
+    const completed = { type: 'event_msg', timestamp: secondTime, payload: {
+      type: 'item_completed', item: { type: 'CommandExecution', id: 'call-failed', status: 'failed', exit_code: 1 },
+    } };
+    const result = parseCodexSession([
+      codexRecords()[0], codexRecords()[2],
+      { type: 'response_item', timestamp: firstTime, payload: {
+        type: 'function_call', call_id: 'call-failed', name: 'exec_command', arguments: '{"cmd":"false"}',
+      } },
+      ...(order === 'before' ? [completed, output] : [output, completed]),
+    ], { sourcePath: '/synthetic/failed-command.jsonl' });
+    expect(result.warnings).toEqual([]);
+    expect(result.session).toMatchObject({ messageCount: 3, toolCallCount: 1 });
+    expect(result.session?.messages[2]).toMatchObject({
+      role: 'tool', toolName: 'exec_command', content: 'Process exited with code 1', isError: true,
+    });
+  });
+
+  it.each([
+    { item: { status: 'failed' }, isError: true },
+    { item: { status: 'declined' }, isError: true },
+    { item: { status: 'completed', exit_code: 2 }, isError: true },
+    { item: { status: 'completed', exit_code: 0 }, isError: undefined },
+    { item: { status: 'in_progress' }, isError: undefined },
+  ])('derives tool failure from completed item state $item', ({ item, isError }) => {
+    const result = parseCodexSession([
+      codexRecords()[0],
+      { type: 'response_item', timestamp: firstTime, payload: { type: 'function_call', call_id: 'call-state', name: 'exec_command', arguments: '{}' } },
+      { type: 'response_item', timestamp: secondTime, payload: { type: 'function_call_output', call_id: 'call-state', output: 'synthetic output' } },
+      { type: 'event_msg', timestamp: secondTime, payload: { type: 'item_completed', item: { type: 'CommandExecution', id: 'call-state', ...item } } },
+    ], { sourcePath: '/synthetic/item-state.jsonl' });
+    expect(result.session?.messages.find(message => message.role === 'tool')?.isError).toBe(isError);
+  });
+
+  it('records client tool searches as a tool call and its result', () => {
+    const result = parseCodexSession([
+      codexRecords()[0], codexRecords()[2],
+      { type: 'response_item', timestamp: firstTime, payload: {
+        type: 'tool_search_call', id: 'search-item', call_id: 'search-one', status: 'completed', execution: 'client',
+        arguments: { query: 'synthetic calendar', limit: 8 },
+      } },
+      { type: 'response_item', timestamp: secondTime, payload: {
+        type: 'tool_search_output', id: 'search-output', call_id: 'search-one', status: 'completed', execution: 'client',
+        tools: [{ type: 'namespace', name: 'synthetic_calendar', description: 'Synthetic tools', tools: [] }],
+      } },
+    ], { sourcePath: '/synthetic/tool-search.jsonl' });
+    expect(result.session?.toolCallCount).toBe(1);
+    expect(result.session?.messages.slice(1).map(message => [message.role, message.toolName])).toEqual([
+      ['assistant', 'tool_search'], ['tool', 'tool_search'],
+    ]);
+    expect(JSON.parse(result.session!.messages[1].content)).toEqual({ query: 'synthetic calendar', limit: 8 });
+    expect(result.session?.messages[2].content).toContain('synthetic_calendar');
+  });
+
+  function forkedChild(meta: Record<string, unknown> = { subagent_history_start_ordinal: 5 }): unknown[] {
+    const message = (id: string, role: string, value: string) => ({ type: 'response_item', timestamp: thirdTime, payload: {
+      type: 'message', id, role, content: [{ type: role === 'user' ? 'input_text' : 'output_text', text: value }],
+    } });
+    return [
+      { type: 'session_meta', timestamp: secondTime, payload: {
+        id: 'forked-child', session_id: 'root-thread', cwd: '/work/forked', thread_source: 'subagent',
+        parent_thread_id: 'root-thread', forked_from_id: 'root-thread', ...meta,
+      } },
+      // Lines 1-4 are the parent's history copied into the fork.
+      { type: 'session_meta', timestamp: secondTime, payload: { id: 'root-thread', cwd: '/work/parent', thread_source: 'user', title: 'Parent title' } },
+      { type: 'turn_context', timestamp: secondTime, payload: { cwd: '/work/parent', model: 'parent-model' } },
+      message('parent-request', 'user', 'Parent request'),
+      message('parent-answer', 'assistant', 'Parent answer'),
+      message('child-task', 'user', 'Child task'),
+      { type: 'turn_context', timestamp: thirdTime, payload: { cwd: '/work/forked', model: 'child-model' } },
+      message('child-answer', 'assistant', 'Child answer'),
+    ];
+  }
+
+  it('imports a forked subagent thread with only the records after its inherited parent history', () => {
+    const result = parseCodexSession(forkedChild(), { sourcePath: '/synthetic/forked-child.jsonl' });
+    expect(result.warnings).toEqual([]);
+    expect(result.session).toMatchObject({
+      id: 'codex:forked-child', parentId: 'codex:root-thread', resumable: false,
+      title: 'Child task', projectPath: '/work/forked', model: 'child-model',
+    });
+    expect(result.session?.messages.map(message => [message.role, message.content])).toEqual([
+      ['user', 'Child task'], ['assistant', 'Child answer'],
+    ]);
+  });
+
+  it('ignores copied parent metadata without a history boundary instead of withholding the fork', () => {
+    const result = parseCodexSession(forkedChild({}), { sourcePath: '/synthetic/forked-unbounded.jsonl' });
+    expect(result.warnings).toEqual([]);
+    expect(result.session).toMatchObject({
+      id: 'codex:forked-child', parentId: 'codex:root-thread', resumable: false, projectPath: '/work/forked', messageCount: 4,
+    });
+    expect(result.session?.title).not.toBe('Parent title');
+  });
+
+  it('still withholds a rollout whose later metadata names an unrelated thread', () => {
+    const result = parseCodexSession([
+      ...codexRecords('first-thread'),
+      { type: 'session_meta', timestamp: thirdTime, payload: { id: 'unrelated-thread', cwd: '/work/synthetic' } },
+    ], { sourcePath: '/synthetic/conflicting.jsonl' });
+    expect(result.session).toBeNull();
+    expect(result.warnings).toEqual([expect.stringContaining('Conflicting native session IDs')]);
+  });
+
+  it('keeps inter-agent messages as original system text without using them as the title', () => {
+    const result = parseCodexSession([
+      codexRecords()[0],
+      { type: 'response_item', timestamp: firstTime, payload: {
+        type: 'agent_message', id: 'delegated-task', author: '/root', recipient: '/root/worker',
+        content: [{ type: 'encrypted_content', encrypted_content: 'opaque' }, { type: 'input_text', text: 'Synthetic delegated task' }],
+      } },
+      codexRecords()[2],
+    ], { sourcePath: '/synthetic/agent-message.jsonl' });
+    expect(result.session?.title).toBe('Review the sample parser');
+    expect(result.session?.messages.map(message => [message.role, message.content])).toEqual([
+      ['system', 'Synthetic delegated task'], ['user', 'Review the sample parser'],
+    ]);
+  });
 });
 
 describe('native Claude sessions', () => {

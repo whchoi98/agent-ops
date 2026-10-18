@@ -5,7 +5,8 @@ import type { Agent, SyncReport } from '../shared/types.js';
 import { setImmediate as yieldToIO } from 'node:timers/promises';
 
 // Parser identity changes require unchanged native files to be read once again.
-const parserFormat = (agent?: Agent) => agent === 'kiro' ? 'format-v4-kiro-credits' : 'format-v3';
+const parserFormat = (agent?: Agent) => agent === 'kiro' ? 'format-v4-kiro-credits'
+  : agent === 'codex' ? 'format-v4-codex-threads' : 'format-v3';
 const importFingerprint = (fingerprint: string, agent?: Agent) => `${parserFormat(agent)}:${fingerprint}`;
 
 export interface SyncController {
