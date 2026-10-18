@@ -77,7 +77,7 @@ export function SessionInfo({ session }: { session: SessionDetail }) {
     <details className="source-details"><summary><Trans message={"원본 기록 정보"} /></summary><dl className="detail-properties">
       <div><dt><Trans message={"CLI 세션 ID"} /></dt><dd className="with-copy"><code>{session.nativeId || t("미기록")}</code>{session.nativeId && <CopyButton text={session.nativeId} compact label={t("CLI 세션 ID 복사")} />}</dd></div>
       <div><dt><Trans message={"원본 파일"} /></dt><dd><code>{session.sourcePath || t("미기록")}</code>
-        {session.sourceAvailable === false && <small><Trans message={"원본 파일이 삭제되었습니다. 가져온 기록은 그대로 보존됩니다."} /></small>}</dd></div>
+        {session.sourceAvailable === false && <small><Trans message={"기록된 경로에 원본 파일이 없습니다. 삭제되었거나 옮겨졌으며, 가져온 기록은 그대로 보존됩니다."} /></small>}</dd></div>
       {session.parentId && <div><dt><Trans message={"상위 세션"} /></dt><dd><button type="button" className="text-button" onClick={() => openSession(session.parentId!)}><Trans message={"상위 세션 열기"} /></button><code>{session.parentId}</code></dd></div>}
     </dl></details>
   </div>;

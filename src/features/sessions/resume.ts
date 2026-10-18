@@ -9,8 +9,8 @@ export const RESUME_BLOCK_MESSAGES: Record<ResumeBlock, { title: string; notice:
     notice: '이 기록은 CLI에서 직접 이어갈 수 없습니다. 다른 에이전트에 맥락을 전달할 수 있습니다.',
   },
   'source-missing': {
-    title: '원본 기록 파일이 삭제되어 CLI에서 이어갈 수 없습니다. 작업 인계를 사용하세요.',
-    notice: '원본 기록 파일이 삭제되어 CLI에서 이어갈 수 없습니다. 보존된 기록의 맥락은 다른 에이전트에 전달할 수 있습니다.',
+    title: '원본 기록 파일을 찾을 수 없어 CLI에서 이어갈 수 없습니다. 작업 인계를 사용하세요.',
+    notice: '기록된 경로에 원본 기록 파일이 없어 CLI에서 이어갈 수 없습니다. 파일을 옮겼다면 다시 동기화하고, 아니면 보존된 기록의 맥락을 다른 에이전트에 전달하세요.',
   },
 };
 

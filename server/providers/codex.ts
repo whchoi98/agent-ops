@@ -17,7 +17,6 @@ export function createCodexParser(context: ParseContext): SessionParser {
   const aliases = new Map<string, string>();
   const eventIds = new Set<string>();
   const failedCalls = new Set<string>();
-  const lineage = new Set<string>();
   let inheritedUntil = 0;
   let ordinal = 0;
   let turn = '';
@@ -85,15 +84,13 @@ export function createCodexParser(context: ParseContext): SessionParser {
       const payload = object(record.payload);
       const type = string(record.type);
       const time = record.timestamp ?? payload.timestamp;
-      if (type === 'session_meta' && ordinal > 1 && lineage.has(firstString(payload.id, payload.session_id))) return;
       builder.observe(time);
       if (type === 'session_meta' || (!type && record.id && record.timestamp)) {
         const metadata = type ? payload : record;
-        if (ordinal === 1) {
-          for (const id of [metadata.parent_thread_id, metadata.forked_from_id]) if (string(id)) lineage.add(string(id));
-          const start = metadata.subagent_history_start_ordinal;
-          if (typeof start === 'number' && Number.isSafeInteger(start) && start > 1) inheritedUntil = start;
-        }
+        // Without this boundary, copied parent records cannot be told apart and
+        // the copied parent session_meta keeps the rollout withheld.
+        const start = metadata.subagent_history_start_ordinal;
+        if (ordinal === 1 && typeof start === 'number' && Number.isSafeInteger(start) && start > 1) inheritedUntil = start;
         builder.identify(metadata.id ?? metadata.session_id);
         builder.observe(metadata.timestamp);
         builder.projectPath = firstString(metadata.cwd, metadata.project_path, builder.projectPath);
@@ -131,8 +128,7 @@ export function createCodexParser(context: ParseContext): SessionParser {
           // so it annotates the matching tool result instead of adding a call.
           const item = object(payload.item);
           const itemId = string(item.id);
-          const exitCode = item.exit_code;
-          if (itemId && (item.status === 'failed' || item.status === 'declined' || (typeof exitCode === 'number' && exitCode !== 0))) {
+          if (itemId && (item.status === 'failed' || item.status === 'declined')) {
             const result = builder.get(`result:${itemId}`);
             if (result) result.isError = true;
             else if (failedCalls.size < 40_000) failedCalls.add(itemId);
@@ -144,7 +140,12 @@ export function createCodexParser(context: ParseContext): SessionParser {
         response(record, time);
       }
     },
-    finish: () => builder.finish(),
+    finish() {
+      if (inheritedUntil && ordinal <= inheritedUntil) {
+        builder.warn('The inherited-history boundary is beyond the recorded lines; no records of this thread were read.');
+      }
+      return builder.finish();
+    },
   };
 }
 

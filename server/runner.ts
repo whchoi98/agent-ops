@@ -410,7 +410,7 @@ export class Runner {
         const available = await sourceAvailable(session.sourcePath);
         this.assertOpen();
         if (available === false) {
-          throw failure(409, 'The native source file no longer exists, so the CLI cannot resume this session. Start a new run with a context handoff instead.');
+          throw failure(409, 'The native source file is no longer at its recorded path, so the CLI cannot resume this session. Sync again if it was moved, or start a new run with a context handoff instead.');
         }
         nativeId = session.nativeId;
         if (!nativeId) throw failure(409, 'The session has no known native resume ID.');

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolve } from 'node:path';
@@ -69,15 +69,28 @@ describe('local API boundary', () => {
       messageCount: 1, toolCallCount: 0, usage: emptyUsage(), sourcePath,
       messages: [{ id: 'm1', role: 'user', content: 'Synthetic retained request', timestamp: '2026-10-18T10:00:00.000Z' }],
     });
+    const replaced = join(dir, 'replaced.jsonl');
+    mkdirSync(replaced);
+    const dangling = join(dir, 'dangling.jsonl');
+    symlinkSync(join(dir, 'gone.jsonl'), dangling);
     recorded('present', present);
     recorded('removed', join(dir, 'removed.jsonl'));
+    recorded('replaced', replaced);
+    recorded('dangling', dangling);
     recorded('virtual', 'demo://codex/virtual');
     const detail = async (id: string) => (await app.inject({ url: `/api/sessions/${encodeURIComponent(id)}?includeMessages=false` })).json();
     expect(await detail('codex:present')).toMatchObject({ sourceAvailable: true });
     expect(await detail('codex:removed')).toMatchObject({ sourceAvailable: false, messageCount: 1 });
+    expect(await detail('codex:replaced')).toMatchObject({ sourceAvailable: false });
+    expect(await detail('codex:dangling')).toMatchObject({ sourceAvailable: false });
     expect(await detail('codex:virtual')).not.toHaveProperty('sourceAvailable');
+    // Saving metadata returns the detail the client keeps, so it carries the same check.
+    const patched = await app.inject({
+      method: 'PATCH', url: `/api/sessions/${encodeURIComponent('codex:removed')}?includeMessages=false`, headers, payload: { note: 'Retained note' },
+    });
+    expect(patched.json()).toMatchObject({ note: 'Retained note', sourceAvailable: false });
     const listed = (await app.inject({ url: '/api/sessions' })).json().items as Record<string, unknown>[];
-    expect(listed).toHaveLength(3);
+    expect(listed).toHaveLength(5);
     expect(listed.some(item => 'sourceAvailable' in item)).toBe(false);
   });
   it('persists metadata, searches it, and downloads a safe export', async () => {

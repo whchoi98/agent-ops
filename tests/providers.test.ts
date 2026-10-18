@@ -317,10 +317,12 @@ describe('native Codex sessions', () => {
   it.each([
     { item: { status: 'failed' }, isError: true },
     { item: { status: 'declined' }, isError: true },
-    { item: { status: 'completed', exit_code: 2 }, isError: true },
+    { item: { status: 'failed', exit_code: 1 }, isError: true },
+    // Codex's own status is authoritative; an exit code alone does not reclassify it.
+    { item: { status: 'completed', exit_code: 2 }, isError: undefined },
     { item: { status: 'completed', exit_code: 0 }, isError: undefined },
     { item: { status: 'in_progress' }, isError: undefined },
-  ])('derives tool failure from completed item state $item', ({ item, isError }) => {
+  ])('derives tool failure from the recorded item status $item', ({ item, isError }) => {
     const result = parseCodexSession([
       codexRecords()[0],
       { type: 'response_item', timestamp: firstTime, payload: { type: 'function_call', call_id: 'call-state', name: 'exec_command', arguments: '{}' } },
@@ -382,13 +384,25 @@ describe('native Codex sessions', () => {
     ]);
   });
 
-  it('ignores copied parent metadata without a history boundary instead of withholding the fork', () => {
-    const result = parseCodexSession(forkedChild({}), { sourcePath: '/synthetic/forked-unbounded.jsonl' });
+  it('skips every copied ancestor record inside a nested fork boundary', () => {
+    const records = forkedChild({ subagent_history_start_ordinal: 6, parent_thread_id: 'middle-thread', forked_from_id: 'middle-thread' });
+    records.splice(1, 0, { type: 'session_meta', timestamp: secondTime, payload: { id: 'middle-thread', forked_from_id: 'root-thread' } });
+    const result = parseCodexSession(records, { sourcePath: '/synthetic/nested-fork.jsonl' });
     expect(result.warnings).toEqual([]);
-    expect(result.session).toMatchObject({
-      id: 'codex:forked-child', parentId: 'codex:root-thread', resumable: false, projectPath: '/work/forked', messageCount: 4,
-    });
-    expect(result.session?.title).not.toBe('Parent title');
+    expect(result.session).toMatchObject({ parentId: 'codex:middle-thread', title: 'Child task' });
+    expect(result.session?.messages.map(message => message.content)).toEqual(['Child task', 'Child answer']);
+  });
+
+  it('withholds a fork whose copied parent history has no boundary instead of counting it twice', () => {
+    const result = parseCodexSession(forkedChild({}), { sourcePath: '/synthetic/forked-unbounded.jsonl' });
+    expect(result.session).toBeNull();
+    expect(result.warnings).toEqual([expect.stringContaining('Conflicting native session IDs')]);
+  });
+
+  it('explains a withheld child whose inherited-history boundary is beyond its records', () => {
+    const result = parseCodexSession(forkedChild({ subagent_history_start_ordinal: 50 }), { sourcePath: '/synthetic/forked-overrun.jsonl' });
+    expect(result.session).toBeNull();
+    expect(result.warnings).toContainEqual(expect.stringContaining('inherited-history boundary'));
   });
 
   it('still withholds a rollout whose later metadata names an unrelated thread', () => {

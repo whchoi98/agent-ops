@@ -301,12 +301,14 @@ Malformed files and unsupported records appear in sync diagnostics while other i
 
 Imported sessions remain after native cleanup deletes their source file, for example
 through Claude Code `cleanupPeriodDays`, Kiro `cleanup.periodDays` or Codex `delete`.
-The session detail then reports the missing source and disables **Resume**; **Handoff**
-still uses the retained history. Kiro SQLite sessions check only the database file.
+When no file is left at the recorded path, the session detail reports it and disables
+**Resume**; **Handoff** still uses the retained history. A file moved into the Codex
+archive is found again on the next sync. Kiro SQLite sessions check only the database file.
 Codex subagent and guardian-review threads link to the thread that started them and
 cannot be resumed directly. Parent history copied at the start of a child rollout is
-not repeated in the child; it stays in the parent session. A Codex tool result is marked failed when its completed
-command item records a failed or declined status or a nonzero exit code.
+not repeated in the child; it stays in the parent session, and a child rollout without
+that boundary is withheld with a sync diagnostic. A Codex tool result is marked failed
+when its completed item records a `failed` or `declined` status.
 
 Usage totals include **recorded values only**. Input tokens are normalized to include cache-read and cache-write input.
 Missing token, credit and cost records remain marked as unknown.
@@ -884,12 +886,14 @@ agent-ops optimize
 잘못된 파일과 지원하지 않는 기록은 동기화 진단에 표시하고 나머지 수집을 계속합니다.
 
 Claude Code `cleanupPeriodDays`, Kiro `cleanup.periodDays`, Codex `delete` 같은 원본 정리로
-파일이 삭제되어도 이미 가져온 세션은 남습니다. 이때 세션 상세는 원본이 없음을 표시하고
-**재개**를 비활성화하며, **작업 인계**는 보존된 기록으로 계속 사용할 수 있습니다.
-Kiro SQLite 세션은 데이터베이스 파일만 확인합니다. Codex subagent와 guardian review
-thread는 이를 시작한 thread에 연결되며 직접 재개할 수 없습니다. 하위 rollout 앞부분에 복사된
-상위 이력은 하위 세션에 반복하지 않고 상위 세션에만 남깁니다. Codex 명령의 완료 항목이
-실패, 거부 상태나 0이 아닌 종료 코드를 기록하면 해당 도구 결과를 실패로 표시합니다.
+파일이 삭제되어도 이미 가져온 세션은 남습니다. 기록된 경로에 파일이 없으면 세션 상세가
+이를 표시하고 **재개**를 비활성화하며, **작업 인계**는 보존된 기록으로 계속 사용할 수 있습니다.
+Codex 보관 폴더로 옮겨진 파일은 다음 동기화에서 다시 찾습니다. Kiro SQLite 세션은
+데이터베이스 파일만 확인합니다. Codex subagent와 guardian review thread는 이를 시작한
+thread에 연결되며 직접 재개할 수 없습니다. 하위 rollout 앞부분에 복사된 상위 이력은 하위
+세션에 반복하지 않고 상위 세션에만 남기며, 그 경계가 없는 하위 rollout은 가져오지 않고
+동기화 진단에 표시합니다. Codex 완료 항목이 `failed` 또는 `declined` 상태를 기록하면 해당
+도구 결과를 실패로 표시합니다.
 
 사용량은 **기록된 값만** 집계합니다. 입력 토큰은 캐시 읽기, 쓰기 입력을 포함하는 기준으로 정규화합니다.
 토큰, credit, 비용 기록이 없으면 미확인 상태로 표시합니다.

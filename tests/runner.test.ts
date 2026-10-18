@@ -382,9 +382,12 @@ describe('project and session permission gates', () => {
 
   it('rejects historical Kiro SQLite resume on V3 when an engine selector is not advertised', async () => {
     const previous = { ...session('kiro'), sourcePath: join(root, 'conversations.sqlite3') };
+    // The database exists, so the engine-selector guard rather than the missing-source check rejects it.
+    writeFileSync(previous.sourcePath, '');
     store.upsertSession(previous);
     const instance = runner({ connectors: async () => connectors({ version: 'kiro-cli 3.0.1' }) });
-    await expect(instance.create(request({ agent: 'kiro', resumeSessionId: previous.id }))).rejects.toMatchObject({ statusCode: 409 });
+    await expect(instance.create(request({ agent: 'kiro', resumeSessionId: previous.id })))
+      .rejects.toMatchObject({ statusCode: 409, message: expect.stringMatching(/engine selector/) });
     expect(fixtureCalls()).toEqual([]);
   });
 
