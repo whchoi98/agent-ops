@@ -1,6 +1,6 @@
 # my-agent-ops
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.5.0](https://img.shields.io/badge/version-1.5.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Build: not configured](https://img.shields.io/badge/build-not_configured-lightgrey)](#testing) [![Version: 1.6.0](https://img.shields.io/badge/version-1.6.0-blue)](package.json) [![English](https://img.shields.io/badge/lang-English-blue)](#english) [![한국어](https://img.shields.io/badge/lang-%ED%95%9C%EA%B5%AD%EC%96%B4-red)](#한국어)
 
 Manage Codex, Claude Code and Kiro CLI conversations and runs locally. / Codex, Claude Code, Kiro CLI의 대화와 실행 작업을 관리하는 로컬 운영 도구입니다.
 
@@ -59,7 +59,7 @@ Sample transcripts keep their original Korean text when the interface is in Engl
 | `npm install -g` installation | [macOS upgrade (npm)](#macos-upgrade-npm) |
 | `git clone` installation | [Upgrade a source checkout](#upgrade-a-source-checkout) |
 
-These examples target source version **1.5.0**.
+These examples target source version **1.6.0**.
 
 ### macOS quick start
 
@@ -72,12 +72,12 @@ Open **Terminal** on the Mac and run:
 node --version
 npm --version
 
-# Install my-agent-ops 1.5.0 from the GitHub release.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
+# Install my-agent-ops 1.6.0 from the GitHub release.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.6.0/agent-ops-local-1.6.0.tgz
 
 # Confirm the installed version.
 agent-ops --version
-# 1.5.0
+# 1.6.0
 
 # Start the app.
 agent-ops
@@ -94,12 +94,12 @@ Wait for active jobs and synchronization to finish, then press **`Ctrl+C` in the
 Run:
 
 ```bash
-# Install version 1.5.0 over the existing npm installation.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
+# Install version 1.6.0 over the existing npm installation.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.6.0/agent-ops-local-1.6.0.tgz
 
 # Confirm the new version.
 agent-ops --version
-# 1.5.0
+# 1.6.0
 
 # Restart the app.
 agent-ops
@@ -166,8 +166,8 @@ The UI labels sample sessions and runs; assistant execution, retries and MCP con
 ### Local npm archive
 
 After installing dependencies in a source checkout, create an archive with `npm pack`.
-The [source manifest](package.json) specifies version `1.5.0`; see [CHANGELOG.md](CHANGELOG.md) for changes.
-Download the [v1.5.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz) from the [v1.5.0 release page](https://github.com/whchoi98/agent-ops/releases/tag/v1.5.0).
+The [source manifest](package.json) specifies version `1.6.0`; see [CHANGELOG.md](CHANGELOG.md) for changes.
+Download the [v1.6.0 installation archive](https://github.com/whchoi98/agent-ops/releases/download/v1.6.0/agent-ops-local-1.6.0.tgz) from the [v1.6.0 release page](https://github.com/whchoi98/agent-ops/releases/tag/v1.6.0).
 These commands install a local file and do not depend on a public npm release.
 
 ```bash
@@ -175,7 +175,7 @@ These commands install a local file and do not depend on a public npm release.
 npm pack
 
 # Install the archive and start the app.
-npm install -g ./agent-ops-local-1.5.0.tgz
+npm install -g ./agent-ops-local-1.6.0.tgz
 agent-ops
 ```
 
@@ -183,7 +183,7 @@ To run the archive without a global installation:
 
 ```bash
 # Start the archive in demo mode.
-npm exec --package=./agent-ops-local-1.5.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.6.0.tgz -- agent-ops demo --port 4318
 ```
 
 The archive includes the built application and public documentation.
@@ -637,7 +637,7 @@ my-agent-ops는 Codex, Claude Code, Kiro CLI의 대화를 찾고 후속 업무�
 | `npm install -g`로 설치 | [macOS 업그레이드 (npm)](#macos-업그레이드-npm) |
 | `git clone`으로 설치 | [소스 체크아웃 업그레이드](#소스-체크아웃-업그레이드) |
 
-아래 예시는 소스 버전 **1.5.0**을 기준으로 합니다.
+아래 예시는 소스 버전 **1.6.0**을 기준으로 합니다.
 
 ### macOS 처음 설치
 
@@ -650,12 +650,12 @@ Mac의 **터미널**을 열고 다음 명령을 실행합니다.
 node --version
 npm --version
 
-# GitHub 릴리스에서 my-agent-ops 1.5.0을 설치합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
+# GitHub 릴리스에서 my-agent-ops 1.6.0을 설치합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.6.0/agent-ops-local-1.6.0.tgz
 
 # 설치한 버전을 확인합니다.
 agent-ops --version
-# 1.5.0
+# 1.6.0
 
 # 앱을 시작합니다.
 agent-ops
@@ -672,12 +672,12 @@ npm에서 `EACCES` 오류가 발생하면 [공식 npm 권한 설정 안내](http
 다음 명령으로 업데이트합니다.
 
 ```bash
-# 기존 npm 설치본을 1.5.0으로 업데이트합니다.
-npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz
+# 기존 npm 설치본을 1.6.0으로 업데이트합니다.
+npm install -g https://github.com/whchoi98/agent-ops/releases/download/v1.6.0/agent-ops-local-1.6.0.tgz
 
 # 새 버전을 확인합니다.
 agent-ops --version
-# 1.5.0
+# 1.6.0
 
 # 앱을 다시 시작합니다.
 agent-ops
@@ -744,8 +744,8 @@ npm run demo -- --port 4318
 ### 로컬 npm 압축 파일
 
 소스 체크아웃에서 의존성을 설치한 뒤 `npm pack`으로 압축 파일을 만듭니다.
-[소스 매니페스트](package.json)의 버전은 `1.5.0`이며 변경 사항은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
-[v1.5.0 릴리스 페이지](https://github.com/whchoi98/agent-ops/releases/tag/v1.5.0)에서 [설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.5.0/agent-ops-local-1.5.0.tgz)을 내려받습니다.
+[소스 매니페스트](package.json)의 버전은 `1.6.0`이며 변경 사항은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다.
+[v1.6.0 릴리스 페이지](https://github.com/whchoi98/agent-ops/releases/tag/v1.6.0)에서 [설치 압축 파일](https://github.com/whchoi98/agent-ops/releases/download/v1.6.0/agent-ops-local-1.6.0.tgz)을 내려받습니다.
 아래 명령은 로컬 파일을 설치하므로 npm에 공개된 릴리스가 없어도 사용할 수 있습니다.
 
 ```bash
@@ -753,7 +753,7 @@ npm run demo -- --port 4318
 npm pack
 
 # 압축 파일을 설치하고 앱을 시작합니다.
-npm install -g ./agent-ops-local-1.5.0.tgz
+npm install -g ./agent-ops-local-1.6.0.tgz
 agent-ops
 ```
 
@@ -761,7 +761,7 @@ agent-ops
 
 ```bash
 # 압축 파일을 데모 모드로 실행합니다.
-npm exec --package=./agent-ops-local-1.5.0.tgz -- agent-ops demo --port 4318
+npm exec --package=./agent-ops-local-1.6.0.tgz -- agent-ops demo --port 4318
 ```
 
 압축 파일에는 빌드된 앱과 공개 문서가 포함됩니다.

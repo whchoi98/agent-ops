@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-18
+
 ### Added
 
 - Publish a responsive Korean product brochure on GitHub Pages with screens, architecture and how the workbench operates.
@@ -117,7 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve UI assets and API requests relative to the configured proxy path.
 - Accept the configured proxy origin while preserving local connection and cross-origin request guards.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/whchoi98/agent-ops/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
@@ -136,6 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)을 따릅니다.
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-10-18
 
 ### Added
 
@@ -246,7 +251,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 설정한 프록시 경로를 기준으로 화면 파일과 API 요청 주소를 계산하도록 수정.
 - 로컬 연결, 교차 출처 요청 보호를 유지하며 설정한 프록시 출처를 허용하도록 수정.
 
-[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/whchoi98/agent-ops/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/whchoi98/agent-ops/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/whchoi98/agent-ops/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/whchoi98/agent-ops/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/whchoi98/agent-ops/compare/v1.3.0...v1.4.0
