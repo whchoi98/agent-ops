@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Publish a responsive Korean product brochure on GitHub Pages with screens, architecture and how the workbench operates.
+- Link Codex subagent and guardian-review threads to the thread that started them as non-resumable child sessions.
+- Import Codex client tool searches as tool calls and inter-agent messages as original system messages.
+- Show when a session's native source file was deleted, and reject native resume for it while keeping handoff available.
+
+### Fixed
+
+- Mark Codex tool results as failed when the completed command item records a failed or declined status or a nonzero exit code.
+- Import forked Codex subagent threads that were withheld as conflicting sessions, without repeating the parent history copied into their rollout.
 
 ## [1.5.0] - 2026-09-26
 
@@ -132,6 +140,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - 화면, 아키텍처와 동작 원리를 담은 반응형 한국어 제품 브로셔를 GitHub Pages에 게시합니다.
+- Codex subagent와 guardian review thread를 이를 시작한 thread의 하위 세션으로 연결하고 직접 재개할 수 없게 표시합니다.
+- Codex 클라이언트 도구 검색을 도구 호출로, 에이전트 사이 메시지를 원문 그대로 시스템 메시지로 가져옵니다.
+- 세션의 원본 기록 파일이 삭제되면 이를 표시하고 CLI 재개를 거부하며, 작업 인계는 계속 사용할 수 있게 합니다.
+
+### Fixed
+
+- Codex 명령의 완료 항목이 실패, 거부 상태나 0이 아닌 종료 코드를 기록하면 해당 도구 결과를 실패로 표시합니다.
+- 세션 ID 충돌로 가져오지 못하던 Codex forked subagent thread를 가져오며, rollout에 복사된 상위 이력은 반복하지 않습니다.
 
 ## [1.5.0] - 2026-09-26
 
