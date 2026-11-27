@@ -5,10 +5,10 @@ After=network.target
 [Service]
 Type=simple
 User=ec2-user
-WorkingDirectory=/home/ec2-user/my-project/agent-ops
+WorkingDirectory=/home/ec2-user/my-project/dashboards/agent-ops
 Environment=PATH=/home/ec2-user/.npm-global/bin:/home/ec2-user/.local/bin:/usr/local/bin:/usr/bin:/bin
-EnvironmentFile=/home/ec2-user/my-project/agent-ops/.data/service.env
-ExecStart=/usr/bin/node /home/ec2-user/my-project/agent-ops/dist/server/index.js serve
+EnvironmentFile=/home/ec2-user/my-project/dashboards/agent-ops/.data/service.env
+ExecStart=/usr/bin/node /home/ec2-user/my-project/dashboards/agent-ops/dist/server/index.js serve
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=30
